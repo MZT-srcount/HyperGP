@@ -23,7 +23,7 @@ struct InputCuda{
     }
 };
 
-namespace HyperGP_exec{
+namespace pygp_exec{
 
 #define MEM_CAPACITY (10.0 * 1024 * 1024 * 1024)
 
@@ -899,7 +899,7 @@ void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
 
 template<typename scalar_t>
 void TEMPLATE_BIND_FUNCS(py::module& m){
-    using namespace HyperGP_exec;
+    using namespace pygp_exec;
 
     m.def("exec_cpuinput", &exec_cpuinput<scalar_t>);
     m.def("exec_gpuinput", &exec_gpuinput<scalar_t>);

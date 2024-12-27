@@ -4,7 +4,7 @@ from HyperGP.base.func_basic import Constant
 from HyperGP.base.base_struct import States
 from .cash_manager import CashManager
 import numpy as np
-from ..src import HyperGP_utils
+from ..src import pygp_utils
 import itertools
 
 
@@ -65,7 +65,7 @@ class ExecutableGen:
         #         node.states['cash_record'] = False
         #         # assert sym in output
         #         cash_records[i] = True
-        res = HyperGP_utils.tree2graph(nodes_arity, nodes_str, 
+        res = pygp_utils.tree2graph(nodes_arity, nodes_str, 
                                           idxs_list, idxs, [len(pset.arguments), id_init, input_len_max])
         print('pre_time: ', time.time() - st)
         assert 0==1

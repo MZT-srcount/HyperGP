@@ -249,7 +249,7 @@ size_t ewise_async_2op(const Array<scalar_t>& a, const Array<sscalar_t>& b, Arra
 }
 
 namespace gpu{
-namespace HyperGP_tensor{
+namespace pygp_tensor{
     
 
 template<typename scalar_t>
@@ -2187,7 +2187,7 @@ void matrix_opers(const Array<scalar_t>& a_handle, const Array<sscalar_t>& b_han
 }
 }
 
-namespace HyperGP_img{
+namespace pygp_img{
     
     struct MatrixShape{
         int32_t width;
@@ -3488,7 +3488,7 @@ namespace HyperGP_img{
 template<typename scalar_t, typename sscalar_t>
 void TEMPLATE_BIND_IMGSPROC(py::module& m){
     using namespace gpu;
-    using namespace HyperGP_img;
+    using namespace pygp_img;
     /*image operations*/
     m.def("gaussian_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, uint8_t type, int pre_dim, int post_dim){
         switch(type){
@@ -3654,7 +3654,7 @@ template<typename scalar_t, typename sscalar_t>
 void TEMPLATE_BIND_FUNCS_DIM1(py::module& m){
     
     using namespace gpu;
-    using namespace HyperGP_tensor;
+    using namespace pygp_tensor;
 
     m.def("ewise_sin", [](const Array<scalar_t>& a, Array<sscalar_t>& out, int32_t offset_a){
         ewise_compute_1op<scalar_t, sscalar_t>(a, out, offset_a, 0);
@@ -3856,7 +3856,7 @@ template<typename scalar_t, typename sscalar_t, typename tscalar_t>
 void TEMPLATE_BIND_FUNCS(py::module& m){
     
     using namespace gpu;
-    using namespace HyperGP_tensor;
+    using namespace pygp_tensor;
 
     m.def("wait", [](Array<scalar_t>& out){
         if (out.stream_id != -1){

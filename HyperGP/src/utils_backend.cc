@@ -15,7 +15,7 @@ namespace py = pybind11;
 
 typedef std::tuple<py::array_t<int>, std::vector<int>, std::vector<int>, std::vector<std::string>, int> transformer_ret;
 
-namespace HyperGP_utils{
+namespace pygp_utils{
 
     #define PYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF
     void getChilds(std::vector<int> const& node_arity, std::vector<std::vector<int>>& node_childs){
@@ -260,7 +260,7 @@ template<typename scalar_t>
 void TEMPLATE_BIND_FUNCS(py::module& m){
     
     #include <ctime>
-    using namespace HyperGP_utils;
+    using namespace pygp_utils;
     m.def("test", [](const std::vector<std::vector<py::object>>& res){
         std::vector<std::vector<int>> idxs;
         for(int i = 0; i < res.size(); ++i){
@@ -396,7 +396,7 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
         return transformer_ret(exp_set_final, layer_info_final, record_posi_final, record_strs_final, id_allocator);
     });
 }
-PYBIND11_MODULE(HyperGP_utils, m){
+PYBIND11_MODULE(pygp_utils, m){
     
     TEMPLATE_BIND_FUNCS<int8_t>(m);
     TEMPLATE_BIND_FUNCS<int32_t>(m);

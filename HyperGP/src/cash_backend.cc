@@ -18,7 +18,7 @@ typedef std::tuple<std::vector<py::array_t<scalar_t>>, std::vector<size_t>,
 typedef std::tuple<std::vector<py::array_t<scalar_t>>,
      std::vector<std::vector<std::size_t>>, size_t, std::vector<std::vector<std::size_t>>> cashes_ret;
 
-namespace HyperGP_cash{
+namespace pygp_cash{
 
     void getChilds(std::vector<size_t> const& node_arity, std::vector<std::vector<size_t>>& node_childs, size_t init_origin_posi){
         
@@ -322,9 +322,9 @@ namespace HyperGP_cash{
     }
 }
 
-PYBIND11_MODULE(HyperGP_cash, m){
+PYBIND11_MODULE(pygp_cash, m){
     namespace py = pybind11;
-    using namespace HyperGP_cash;
+    using namespace pygp_cash;
     py::class_<CashList>(m, "CashList")
         .def(py::init<size_t>(), py::return_value_policy::take_ownership)
         .def("insert", &CashList::insert)

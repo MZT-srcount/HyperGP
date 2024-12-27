@@ -1,6 +1,6 @@
 import os
 
-BACKEND = os.environ.get("HyperGP_BACKEND", "G")
+BACKEND = os.environ.get("PYGP_BACKEND", "G")
 
 if BACKEND == "G":
     from . import ndarray as array_api
