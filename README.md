@@ -108,11 +108,7 @@ pip install HyperGP
 
 ## Main Features
 
-**The performance of each algorithm was tested** (see *Results* section in their respective page),
-you can take a look at the issues [#48](https://github.com/DLR-RM/stable-baselines3/issues/48) and [#49](https://github.com/DLR-RM/stable-baselines3/issues/49) for more details.
-
-We also provide detailed logs and reports on the [OpenRL Benchmark](https://wandb.ai/openrlbenchmark/sb3) platform.
-
+A rich acceleration mode are supported.
 
 | **Features**                | **Stable-Baselines3** |
 | --------------------------- | ----------------------|
