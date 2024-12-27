@@ -1,5 +1,7 @@
-build/
-dist/
 setup.cfg
 .pypirc
 res.txt
+
+build/
+dist/
+
