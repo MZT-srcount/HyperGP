@@ -2,6 +2,7 @@ setup.cfg
 .pypirc
 res.txt
 
+/docs/build/
 build/
 dist/
 
