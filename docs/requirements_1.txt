@@ -1,0 +1,85 @@
+accessible-pygments==0.0.5
+alabaster==1.0.0
+anyio==4.6.2.post1
+babel==2.16.0
+beautifulsoup4==4.12.3
+certifi @ file:///home/conda/feedstock_root/build_artifacts/certifi_1725278078093/work/certifi
+charset-normalizer==3.4.0
+click==8.1.7
+colorama==0.4.6
+commonmark==0.9.1
+contourpy @ file:///home/conda/feedstock_root/build_artifacts/contourpy_1731428301407/work
+cupy @ file:///home/conda/feedstock_root/build_artifacts/cupy-split_1724325819232/work
+cycler @ file:///home/conda/feedstock_root/build_artifacts/cycler_1733332471406/work
+deap==1.4.1
+dill @ file:///home/conda/feedstock_root/build_artifacts/dill_1706434688412/work
+docutils==0.21.2
+et-xmlfile @ file:///home/conda/feedstock_root/build_artifacts/et_xmlfile_1674664118162/work
+fastrlock @ file:///home/conda/feedstock_root/build_artifacts/fastrlock_1702696298059/work
+fonttools @ file:///home/conda/feedstock_root/build_artifacts/fonttools_1733518819114/work
+geppy==0.1.3
+h11==0.14.0
+idna==3.10
+imagesize==1.4.1
+Jinja2==3.1.4
+kiwisolver @ file:///home/conda/feedstock_root/build_artifacts/kiwisolver_1725459266942/work
+llvmlite @ file:///croot/llvmlite_1720455102465/work
+Markdown==3.7
+MarkupSafe==3.0.2
+matplotlib==3.9.1
+mkl-fft @ file:///work/perseverance-python-buildout/croot/mkl_fft_1698845673361/work
+mkl-random @ file:///work/perseverance-python-buildout/croot/mkl_random_1698845720894/work
+mkl-service==2.4.0
+munkres==1.1.4
+numba @ file:///home/conda/feedstock_root/build_artifacts/numba_1718888016245/work
+numpy @ file:///croot/numpy_and_numpy_base_1708638617955/work/dist/numpy-1.26.4-cp312-cp312-linux_x86_64.whl#sha256=1d700f51d8b4fa684d858c9e3b56b1656bc5c82b6b79ff08d4e3b491c430059f
+numpydoc==1.8.0
+openpyxl @ file:///home/conda/feedstock_root/build_artifacts/openpyxl_1725460884078/work
+packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1733203243479/work
+pandas @ file:///home/conda/feedstock_root/build_artifacts/pandas_1726878417179/work
+pillow @ file:///croot/pillow_1731594689713/work
+plum-dispatch==1.7.4
+ply @ file:///home/conda/feedstock_root/build_artifacts/ply_1733239724146/work
+psutil @ file:///home/conda/feedstock_root/build_artifacts/psutil_1725737890554/work
+pybind11==2.13.1
+pydata-sphinx-theme==0.16.0
+Pygments==2.18.0
+pyparsing @ file:///home/conda/feedstock_root/build_artifacts/pyparsing_1733222594562/work
+PyQt5==5.15.10
+PyQt5-sip @ file:///work/perseverance-python-buildout/croot/pyqt-split_1698847927472/work/pyqt_sip
+python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1709299778482/work
+pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1706886791323/work
+recommonmark==0.7.1
+requests==2.32.3
+setuptools==69.5.1
+sip @ file:///home/conda/feedstock_root/build_artifacts/sip_1697300425834/work
+six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
+sniffio==1.3.1
+snowballstemmer==2.2.0
+soupsieve==2.6
+Sphinx==8.1.3
+sphinx-autobuild==2024.10.3
+sphinx-book-theme==1.1.3
+sphinx-markdown-tables==0.0.17
+sphinx-rtd-theme==3.0.2
+sphinx_design==0.6.1
+sphinx_press_theme==0.9.1
+sphinxcontrib-applehelp==2.0.0
+sphinxcontrib-devhelp==2.0.0
+sphinxcontrib-htmlhelp==2.1.0
+sphinxcontrib-jquery==4.1
+sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-qthelp==2.0.0
+sphinxcontrib-serializinghtml==2.0.0
+starlette==0.41.3
+tabulate==0.9.0
+tomli @ file:///home/conda/feedstock_root/build_artifacts/tomli_1733256695513/work
+tornado @ file:///home/conda/feedstock_root/build_artifacts/tornado_1732615905931/work
+typing_extensions==4.12.2
+tzdata @ file:///home/conda/feedstock_root/build_artifacts/python-tzdata_1727140567071/work
+unicodedata2 @ file:///home/conda/feedstock_root/build_artifacts/unicodedata2_1729704561929/work
+urllib3==2.2.3
+uvicorn==0.32.1
+watchfiles==1.0.0
+websockets==14.1
+wheel==0.43.0

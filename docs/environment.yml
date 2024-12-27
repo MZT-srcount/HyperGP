@@ -1,0 +1,28 @@
+name: base
+channels:
+  - conda-forge
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+  - defaults
+dependencies:
+  - _anaconda_depends
+  - python=3.11
+  - setuptools
+  - pip
+  - wheel
+  - anaconda-anon-usage
+  - anaconda-catalogs
+  - anaconda-client
+  - anaconda-project
+  - anaconda-navigator
+  - conda[version='>=23.7']
+  - conda-build
+  - conda-content-trust
+  - conda-libmamba-solver
+  - conda-pack
+  - conda-package-handling
+  - conda-package-streaming
+  - conda-token
+  - conda-verify
+prefix: /home/mazt/Software/anaconda3
