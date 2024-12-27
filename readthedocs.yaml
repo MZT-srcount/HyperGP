@@ -9,7 +9,6 @@ build:
   os: ubuntu-20.04
   tools:
     python: "3.12"
-    gcc
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
