@@ -6,9 +6,12 @@
 
 PyGP is an open-source high performance framework, providing convenient distributed heterogeneous accleration for the custom prototyping of Genetic Programming (GP) and its variants. To ensure both flexibility and high performance, PyGP encompasses a variety of technologies for GP characteristics to provide convenient prototyping and efficient acceleration of various custom algorithms. To enable quick prototyping within PyGP for research on different types of genetic programming and different application fields, adaptability is also emphasized in building the PyGP framework, to support a wide range of potential applications, such as symbolic regression and image classification. 
 
+- HyperGP document: xxxxx
+
 
 # Installation
 HyperGP is available on PyPI and can be installed with:
+
 ```
 pip install HyperGP
 ```
@@ -101,3 +104,24 @@ pip install HyperGP
     # Iteratively run
     optimizer.run(100)
 ```
+
+
+## Main Features
+
+**The performance of each algorithm was tested** (see *Results* section in their respective page),
+you can take a look at the issues [#48](https://github.com/DLR-RM/stable-baselines3/issues/48) and [#49](https://github.com/DLR-RM/stable-baselines3/issues/49) for more details.
+
+We also provide detailed logs and reports on the [OpenRL Benchmark](https://wandb.ai/openrlbenchmark/sb3) platform.
+
+
+| **Features**                | **Stable-Baselines3** |
+| --------------------------- | ----------------------|
+| Documentation               | :heavy_check_mark: |
+| Custom environments         | :heavy_check_mark: |
+| Acceleration for Custom algorithms           | :heavy_check_mark: |
+| Acceleration for Custom monitors             | :heavy_check_mark: |
+| Acceleration for Custom representation | :heavy_check_mark: |
+| Multi-node parallel         | :heavy_check_mark: |
+| GPU-Acceleration            | :heavy_check_mark: |
+| Hybrid Acceleration with other library   | :heavy_check_mark: |
+| High code coverage          | :heavy_check_mark: |
