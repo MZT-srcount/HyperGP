@@ -124,3 +124,16 @@ pip install HyperGP
     # Iteratively run
     optimizer.run(100)
 ```
+
+# User-cases and Applications
+
+
+| **Example**                | **Link** |
+| --------------------------- | ----------------------|
+| Example on Symbolic Regression               | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
+| Example on Image Classification        | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
+| Multi-Population Run           | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
+| Multi-task Run             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
+| Custom Representation             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
+| Custom operators             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
+| Hybrid with other libraries             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
