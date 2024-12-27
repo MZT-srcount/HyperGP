@@ -25,6 +25,9 @@ A rich acceleration mode are supported.
 | Hybrid Acceleration with other library   | :heavy_check_mark: |
 | High code coverage          | :heavy_check_mark: |
 
+# Documentation
+Documentation is available online: xxx
+
 # Installation
 HyperGP is available on PyPI and can be installed with:
 
