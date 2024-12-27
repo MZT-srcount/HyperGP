@@ -9,12 +9,29 @@ PyGP is an open-source high performance framework, providing convenient distribu
 - HyperGP document: xxxxx
 
 
+## Main Features
+
+A rich acceleration mode are supported.
+
+| **Features**                | **Stable-Baselines3** |
+| --------------------------- | ----------------------|
+| Documentation               | :heavy_check_mark: |
+| Custom environments         | :heavy_check_mark: |
+| Acceleration for Custom algorithms           | :heavy_check_mark: |
+| Acceleration for Custom monitors             | :heavy_check_mark: |
+| Acceleration for Custom representation | :heavy_check_mark: |
+| Multi-node parallel         | :heavy_check_mark: |
+| GPU-Acceleration            | :heavy_check_mark: |
+| Hybrid Acceleration with other library   | :heavy_check_mark: |
+| High code coverage          | :heavy_check_mark: |
+
 # Installation
 HyperGP is available on PyPI and can be installed with:
 
 ```
 pip install HyperGP
 ```
+
 
 # Quick Start for Symbolic Regression
 
@@ -104,20 +121,3 @@ pip install HyperGP
     # Iteratively run
     optimizer.run(100)
 ```
-
-
-## Main Features
-
-A rich acceleration mode are supported.
-
-| **Features**                | **Stable-Baselines3** |
-| --------------------------- | ----------------------|
-| Documentation               | :heavy_check_mark: |
-| Custom environments         | :heavy_check_mark: |
-| Acceleration for Custom algorithms           | :heavy_check_mark: |
-| Acceleration for Custom monitors             | :heavy_check_mark: |
-| Acceleration for Custom representation | :heavy_check_mark: |
-| Multi-node parallel         | :heavy_check_mark: |
-| GPU-Acceleration            | :heavy_check_mark: |
-| Hybrid Acceleration with other library   | :heavy_check_mark: |
-| High code coverage          | :heavy_check_mark: |
