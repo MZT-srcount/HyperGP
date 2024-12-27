@@ -1,1 +1,1 @@
-from HyperGP.tensor_libs.nn_ops import *
+from ..tensor_libs.nn_ops import *
