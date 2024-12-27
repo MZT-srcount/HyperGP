@@ -9,7 +9,7 @@ from HyperGP.base.base_struct import States
 from HyperGP import executor, Tensor
 import HyperGP
 from HyperGP.monitors import statistics_record
-from HyperGP import nn
+from HyperGP import library, nn
 
 def set_rdmask(size):
     return [random.randint(0, size - 1) for i in range(size)]
