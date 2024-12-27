@@ -1,5 +1,8 @@
 from .base import *
 from .tensor_libs import *
+from . import library
+from . import operators as ops
+from . import monitors
 from .src import NDArray
 from .workflow import GpOptimizer
 from .operators.execution.tree_exec import executor
@@ -8,6 +11,3 @@ from . import tensor, nn
 from .library.primitive_set import PrimitiveSet
 from .library.representation import *
 from .library import representation
-from . import library
-from . import operators as ops
-from . import monitors
