@@ -35,6 +35,7 @@ HyperGP is available on PyPI and can be installed with:
 pip install HyperGP
 ```
 
+Supported Operation Systems: ``Linux``
 
 # Quick Start for Symbolic Regression
 
