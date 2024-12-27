@@ -10,6 +10,7 @@
 import os
 import sys
 import pathlib
+from HyperGP import nn
 
 # path = pathlib.Path(__file__).resolve() / '..' / '..'
 sys.path.insert(0, os.path.abspath("."))
