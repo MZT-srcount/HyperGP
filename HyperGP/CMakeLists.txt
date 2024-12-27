@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(HyperGP_Tensor_backend)
+project(PyGP_Tensor_backend)
 
 execute_process(COMMAND python3-config --prefix
     OUTPUT_VARIABLE Python_ROOT_DIR)
@@ -32,12 +32,12 @@ list(APPEND LINKER_LIBS ${pybind11_LIBRARIES})
 
 ### tree2graph_transformer
 
-add_library(HyperGP_utils MODULE src/utils_backend.cc)
-target_link_libraries(HyperGP_utils PUBLIC ${LINKER_LIBS})
-pybind11_extension(HyperGP_utils)
-pybind11_strip(HyperGP_utils)
+add_library(pygp_utils MODULE src/utils_backend.cc)
+target_link_libraries(pygp_utils PUBLIC ${LINKER_LIBS})
+pybind11_extension(pygp_utils)
+pybind11_strip(pygp_utils)
 
-set_target_properties(HyperGP_utils
+set_target_properties(pygp_utils
     PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
     CXX_VISIBILITY_PRESET "hidden"
@@ -48,19 +48,19 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 ### cash_backend
-add_library(HyperGP_cash MODULE src/cash_backend.cc)
-target_link_libraries(HyperGP_cash PUBLIC ${LINKER_LIBS})
-pybind11_extension(HyperGP_cash)
-pybind11_strip(HyperGP_cash)
+add_library(pygp_cash MODULE src/cash_backend.cc)
+target_link_libraries(pygp_cash PUBLIC ${LINKER_LIBS})
+pybind11_extension(pygp_cash)
+pybind11_strip(pygp_cash)
 
-set_target_properties(HyperGP_cash
+set_target_properties(pygp_cash
     PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
     CXX_VISIBILITY_PRESET "hidden"    
 )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set_property(TARGET HyperGP_cash PROPERTY LINK_OPTIONS -undefined dynamic_lookup)
+    set_property(TARGET pygp_cash PROPERTY LINK_OPTIONS -undefined dynamic_lookup)
 endif()
 
 ############################################################################
