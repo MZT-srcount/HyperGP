@@ -74,6 +74,11 @@ autodoc_typehints_format = "short"
 autodoc_typehints = "description"
 autodoc_class_signature = "separated"
 
+
+# coverage_c_path = []
+# coverage_c_regexes = {}
+# coverage_ignore_c_items = {}
+
 autodoc_typehints_description_target = "all"
 
 autosummary_generate = True
