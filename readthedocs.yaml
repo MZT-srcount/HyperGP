@@ -11,15 +11,15 @@ build:
     python: "mambaforge-22.9"
 
 conda:
-  environment: docs/environment_docs.yml
+  environment: docs/environment.yml
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
    configuration: docs/source/conf.py
 
-python:
-   install:
-   - requirements: docs/requirements_docs.txt
+# python:
+#    install:
+#    - requirements: docs/requirements_docs.txt
 
 # Optionally, but recommended,
 # declare the Python requirements required to build your documentation
