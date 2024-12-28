@@ -43,7 +43,6 @@ Supported Operation Systems: ``Linux``
       - ``Population`` to initialize population
       - ``PrimitiveSet`` to set the primitives and terminals
       - ``executor`` to execute the expression
-      - ``Tensor`` to store and compute datas
       - ``GpOptimizer`` a workflow manager, to iter overall process 
 
    - *operators*:
@@ -54,34 +53,24 @@ Supported Operation Systems: ``Linux``
 
 ```
     import random, HyperGP
-    from HyperGP import Population, PrimitiveSet, executor, Tensor, GpOptimizer
-    from HyperGP.library.operators import RandTrCrv, RandTrMut
     from HyperGP.states import ProgBuildStates, ParaStates
 ```
 
 2. **generate the training data**: We can use ``Tensor`` module to generate the array, or use to encapsulate the ``numpy.ndarray`` or the ``list``
 ```
     # Generate training set
-    input_array = Tensor.uniform(0, 10, size=(2, 10000))
+    input_array = HyperGP.uniform(0, 10, size=(2, 10000))
     target = HyperGP.exp((input_array[0] + 1) ** 2) / (input_array[1] + input_array[0])
 ```
-3. **build the primitive set**: To run the program, we will need  the ``PrimitiveSet`` module to define the used primitives and terminals
+3. **Initialize the basic elements**: To run the program, a ``PrimitiveSet`` module is needed to define the used primitives and terminals, ``Population`` module is used to initialize the population, ``GPOptimizer`` is a workflow used to manage the evolution process.
 
 ```
     # Generate primitive set
-    pset = PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2)])
-```
-
-4. **initialize population**: with the ``PrimitiveSet``, we can use ``Population`` to initialize the population
-```
+    pset = HyperGP.PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2)])
     # Init population
-    pop = Population(pop_size=100, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), parallel=False)
-```
-5. **initialize** ``GpOptimizer`` **workflow module**: To run a workflow, we should first initialize it and set the states we use to the GpOptimizer.
-```
+    pop = HyperGP.Population(pop_size=100, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), parallel=False)
     # Init workflow
-    optimizer = GpOptimizer()
-
+    optimizer = HyperGP.GpOptimizer()
     # Register relevant states
     optimizer.status_init(
         p_list=pop.states['progs'].indivs,
@@ -89,36 +78,28 @@ Supported Operation Systems: ``Linux``
         fit_list = pop.states['progs'].fitness)
 ```
 
-6. **build the evaluation function**
+
+4. **build the self-define evaluation function**: Here we use rmse as an example.
 ```
     def evaluation(output, target):
-        r1 = HyperGP.sub(output, target, dim_0=1)
+        r1 = HyperGP.tensor.sub(output, target, dim_0=1)
         return (r1 * r1).sum(dim=1).sqrt()
 ```
 
-7. **set mask**
-
-```   
-    # Set Mask
-    def set_prmask(size):
-        cdd = random.sample(range(size), size)
-        return [[cdd[i] for i in range(0, size, 2)], [cdd[i] for i in range(1, size, 2)]]
-```
-
-8. **add the component user want to iteratively run**
+5. **add the component user want to iteratively run**
 ```
     # Add components
     optimizer.iter_component(
-        ParaStates(func=RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
-                    mask=set_prmask(100)),
-        ParaStates(func=RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), True], to=["p_list"],
+        ParaStates(func=HyperGP.ops.RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
+                    mask=[list(random.sample(range(100), 50)), list(random.sample(range(100), 50))]),
+        ParaStates(func=HyperGP.ops.RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), True], to=["p_list"],
                     mask=[random.sample(range(100), 100), 1, 1]),
-        ParaStates(func=ExecGPU(), source=["p_list", "input", "pset"], to=["output", None],
+        ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None],
                     mask=[1, 1, 1]),
         ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"],
                     mask=[1, 1]))
 ```
-9. **run the optimizer**
+6. **run the optimizer**
 ```
     # Iteratively run
     optimizer.run(100)
