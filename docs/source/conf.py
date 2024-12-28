@@ -19,6 +19,8 @@ sys.path.insert(0, os.path.abspath("../../"))
 # sys.path.insert(0, os.path.abspath('../..'))
 # sys.path.insert(0, os.path.abspath(path))
 
+from HyperGP import ops
+import HyperGP
 from HyperGP import nn
 
 
