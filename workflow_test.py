@@ -1,15 +1,9 @@
-from HyperGP.workflow import GpOptimizer
 import numpy as np
 import random
-from HyperGP.library.population import Population, ProgBuildStates
-from HyperGP.operators.crossover.tree_crv import RandTrCrv
-from HyperGP.operators.mutation.tree_mut import RandTrMut
-from HyperGP.library.primitive_set import PrimitiveSet
+from HyperGP.library.population import ProgBuildStates
 from HyperGP.base.base_struct import States
-from HyperGP import executor, Tensor
 import HyperGP
 from HyperGP.monitors import statistics_record
-from HyperGP import library, nn
 
 def set_rdmask(size):
     return [random.randint(0, size - 1) for i in range(size)]
@@ -40,23 +34,23 @@ def run():
     
     
     pop_size = 1000
-    pset = PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.tensor.add, 2),('sub', HyperGP.tensor.sub, 2)])
-    pop = Population(parallel=False)
+    pset = HyperGP.PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.tensor.add, 2),('sub', HyperGP.tensor.sub, 2)])
+    pop = HyperGP.Population(parallel=False)
     pop.initPop(pop_size=pop_size, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=100))
     pop.stateRegister(cprogs = pop.states['progs'].copy)
     input = np.random.uniform(0, 10, size=(1, 10000))
     
     prog_list = [States(prog_1=pop.states['cprogs'].indivs[i], prog_2=pop.states['cprogs'].indivs[i + 1]) for i in range(0, len(pop.states['cprogs'].indivs), 2)]
     
-    output_tensor = Tensor(np.random.uniform(0, 10, size=(10000)))
+    output_tensor = HyperGP.Tensor(np.random.uniform(0, 10, size=(10000)))
 
     print(".........optimizer test begin.........")
-    optimizer = GpOptimizer()
+    optimizer = HyperGP.GpOptimizer()
 
     optimizer.status_init(
         p_list=pop.states['cprogs'].indivs,
         fit_list = pop.states['cprogs'].fitness,
-        input=Tensor(input),
+        input=HyperGP.Tensor(input),
         pset=pset,
         output=None
     )
@@ -65,13 +59,13 @@ def run():
     from HyperGP.library.states import ParaStates
 
     optimizer.iter_component(
-        ParaStates(func=RandTrCrv(), source=[optimizer.p_list, optimizer.p_list], to=[optimizer.p_list, optimizer.p_list],
+        ParaStates(func=HyperGP.ops.RandTrCrv(), source=[optimizer.p_list, optimizer.p_list], to=[optimizer.p_list, optimizer.p_list],
                     mask=set_prmask(pop_size)),
         ParaStates(func=shuffle, source=[optimizer.p_list], to=[optimizer.p_list],
                     mask=[1]),
-        ParaStates(func=RandTrMut(), source=[optimizer.p_list, ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=100), True], to=[optimizer.p_list],
+        ParaStates(func=HyperGP.ops.RandTrMut(), source=[optimizer.p_list, ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=100), True], to=[optimizer.p_list],
                     mask=[set_armask(pop_size), 1, 1]),
-        ParaStates(func=executor, source=[optimizer.p_list, "input", pset], to=["output", None],
+        ParaStates(func=HyperGP.executor, source=[optimizer.p_list, "input", pset], to=["output", None],
                     mask=[1, 1, 1]),
         ParaStates(func=evaluation, source=["output", output_tensor], to=[optimizer.fit_list],
                     mask=[1, 1])
