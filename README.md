@@ -105,7 +105,7 @@ Supported Operation Systems: ``Linux``
     optimizer.run(100)
 ```
 
-# User-cases and Applications
+# More User-cases and Applications
 
 
 | **Example**                | **Link** |
