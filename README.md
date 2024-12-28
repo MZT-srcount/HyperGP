@@ -2,18 +2,16 @@
 
 [![License: BSD 3-Clause License](https://img.shields.io/badge/License-BSD%203--Clause-red)](https://github.com/MZT-srcount/HyperGP/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/badge/PyPI-support-blue)](https://pypi.org/project/HyperGP/)
-[![readthedocs](https://img.shields.io/badge/docs-passing-green)]()
+[![readthedocs](https://img.shields.io/badge/docs-passing-green)](https://hypergp.readthedocs.io/en/latest/)
 
 PyGP is an open-source high performance framework, providing convenient distributed heterogeneous accleration for the custom prototyping of Genetic Programming (GP) and its variants. To ensure both flexibility and high performance, PyGP encompasses a variety of technologies for GP characteristics to provide convenient prototyping and efficient acceleration of various custom algorithms. To enable quick prototyping within PyGP for research on different types of genetic programming and different application fields, adaptability is also emphasized in building the PyGP framework, to support a wide range of potential applications, such as symbolic regression and image classification. 
-
-- HyperGP document: xxxxx
 
 
 ## Main Features
 
 A rich acceleration mode are supported.
 
-| **Features**                | **Stable-Baselines3** |
+| **Features**                | **HyperGP** |
 | --------------------------- | ----------------------|
 | Documentation               | :heavy_check_mark: |
 | Custom environments         | :heavy_check_mark: |
@@ -26,7 +24,7 @@ A rich acceleration mode are supported.
 | High code coverage          | :heavy_check_mark: |
 
 # Documentation
-Documentation is available online: xxx
+Documentation is available online: https://hypergp.readthedocs.io/en/latest/
 
 # Installation
 HyperGP is available on PyPI and can be installed with:
