@@ -1,6 +1,5 @@
 import numpy as np
 from .device import BackendDevice
-from . import ndarray_cuda_backend
 # from . import ndarray_cpu_backend
 # from . import ndarray_np_backend
 from functools import reduce
@@ -39,6 +38,7 @@ def cpu():
     return BackendDevice("cpu", ndarray_cpu_backend)
 
 def gpu():
+    from . import ndarray_cuda_backend
     return BackendDevice("gpu", ndarray_cuda_backend)
 
 #[ ]TODO: change the computation way through changing the default_device
@@ -46,6 +46,7 @@ def default_device():
     return gpu()
 
 def get_porperties():
+    from . import ndarray_cuda_backend
     return BackendDevice("gpu", ndarray_cuda_backend).get_properties()
 
 def check_gpu():
