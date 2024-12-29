@@ -1,7 +1,7 @@
 import time
-from HyperGP.library.representation.TGP import TGPIndv
+from HyperGP.libs.representation.TGP import TGPIndv
 
-from HyperGP.library.primitive_set import PrimitiveSet
+from HyperGP.libs.primitive_set import PrimitiveSet
 from HyperGP.mods.tree2graph import ExecutableGen
 import itertools
 import numpy as np

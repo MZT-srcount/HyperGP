@@ -6,5 +6,6 @@ workflow_test.py
 /docs/build/
 build/
 dist/
+/HyperGP.egg-info
 
 

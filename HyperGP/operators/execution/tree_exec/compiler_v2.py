@@ -1,7 +1,7 @@
 
 import numpy as np
 from functools import reduce
-from HyperGP.library.representation.TGP import TGPIndv
+from HyperGP.libs.representation.TGP import TGPIndv
 import operator, psutil
 import HyperGP, math, time, itertools
 from HyperGP import Tensor

@@ -1,6 +1,6 @@
 import time
 
-from HyperGP.library.primitive_set import PrimitiveSet
+from HyperGP.libs.primitive_set import PrimitiveSet
 import pycuda.driver as cuda
 from HyperGP.src.cuda_backend import memcopy_2D, mod
 from pycuda.autoinit import context as sync

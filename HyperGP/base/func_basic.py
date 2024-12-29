@@ -111,7 +111,7 @@ class BasePrimitiveSet:
 
     def __registerPrimitive(self, primitive_set, **kwargs):
         for primitive in primitive_set:
-            if not isinstance(primitive[1], TensorOp) or not hasattr(primitive[1], "idx"):
+            if not hasattr(primitive[1], "idx"):##not isinstance(primitive[1], TensorOp) or 
                 self.mod = False
                 break
         for primitive in primitive_set:
@@ -166,7 +166,7 @@ class BasePrimitiveSet:
         """
         # self.used_func_set.append(Func(idx=self.func_count, name=primitive[0], arity=primitive[2], **kwargs))
         
-        if isinstance(func, TensorOp) and self.mod and hasattr(func, "idx"):
+        if self.mod and hasattr(func, "idx"):#isinstance(func, TensorOp) and 
             states_basic = States(idx=func.idx, func=func)
         else:
             states_basic = States(idx=self.func_count, func=func)
@@ -175,7 +175,7 @@ class BasePrimitiveSet:
             states.update(states_basic)
         else:
             states = states_basic
-        if isinstance(func, TensorOp) and self.mod and hasattr(func, "idx"):
+        if self.mod and hasattr(func, "idx"):#isinstance(func, TensorOp) and 
             self.used_primitive_set[name] = Func(name=name, arity=arity, states=states, **kwargs)
             self.func_count = max(func.idx + 1, self.func_count)
         else:

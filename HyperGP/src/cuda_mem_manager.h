@@ -160,7 +160,7 @@ public:
     {
         // std::unique_lock<std::mutex> locker(m_mtx);
         for(auto &stream: m_elementListMap){
-            CHECK(cudaSetDevice(stream.first));
+            cudaSetDevice(stream.first);//CHECK(cudaSetDevice(stream.first));
             for (auto &it : stream.second)
             {
                 auto &elementList = it.second;

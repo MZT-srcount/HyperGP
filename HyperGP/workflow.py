@@ -1,16 +1,17 @@
 import multiprocessing.process
 from .base.base_struct import BaseStruct
 from HyperGP.mods import AvailableMods, __Mods
-import types
+# import types
 import inspect
-import itertools
+# import itertools
 import random
 from HyperGP.base.base_struct import States
-from HyperGP.library.states import WorkflowStates
+from HyperGP.libs.states import WorkflowStates
 from HyperGP.src import device as set_device, query_device
 import multiprocessing
 import copy
-from HyperGP.src import check_gpu
+# from HyperGP.src import check_gpu
+from tqdm import tqdm
 
 class GpOptimizer(BaseStruct, __Mods):
     """
@@ -165,11 +166,13 @@ class GpOptimizer(BaseStruct, __Mods):
 
     def _run_independent(self, iter, device=[0]):
         
-        for i in range(iter):
-            print('iteration: %d'%i)
+        for i in tqdm(range(iter)):
+            # print('iteration: %d'%i)
             for j, (func, from_l, to_l, mask_l) in enumerate(zip(self.components['func_list'], self.components['from_list'], self.components['to_list'], self.components['mask_list'])):
+                # print('func: ', func)
                 for k in range(len(from_l)):
                     if isinstance(from_l[k], str):
+                        # print(from_l[k], len(self.workflowstates[from_l[k]]), mask_l[k], func)
                         from_l[k] = self.workflowstates[from_l[k]]
                 states = [States(**{self.components['param_list'][j][k]:source[mask_l[k][z]] for k, source in enumerate(from_l) if isinstance(mask_l[k], list)}) for z in range(self.components['unit_size_list'][j])]
                 states_kwargs = {self.components['param_list'][j][k]:from_l[k] for k, mask in enumerate(mask_l) if isinstance(mask, int)}
@@ -181,27 +184,37 @@ class GpOptimizer(BaseStruct, __Mods):
                 if len(to_l) == 0:
                     continue
                 for k, key in enumerate(to_l):
-                    if key == None or isinstance(key, str):
+                    if key == None:
+                        continue
+                    if isinstance(key, str):
+                        self.workflowstates[key] = None
                         continue
                     key.clear()
                 if len(to_l) > 1:
+                    result = [[] for i in range(len(to_l))]
                     for k, key in enumerate(to_l):
                         if key == None:
                             continue
-                        result = []
                         for res in rets:
                             if isinstance(res[k], list):
-                                result.extend(res[k])
+                                result[k].extend(res[k])
                             else:
-                                result.append(res[k])
+                                result[k].append(res[k])
 
                         if isinstance(key, str):
-                            if len(result) > 1:
-                                self.workflowstates[key] = result
+                            # print('key', len(result[k]), len(rets), [len(res) for res in rets])
+                            if len(result[k]) > 1:
+                                if self.workflowstates[key] is not None:
+                                    self.workflowstates[key].extend(result[k])
+                                else:
+                                    self.workflowstates[key] = result[k]
                             else:
-                                self.workflowstates[key] = result[0]
+                                if self.workflowstates[key] is not None:
+                                    self.workflowstates[key].extend(result[k][0])
+                                else:
+                                    self.workflowstates[key] = result[k][0]
                         else:
-                            key.extend(result)
+                            key.extend(result[k])
                 else:
                     result = []
                     for res in rets:
@@ -272,7 +285,7 @@ class GpOptimizer(BaseStruct, __Mods):
             >>> for optimizer in optimizers:
             ...    optimizer.wait()
         """
-        print(self.status)
+        # print(self.status)
         new_workflow = GpOptimizer(**self.status)
         new_workflow._update(copy.deepcopy(self._package, {}))
         return new_workflow

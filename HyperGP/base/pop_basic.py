@@ -2,7 +2,7 @@ import sys
 
 import HyperGP.mods
 from HyperGP.base.base_struct import BaseStruct
-from HyperGP.library.states import PopBaseStates
+from HyperGP.libs.states import PopBaseStates
 import inspect
 from HyperGP.mods import AvailableMods, __Mods
 

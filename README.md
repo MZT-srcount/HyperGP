@@ -59,7 +59,7 @@ Supported Operation Systems: ``Linux``
 2. **generate the training data**: We can use ``Tensor`` module to generate the array, or use to encapsulate the ``numpy.ndarray`` or the ``list``
 ```
     # Generate training set
-    input_array = HyperGP.uniform(0, 10, size=(2, 10000))
+    input_array = HyperGP.uniform(0, 10, shape=(2, 10000))
     target = HyperGP.exp((input_array[0] + 1) ** 2) / (input_array[1] + input_array[0])
 ```
 3. **Initialize the basic elements**: To run the program, a ``PrimitiveSet`` module is needed to define the used primitives and terminals, ``Population`` module is used to initialize the population, ``GPOptimizer`` is a workflow used to manage the evolution process.

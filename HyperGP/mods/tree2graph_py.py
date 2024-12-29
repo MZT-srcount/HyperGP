@@ -1,5 +1,5 @@
-from HyperGP.library.representation.TGP import TGPIndv
-from HyperGP.library.primitive_set import PrimitiveSet
+from HyperGP.libs.representation.TGP import TGPIndv
+from HyperGP.libs.primitive_set import PrimitiveSet
 from HyperGP.base.func_basic import Constant
 from HyperGP.base.base_struct import States
 from .cash_manager import CashManager

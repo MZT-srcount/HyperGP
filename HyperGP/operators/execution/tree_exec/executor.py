@@ -1,5 +1,5 @@
 import time
-from HyperGP.library.primitive_set import PrimitiveSet
+from HyperGP.libs.primitive_set import PrimitiveSet
 from HyperGP.mods.tree2graph import ExecutableGen
 from HyperGP.operators.execution.tree_exec.compiler_v2 import compile_v2
 from HyperGP.operators.execution.tree_exec.compiler_v1 import compile_v1

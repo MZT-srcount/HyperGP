@@ -1,6 +1,6 @@
-from HyperGP.library.states import VarStates, ProgBuildStates
-from HyperGP.library.utils import HalfAndHalf
-from HyperGP.library.regression.tree import TreeNode
+from HyperGP.libs.states import VarStates, ProgBuildStates
+from HyperGP.libs.utils import HalfAndHalf
+from HyperGP.libs.regression.tree import TreeNode
 import random
 
 class MutMethod:

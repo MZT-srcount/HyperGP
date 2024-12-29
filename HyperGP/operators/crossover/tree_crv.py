@@ -1,6 +1,6 @@
 
-from HyperGP.library.representation.TGP import TGPIndv
-import random
+from HyperGP.libs.representation.TGP import TGPIndv
+import random, copy
 
 class CrossoverMethod:
     def __call__(self, *args, **kwargs):
@@ -10,6 +10,8 @@ class RandTrCrv(CrossoverMethod):
     def __call__(self, prog_1, prog_2, rd_state=None):
         if rd_state is None:
             rd_state = random
+        if prog_1 == prog_2:
+            prog_2 = copy.deepcopy(prog_1)
         node_list_1 = prog_1.list()
         node_list_2 = prog_2.list()
 
