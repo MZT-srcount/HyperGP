@@ -16,8 +16,8 @@ A rich acceleration mode are supported.
 | Documentation               | :heavy_check_mark: |
 | Custom environments         | :heavy_check_mark: |
 | Acceleration for Custom algorithms           | :heavy_check_mark: |
-| Acceleration for Custom monitors             | :heavy_check_mark: |
-| Acceleration for Custom representation | :heavy_check_mark: |
+| Support for Custom monitors             | :heavy_check_mark: |
+| Support for Custom representation | :heavy_check_mark: |
 | Multi-node parallel         | :heavy_check_mark: |
 | GPU-Acceleration            | :heavy_check_mark: |
 | Hybrid Acceleration with other library   | :heavy_check_mark: |
@@ -27,13 +27,21 @@ A rich acceleration mode are supported.
 Documentation is available online: https://hypergp.readthedocs.io/en/latest/
 
 # Installation
-HyperGP is available on PyPI and can be installed with:
+
+## Binaries
+
+HyperGP is available on PyPI and can be simply installed with:
 
 ```
 pip install HyperGP
 ```
 
 Supported Operation Systems: ``Linux``
+
+## From Source
+
+If you are installing from source, you will need:
+
 
 # Quick Start for Symbolic Regression
 
