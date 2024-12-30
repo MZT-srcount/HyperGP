@@ -1,9 +1,5 @@
-import random, HyperGP
-from HyperGP import states
-from HyperGP.represent import *
-from HyperGP import Population
+import random, HyperGP, numpy as np
 from HyperGP.states import ProgBuildStates, ParaStates
-import numpy as np
 
 # Generate training set
 input_array = HyperGP.Tensor(np.random.uniform(0, 10, size=(2, 10000)))

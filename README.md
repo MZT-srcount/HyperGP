@@ -71,15 +71,15 @@ $ conda activate HyperGP
       - such as ``ProgBuildStates``, ``ParaStates``
 
 ```
-    import random, HyperGP
+    import random, HyperGP, numpy as np
     from HyperGP.states import ProgBuildStates, ParaStates
 ```
 
 2. **generate the training data**: We can use ``Tensor`` module to generate the array, or use to encapsulate the ``numpy.ndarray`` or the ``list``
 ```
     # Generate training set
-    input_array = HyperGP.uniform(0, 10, shape=(2, 10000))
-    target = HyperGP.exp((input_array[0] + 1) ** 2) / (input_array[1] + input_array[0])
+    input_array = HyperGP.Tensor(np.random.uniform(0, 10, size=(2, 10000)))
+    target = HyperGP.exp((input_array[0] + 1) * (input_array[0] + 1)) / (input_array[1] + input_array[0])
 ```
 3. **Initialize the basic elements**: To run the program, a ``PrimitiveSet`` module is needed to define the used primitives and terminals, ``Population`` module is used to initialize the population, ``GPOptimizer`` is a workflow used to manage the evolution process.
 
@@ -87,12 +87,14 @@ $ conda activate HyperGP
     # Generate primitive set
     pset = HyperGP.PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2)])
     # Init population
-    pop = HyperGP.Population(pop_size=100, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), parallel=False)
+    pop = HyperGP.Population()
+    pop.initPop(pop_size=100, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000))
     # Init workflow
     optimizer = HyperGP.GpOptimizer()
     # Register relevant states
+    # print(len(pop.states['progs'].indivs))
     optimizer.status_init(
-        p_list=pop.states['progs'].indivs,
+        p_list=pop.states['progs'].indivs, target=target,
         input=input_array,pset=pset,output=None,
         fit_list = pop.states['progs'].fitness)
 ```
@@ -117,6 +119,16 @@ $ conda activate HyperGP
                     mask=[1, 1, 1]),
         ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"],
                     mask=[1, 1]))
+    optimizer.iter_component(
+        ParaStates(func=HyperGP.ops.RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
+                    mask=[list(random.sample(range(100), 50)), list(random.sample(range(100), 50))],
+        ParaStates(func=HyperGP.ops.RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), True], to=["p_list"],
+                    mask=[random.sample(range(100), 100), 1, 1]),
+        ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None],
+                    mask=[1, 1, 1]),
+        ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"],
+                    mask=[1, 1])
+    )
 ```
 6. **run the optimizer**
 ```
