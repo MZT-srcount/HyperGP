@@ -26,20 +26,7 @@ HyperGP assumes that you already understand the basic concepts of Genetic Progra
    :maxdepth: 2
    :caption: API Reference:
 
-   API Reference/workflow
-   API Reference/Executor
-   API Reference/monitor
-   API Reference/Population
-   API Reference/PrimitiveSet
-   API Reference/Representation
-   API Reference/States
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Reference:
-
-   API Reference/Tensor
+   API Reference/Tensor/index
    API Reference/workflow
    API Reference/Executor
    API Reference/monitor
@@ -64,7 +51,8 @@ HyperGP assumes that you already understand the basic concepts of Genetic Progra
    :maxdepth: 2
    :caption: User Library:
 
-   User Library/ Crossover
-   User Guide/ Mutation
-   User Guide/ Operators
-   User Guide/ Selection
+   User Library/Mutation/index
+   User Library/Crossover/index
+   User Library/Operators/index
+   User Library/Selection/index
+   User Library/Algorithms/index

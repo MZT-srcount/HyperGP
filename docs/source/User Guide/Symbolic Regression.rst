@@ -1,4 +1,4 @@
-Example on Symbolic Regression
+Symbolic Regression
 =====================================
 GP
 GEP
