@@ -43,6 +43,7 @@ Supported Operation Systems: ``Linux``
 If you are installing from source, you will need:
 - Python 3.8 or later
 - A compiler that fully supports C++11, such as gcc (gcc 8.5.0 or newer is required, on Linux)
+- ![NVIDIA CUDA support](https://developer.nvidia.com/cuda-downloads), a driver version higher than 12.2, with a runtime version >= 10.1.105
 
 An example of environment setup in Linux is shown below:
 
