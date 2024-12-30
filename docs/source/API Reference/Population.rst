@@ -1,7 +1,7 @@
 ``Population`` module
 =======================
 
-.. currentmodule:: HyperGP.library
+.. currentmodule:: HyperGP.libs
 .. autoclass:: Population
     :members:
     :undoc-members:

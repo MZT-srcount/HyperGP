@@ -1,7 +1,7 @@
 GP Representation: ``Individual`` Module
 ===========================================
 
-.. currentmodule:: HyperGP.library
+.. currentmodule:: HyperGP.libs
 
 .. autosummary:: 
     ::repeat:

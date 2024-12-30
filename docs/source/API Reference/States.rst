@@ -1,7 +1,7 @@
 States
 ==============
 
-.. currentmodule:: HyperGP.library.states
+.. currentmodule:: HyperGP.states
 
 
 .. autosummary::
