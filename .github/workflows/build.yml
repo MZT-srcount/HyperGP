@@ -59,6 +59,7 @@ jobs:
       # 5. 使用 auditwheel 修复 wheel 文件
       - name: Repair wheel with auditwheel
         run: |
+          mkdir -p dist
           for whl in wheelhouse/*.whl; do
             auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
           done
