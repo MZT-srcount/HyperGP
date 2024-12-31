@@ -140,3 +140,5 @@ $ conda activate HyperGP
 | Custom Representation             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
 | Custom operators             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
 | Hybrid with other libraries             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
+
+# Call for Contributions
