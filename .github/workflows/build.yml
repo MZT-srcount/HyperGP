@@ -24,14 +24,13 @@ jobs:
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib" >> $GITHUB_ENV
           echo "CUDA_HOME=$HOME/miniconda" >> $GITHUB_ENV
           source $HOME/miniconda/etc/profile.d/conda.sh  # 直接加载 conda.sh
-          sudo conda init bash  # 初始化 conda 的 shell 配置
-          source ~/.bashrc  # 重新加载 shell 配置
 
       # 2. 设置 Python 环境
       - name: Create conda environment
         run: |
-          sudo conda create -n myenv-${{ matrix.python-version }} python=${{ matrix.python-version }}
-          sudo conda activate myenv-${{ matrix.python-version }}
+          conda init
+          conda create -n myenv-${{ matrix.python-version }} python=${{ matrix.python-version }}
+          conda activate myenv-${{ matrix.python-version }}
         
       
       - name: Install CUDA toolkit with conda
