@@ -16,10 +16,10 @@ execute_process(COMMAND python3 -m pybind11 --cmakedir
 find_package(pybind11 PATHS ${__pybind_path})
 
 if(NOT MSVC)
-    set(CMAKE_CXX_FLAGS "-std=c++11 -O3 -march=native ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-std=c++11 -O3 -march=x86-64 ${CMAKE_CXX_FLAGS}")
     set(CMAKE_CUDA_STANDARD 14)
 else()
-    set(CMAKE_CXX_FLAGS "/std:c++11 -O3 -march=native ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "/std:c++11 -O3 -march=x86-64 ${CMAKE_CXX_FLAGS}")
     set(CMAKE_CUDA_STANDARD 14)
 endif()
 
@@ -121,4 +121,25 @@ if(CUDA_FOUND)
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
     )
+endif()
+message(STATUS "Python3_INCLUDE_DIRS: ${CMAKE_INSTALL_LIBDIR}")
+
+# Install pygp_utils modules
+install(TARGETS pygp_utils
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hypergp/lib
+        )
+
+# Install pygp_cash modules
+install(TARGETS pygp_cash
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hypergp/lib
+        )
+
+# Install CUDA modules（if exists）
+if(CUDA_FOUND)
+    install(TARGETS ndarray_cuda_backend
+            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hypergp/lib
+            )
+    install(TARGETS executor
+            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hypergp/lib
+            )
 endif()

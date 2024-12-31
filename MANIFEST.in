@@ -1,6 +1,7 @@
-include HyperGP/src/ndarray_cuda_backend.cpython-312-x86_64-linux-gnu.so
-include HyperGP/src/pygp_cash.cpython-312-x86_64-linux-gnu.so
-include HyperGP/src/pygp_utils.cpython-312-x86_64-linux-gnu.so
-include HyperGP/src/executor.cpython-312-x86_64-linux-gnu.so
-include HyperGP/src/executor.cpython-312-x86_64-linux-gnu.so
-include HyperGP/mods/tree2graph_transformer.cpython-312-x86_64-linux-gnu.so
+include HyperGP/mods/*.cu
+include HyperGP/mods/*.cc
+include CMakeLists.txt
+include HyperGP/src/*.cc
+include HyperGP/src/*.cu
+include HyperGP/*.py
+recursive-include HyperGP *

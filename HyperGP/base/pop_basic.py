@@ -22,7 +22,7 @@ class PopBase(BaseStruct, __Mods):
 
         '''init state'''
         self.stateRegister(progs=PopBaseStates(), pprogs=PopBaseStates())
-        print('self.states', self.states)
+        # print('self.states', self.states)
         # '''load the inner module'''
         if parallel:
             self.enable('parallel')

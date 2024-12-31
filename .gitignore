@@ -2,7 +2,11 @@ setup.cfg
 .pypirc
 res.txt
 workflow_test.py
+cibuildwheel.toml
+setup_1.py
 
+/_skbuild
+/wheelhouse
 /docs/build/
 build/
 dist/

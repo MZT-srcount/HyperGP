@@ -43,4 +43,4 @@ optimizer.iter_component(
     )
 
 # print("---------3------------")
-optimizer.run(50)
+optimizer.run(100)

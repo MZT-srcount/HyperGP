@@ -1,35 +1,63 @@
-from setuptools import setup, find_packages  # 导入setuptools打包工具
+import os
+import sys
+from setuptools import setup, find_packages
+from skbuild import setup as skbuild_setup
+from skbuild.cmaker import CMaker
+from skbuild.exceptions import SKBuildError
 
-# with open("README.md", "r", encoding="utf-8") as fh:
-#     long_description = fh.read()
+# 检查 CUDA 是否可用
+def is_cuda_available():
+    return True
 
+# 获取 CUDA 路径
+def get_cuda_path():
+    cuda_path = os.getenv("CUDA_HOME", None)
+    if cuda_path is None:
+        cuda_path = "/usr/local/cuda"  # 默认 CUDA 路径
+    return cuda_path
 
+SUPPORTED_CUDA_VERSIONS = ["10.1"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
 
-setup(
-  name = 'HyperGP',         # How you named your package folder (MyLib)
-#   include_package_data=True,
-  packages = find_packages(),#['HyperGP'],   # Chose the same as "name"
-#   package_data={'': ['HyperGP/src/*.so', 'HyperGP/mod/*.so']},
-  version = '0.1.03',      # Start with a small number and increase it with every change you make
-  license='BSD-3-Clause',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
-  description = 'skip',   # Give a short description about your library
-  author = 'Zhitong Ma',                   # Type in your name
-  author_email = 'cszhitongma@mail.scut.edu.cn',      # Type in your E-Mail
-  url = 'https://github.com/MZT-srcount/HyperGP',   # Provide either the link to your github or to your website
-  # download_url = 'https://github.com/MZT-srcount/HyperGP.git',    # I explain this later on
-  keywords = ['Genetic Programming', 'GPU Acceleration', 'Open-Source'],   # Keywords that define your package best
-  install_requires=[
-      'numpy',
-      'dill',
-      'matplotlib',
-      'psutil',
-      'tqdm'
-      ],
-  classifiers=[
-        "Programming Language :: Python :: 3.12",
-        # "Programming Language :: Python :: 3.13",
-        # "Programming Language :: Python :: 3.14",
-        'License :: OSI Approved :: BSD License',
-        "Operating System :: Unix",
-    ],
-)
+# 定义 CMake 配置
+def get_cmake_args(cuda_version):
+    cmake_args = [
+        f"-DPython_ROOT_DIR={os.path.dirname(sys.executable)}",
+        f"-DPYTHON_EXECUTABLE={sys.executable}",
+        f"-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-{cuda_version}",
+        "-DCUDA_NVCC_FLAGS=--default-stream per-thread;-O3",
+    ]
+    return cmake_args
+
+# 使用 scikit-build 进行构建
+for cuda_version in SUPPORTED_CUDA_VERSIONS:
+    try:
+        skbuild_setup(
+            name='HyperGP',#f'HyperGP_cuda_{cuda_version.replace(".", "_")}',
+            version = '0.1.03', 
+            description="A high performance heterogeneous parallel GP framework",
+            author = 'Zhitong Ma',                   # Type in your name
+            author_email = 'cszhitongma@mail.scut.edu.cn',      # Type in your E-Mail
+            url = 'https://github.com/MZT-srcount/HyperGP',   # Provide either the link to your github or to your website
+            license='BSD-3-Clause', 
+            packages=find_packages(),
+            cmake_args=get_cmake_args(cuda_version),
+            cmake_source_dir="./HyperGP/",  # CMakeLists.txt 所在的目录
+            cmake_minimum_required_version="3.2",
+            keywords = ['Genetic Programming', 'GPU Acceleration', 'Open-Source'],   # Keywords that define your package best
+            install_requires=[
+                'numpy',
+                'dill',
+                'matplotlib',
+                'psutil',
+                'tqdm'
+            ],
+            python_requires=">=3.9, <=3.13", 
+            package_data={
+                'HyperGP': ['*.so'],  # 包含 .so 文件
+            },
+            include_package_data=True,  # 确保包含非 Python 文件
+        )
+    except SKBuildError as e:
+        print(f"An error occurred while building for CUDA {cuda_version}:", file=sys.stderr)
+        print(str(e), file=sys.stderr)
+        sys.exit(1)

@@ -62,7 +62,6 @@ class Population(PopBase):
         # print(str(para[0]))
         # print(para[0].prog_para)
         # assert 0==1
-
         if 'parallel' in self.module_states:
             self.states['progs'].indivs = self.parallel(build, para)
         else:

@@ -46,7 +46,7 @@ class MultiProcess(ModBase):
         self.funcs = {}
 
     def _popSet(self, pop):
-        print("process, popSet")
+        # print("process, popSet")
         self.core_count = multiprocessing.cpu_count() if multiprocessing.cpu_count() < 10 else 10
         # pop.process_manager = self
         '''initialize the process pool and keep it in the class, to avoid the frequent intialization'''
