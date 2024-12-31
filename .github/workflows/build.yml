@@ -18,6 +18,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Miniconda
+        run: |
+          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+          bash miniconda.sh -b -p $HOME/miniconda
+          echo "$HOME/miniconda/bin" >> $GITHUB_PATH
+
+      - name: Install CUDA toolkit with conda
+        run: |
+          conda install -c nvidia cudatoolkit=10.1
+      
+      - name: Set CUDA environment variables
+        run: |
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib" >> $GITHUB_ENV
+          echo "CUDA_HOME=$HOME/miniconda" >> $GITHUB_ENV
+
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
