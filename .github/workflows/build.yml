@@ -43,7 +43,6 @@ jobs:
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
-          conda activate myenv-${{ matrix.python-version }}
           python -m pip install --upgrade pip
           python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
           
