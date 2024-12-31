@@ -4,8 +4,9 @@ Installation Guide
 Prerequisites
 -----------------------
 
-Python Version: 3.12+
-Supported Operation Systems: ``Linux``
+- Python Version: 3.12+
+
+- Supported Operation Systems: ``Linux``
 
 Binaries
 -------------------------
