@@ -4,7 +4,7 @@ on: [push, pull_request]  # 触发条件：当有 push 或 pull_request 时运�
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # 使用最新的 Ubuntu 环境
+    runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
