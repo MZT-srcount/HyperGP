@@ -64,8 +64,22 @@ jobs:
           done
 
       # 6. 上传生成的 wheel 文件
+      - name: Check network connection
+        run: |
+          ping -c 5 github.com
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: wheels
           path: wheelhouse/*.whl
+          retry-on-error: true
+          retry-attempts: 5
+          retry-wait-time: 10000  # 10 秒
+          chunk-size: 10485760  # 10 MB
+
+      - name: Publish distribution 📦 to PyPI
+        if: startsWith(github.ref, 'refs/tags')
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
