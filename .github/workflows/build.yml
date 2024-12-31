@@ -22,7 +22,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build auditwheel scikit-build
+          pip install build auditwheel
+          pip install scikit-build
 
      # 4. 构建 wheel 文件
       - name: Build wheel
