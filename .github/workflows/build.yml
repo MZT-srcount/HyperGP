@@ -63,6 +63,14 @@ jobs:
             auditwheel repair "$whl" --wheel-dir wheelhouse/ --plat manylinux_2_24_x86_64
           done
 
+      - name: Repair wheel with auditwheel
+        run: |
+          mkdir -p wheelhouse
+          for whl in dist/*.whl; do
+            auditwheel repair "$whl" --wheel-dir wheelhouse/ --plat manylinux_2_24_x86_64
+          done
+          ls -l wheelhouse/  # 列出 wheelhouse 目录中的文件
+          
       # 9. 发布到 PyPI
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
