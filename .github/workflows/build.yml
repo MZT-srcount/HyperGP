@@ -62,7 +62,7 @@ jobs:
           mkdir -p dist
           for whl in wheelhouse/*.whl; do
             auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
-          
+          done
           for gz in wheelhouse/*.tar.gz; do
             mv "$gz" dist/
           done
