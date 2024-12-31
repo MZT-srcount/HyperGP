@@ -70,4 +70,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          path: wheelhouse/*.whl  # 修改为 wheelhouse 目录
+          path-to-publish: wheelhouse  # 修改为 wheelhouse 目录
