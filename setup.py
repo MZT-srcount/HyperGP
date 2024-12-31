@@ -33,7 +33,7 @@ for cuda_version in SUPPORTED_CUDA_VERSIONS:
     try:
         skbuild_setup(
             name='HyperGP',#f'HyperGP_cuda_{cuda_version.replace(".", "_")}',
-            version = '0.1.1-1', 
+            version = '0.1.1', 
             description="A high performance heterogeneous parallel GP framework",
             author = 'Zhitong Ma',                   # Type in your name
             author_email = 'cszhitongma@mail.scut.edu.cn',      # Type in your E-Mail
