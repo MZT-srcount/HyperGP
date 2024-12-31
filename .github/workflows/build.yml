@@ -29,8 +29,8 @@ jobs:
       - name: Create conda environment
         run: |
           conda create -n myenv-${{ matrix.python-version }} python=${{ matrix.python-version }}
-          conda init
-          conda activate myenv-${{ matrix.python-version }}
+          sudo conda init
+          sudo conda activate myenv-${{ matrix.python-version }}
         
       
       - name: Install CUDA toolkit with conda
