@@ -28,8 +28,8 @@ jobs:
       # 2. 设置 Python 环境
       - name: Create conda environment
         run: |
-          conda init
           conda create -n myenv-${{ matrix.python-version }} python=${{ matrix.python-version }}
+          conda init
           conda activate myenv-${{ matrix.python-version }}
         
       
