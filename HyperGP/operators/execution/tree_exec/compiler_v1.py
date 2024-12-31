@@ -1,8 +1,8 @@
 
 import operator
 import time
-from HyperGP import Tensor, NDArray, States
-from HyperGP.src import executor
+from .... import Tensor, NDArray, States
+from ....src import executor
 import numpy as np
 
 class ExecutableExpr:

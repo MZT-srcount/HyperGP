@@ -1,11 +1,9 @@
 
 import numpy as np
 from functools import reduce
-from HyperGP.libs.representation.TGP import TGPIndv
 import operator, psutil
 import HyperGP, math, time, itertools
-from HyperGP import Tensor
-import gc
+from .... import Tensor
 
 class ExecutableExpr:
     def __init__(self, exec_list, pset, states):
