@@ -142,13 +142,10 @@ class GpOptimizer(BaseStruct, __Mods):
         self.components['mask_list'] = []
         self.components['pdefine_list'] = []
         self.components['param_list'] = []
-        self.components['unit_size_list'] = []
         self.components['func_list'] = []
         self.components['mfunc_list'] = []
 
         for func in args:
-            max_len = self._mask_check(func["mask"])
-            self.components['unit_size_list'].append(max_len)
             signature = inspect.signature(func["func"])
             params = signature.parameters
             self.components['from_list'].append(func["source"])
@@ -168,18 +165,22 @@ class GpOptimizer(BaseStruct, __Mods):
         
         for i in tqdm(range(iter)):
             # print('iteration: %d'%i)
-            for j, (func, from_l, to_l, mask_l) in enumerate(zip(self.components['func_list'], self.components['from_list'], self.components['to_list'], self.components['mask_list'])):
+            
+            mask_list = [[mask() if callable(mask) else mask for mask in masks] for masks in self.components['mask_list']]
+            unit_size_list = [self._mask_check(mask) for mask in mask_list]
+
+            for j, (func, from_l, to_l, mask_l) in enumerate(zip(self.components['func_list'], self.components['from_list'], self.components['to_list'], mask_list)):
                 # print('func: ', func)
                 for k in range(len(from_l)):
                     if isinstance(from_l[k], str):
                         # print(from_l[k], len(self.workflowstates[from_l[k]]), mask_l[k], func)
                         from_l[k] = self.workflowstates[from_l[k]]
-                states = [States(**{self.components['param_list'][j][k]:source[mask_l[k][z]] for k, source in enumerate(from_l) if isinstance(mask_l[k], list)}) for z in range(self.components['unit_size_list'][j])]
+                states = [States(**{self.components['param_list'][j][k]:source[mask_l[k][z]] for k, source in enumerate(from_l) if isinstance(mask_l[k], list)}) for z in range(unit_size_list[j])]
                 states_kwargs = {self.components['param_list'][j][k]:from_l[k] for k, mask in enumerate(mask_l) if isinstance(mask, int)}
                 if len(states) == 0:
                     states = [States(**states_kwargs)]
                     states_kwargs = {}
-                funcs = [func] * self.components['unit_size_list'][j] if not isinstance(func, list) else [self._mask_index(func, mask) for mask in self.components['mfunc_list'][j]]
+                funcs = [func] * unit_size_list[j] if not isinstance(func, list) else [self._mask_index(func, mask) for mask in self.components['mfunc_list'][j]]
                 rets = self.__parallel(funcs, states, device, self.components['pdefine_list'][j], kwargs=states_kwargs)
                 if len(to_l) == 0:
                     continue

@@ -119,15 +119,6 @@ $ conda activate HyperGP
         ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None],
                     mask=[1, 1, 1]),
         ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"],
-                    mask=[1, 1]))
-    optimizer.iter_component(
-        ParaStates(func=HyperGP.ops.RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
-                    mask=[list(random.sample(range(100), 50)), list(random.sample(range(100), 50))],
-        ParaStates(func=HyperGP.ops.RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), True], to=["p_list"],
-                    mask=[random.sample(range(100), 100), 1, 1]),
-        ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None],
-                    mask=[1, 1, 1]),
-        ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"],
                     mask=[1, 1])
     )
 ```
