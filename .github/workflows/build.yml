@@ -24,15 +24,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install build auditwheel scikit-build
 
-      # 4. 构建 wheel 文件
+     # 4. 构建 wheel 文件
       - name: Build wheel
+        run: |
+          python -m build --wheel
+          
+      # 5. 使用 auditwheel 修复 wheel 文件
+      - name: Repair wheel with auditwheel
         run: |
           mkdir -p wheelhouse
           for whl in dist/*.whl; do
             auditwheel repair "$whl" --wheel-dir wheelhouse/
           done
 
-      # 5. 上传生成的 wheel 文件
+      # 6. 上传生成的 wheel 文件
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
