@@ -53,7 +53,6 @@ jobs:
      # 4. 构建 wheel 文件
       - name: Build wheel
         run: |
-          python -m build --wheel --no-isolation
           python ./setup.py sdist bdist_wheel 
           mv dist wheelhouse
           
@@ -64,7 +63,7 @@ jobs:
           for whl in wheelhouse/*.whl; do
             auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
           
-          for gz in wheelhouse/*.gz; do
+          for gz in wheelhouse/*.tar.gz; do
             mv "$gz" dist/
           done
 
