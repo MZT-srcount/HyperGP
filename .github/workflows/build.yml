@@ -54,15 +54,14 @@ jobs:
       - name: Build wheel
         run: |
           python -m build --wheel --no-isolation
+          mv /dist /wheelhouse
           
       # 5. 使用 auditwheel 修复 wheel 文件
       - name: Repair wheel with auditwheel
         run: |
-          mkdir -p wheelhouse
-          for whl in dist/*.whl; do
-            auditwheel repair "$whl" --wheel-dir wheelhouse/ --plat manylinux_2_24_x86_64
+          for whl in wheelhouse/*.whl; do
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
           done
-          ls -l wheelhouse/  # 列出 wheelhouse 目录中的文件
 
       # 9. 发布到 PyPI
       - name: Publish to PyPI
@@ -70,4 +69,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          path-to-publish: wheelhouse  # 修改为 wheelhouse 目录
