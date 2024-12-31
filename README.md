@@ -29,6 +29,12 @@ Documentation is available online: https://hypergp.readthedocs.io/en/latest/Quic
 
 # Installation
 
+## Prerequisites
+
+- python_requires=">=3.9, <=3.13"
+- [NVIDIA CUDA support](https://developer.nvidia.com/cuda-downloads), with a runtime version >= 10.1.105
+- Supported Operation Systems: ``Linux``
+
 ## Binaries
 
 HyperGP is available on PyPI and can be simply installed with:
@@ -42,7 +48,7 @@ Supported Operation Systems: ``Linux``
 ## From Source
 
 If you are installing from source, you will need:
-- Python 3.12 or later
+
 - A compiler that fully supports C++11, such as gcc (gcc 8.5.0 or newer is required, on Linux)
 - [NVIDIA CUDA support](https://developer.nvidia.com/cuda-downloads), with a runtime version >= 10.1.105
 

@@ -4,9 +4,12 @@ Installation Guide
 Prerequisites
 -----------------------
 
-- Python Version: 3.12+
+- python_requires=">=3.9, <=3.13"
 
 - Supported Operation Systems: ``Linux``
+
+- [NVIDIA CUDA support](https://developer.nvidia.com/cuda-downloads), with a runtime version >= 10.1.105
+
 
 Binaries
 -------------------------
