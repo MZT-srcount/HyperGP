@@ -38,50 +38,41 @@ jobs:
         run: |
           source $HOME/miniconda/etc/profile.d/conda.sh  # 初始化 conda
           conda activate myenv-${{ matrix.python-version }}
-          conda install -c nvidia cudatoolkit=10.1 -y
+          conda install -c nvidia cudatoolkit=10.1
 
-      # 6. 安装构建工具
+      # 3. 安装构建工具
       - name: Install dependencies
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 初始化 conda
           conda activate myenv-${{ matrix.python-version }}
           python -m pip install --upgrade pip
           python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+          
 
-      # 7. 调试环境
       - name: Debug environment
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 初始化 conda
-          conda activate myenv-${{ matrix.python-version }}
           python -m pip list
           which python
-          python --version
           python -c "import skbuild; print(skbuild.__version__)"
-
-      # 8. 清理构建目录
+          
       - name: Clean build directories
         run: |
           rm -rf _skbuild/ dist/ build/
 
-      # 9. 构建 wheel 文件
+     # 4. 构建 wheel 文件
       - name: Build wheel
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 初始化 conda
-          conda activate myenv-${{ matrix.python-version }}
           python -m build --wheel --no-isolation
           mv dist wheelhouse
-
-      # 10. 使用 auditwheel 修复 wheel 文件
+          
+      # 5. 使用 auditwheel 修复 wheel 文件
       - name: Repair wheel with auditwheel
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 初始化 conda
-          conda activate myenv-${{ matrix.python-version }}
           mkdir -p dist
           for whl in wheelhouse/*.whl; do
             auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
           done
 
-      # 11. 发布到 PyPI
+      # 9. 发布到 PyPI
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
