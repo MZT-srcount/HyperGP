@@ -18,10 +18,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Clean build directories
-        run: |
-          rm -rf _skbuild/ dist/ build/
-
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
@@ -34,10 +30,14 @@ jobs:
           which python
           python -c "import skbuild; print(skbuild.__version__)"
           
+      - name: Clean build directories
+        run: |
+          rm -rf _skbuild/ dist/ build/
+          
      # 4. 构建 wheel 文件
       - name: Build wheel
         run: |
-          python -m build --wheel
+          python -m build --wheel --no-isolation
           
       # 5. 使用 auditwheel 修复 wheel 文件
       - name: Repair wheel with auditwheel
