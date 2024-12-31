@@ -32,7 +32,7 @@ An example of environment setup in Linux is shown below:
 .. code-block:: python
    :linenos:
    
-    $ conda create -y -n HyperGP
-    $ cd HyperGP
-    $ make all
-    $ conda activate HyperGP
+   $ conda env create -n HyperGP -f environment.yml
+   $ conda activate HyperGP
+   $ cd HyperGP
+   $ make all

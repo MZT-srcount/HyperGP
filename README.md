@@ -49,10 +49,10 @@ If you are installing from source, you will need:
 An example of environment setup in Linux is shown below:
 
 ```
-$ conda create -y -n HyperGP
+$ conda env create -n HyperGP -f environment.yml
+$ conda activate HyperGP
 $ cd HyperGP
 $ make all
-$ conda activate HyperGP
 ```
 
 # Quick Start for Symbolic Regression

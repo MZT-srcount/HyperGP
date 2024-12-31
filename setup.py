@@ -7,9 +7,9 @@ from setuptools import setup, find_packages  # 导入setuptools打包工具
 
 setup(
   name = 'HyperGP',         # How you named your package folder (MyLib)
-  include_package_data=True,
+#   include_package_data=True,
   packages = find_packages(),#['HyperGP'],   # Chose the same as "name"
-  package_data={'': ['HyperGP/src/*.so', 'HyperGP/mod/*.so']},
+#   package_data={'': ['HyperGP/src/*.so', 'HyperGP/mod/*.so']},
   version = '0.1.03',      # Start with a small number and increase it with every change you make
   license='BSD-3-Clause',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'skip',   # Give a short description about your library
@@ -27,8 +27,8 @@ setup(
       ],
   classifiers=[
         "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python :: 3.13",
-        "Programming Language :: Python :: 3.14",
+        # "Programming Language :: Python :: 3.13",
+        # "Programming Language :: Python :: 3.14",
         'License :: OSI Approved :: BSD License',
         "Operating System :: Unix",
     ],
