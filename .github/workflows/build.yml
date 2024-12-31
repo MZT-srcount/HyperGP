@@ -44,7 +44,7 @@ jobs:
         run: |
           mkdir -p wheelhouse
           for whl in dist/*.whl; do
-            auditwheel repair "$whl" --wheel-dir wheelhouse/
+            auditwheel repair "$whl" --wheel-dir wheelhouse/ --plat manylinux_2_24_x86_64
           done
 
       # 6. 上传生成的 wheel 文件
