@@ -74,7 +74,7 @@ set(CUDA_NVCC_FLAGS
 
 ### tensor backend
 
-find_package(CUDA)
+find_package(CUDA REQUIRED)
 if(CUDA_FOUND)
     message(STATUS "Found cuda, building cuda backend")
     include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} "src")

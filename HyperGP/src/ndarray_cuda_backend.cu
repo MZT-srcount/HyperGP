@@ -14,9 +14,9 @@
 #include <cublas_v2.h>
 #include<assert.h>
 
-#include "npp.h"
-#include "nppi.h"
-#include "npps.h"
+// #include "npp.h"
+// #include "nppi.h"
+// #include "npps.h"
 
 
 namespace py = pybind11;
@@ -2198,18 +2198,18 @@ namespace pygp_img{
         }
     };
 
-    std::vector<NppiMaskSize> mask_size = {
-        NPP_MASK_SIZE_1_X_3,
-        NPP_MASK_SIZE_1_X_5,
-        NPP_MASK_SIZE_3_X_1,
-        NPP_MASK_SIZE_5_X_1,
-        NPP_MASK_SIZE_5_X_5,
-        NPP_MASK_SIZE_7_X_7,
-        NPP_MASK_SIZE_9_X_9,
-        NPP_MASK_SIZE_11_X_11,
-        NPP_MASK_SIZE_13_X_13,
-        NPP_MASK_SIZE_15_X_15
-    };
+    // std::vector<NppiMaskSize> mask_size = {
+    //     NPP_MASK_SIZE_1_X_3,
+    //     NPP_MASK_SIZE_1_X_5,
+    //     NPP_MASK_SIZE_3_X_1,
+    //     NPP_MASK_SIZE_5_X_1,
+    //     NPP_MASK_SIZE_5_X_5,
+    //     NPP_MASK_SIZE_7_X_7,
+    //     NPP_MASK_SIZE_9_X_9,
+    //     NPP_MASK_SIZE_11_X_11,
+    //     NPP_MASK_SIZE_13_X_13,
+    //     NPP_MASK_SIZE_15_X_15
+    // };
     // [ ] TODO: The mask and roi_npp may meet mistake in border
     #define CONV_INPUT_SHARED 512
     template<typename scalar_t, typename sscalar_t>
@@ -2283,1182 +2283,1182 @@ namespace pygp_img{
     //     int thread_ona_posi = threadIdx.x % kernel_size + threadIdx.x * kernel_size;
     // }
 
-    template<typename scalar_t>
-    void gaussian_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    // template<typename scalar_t>
+    // void gaussian_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
         
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        void * cSrc_tmp = nullptr;
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            if(typeid(scalar_t) == typeid(uint8_t)){
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     void * cSrc_tmp = nullptr;
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                nppiFilterGauss_8u_C1R(
-                    reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             nppiFilterGauss_8u_C1R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                 
-                nppiFilterGauss_16u_C1R(
-                    (Npp16u*)(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-        }
-    }
-    template<typename scalar_t>
-    void gaussian_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        void * cSrc_tmp = nullptr;
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            if(typeid(scalar_t) == typeid(uint8_t)){
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             nppiFilterGauss_16u_C1R(
+    //                 (Npp16u*)(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    // }
+    // template<typename scalar_t>
+    // void gaussian_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     void * cSrc_tmp = nullptr;
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                nppiFilterGauss_8u_C3R(
-                    reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             nppiFilterGauss_8u_C3R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                 
-                nppiFilterGauss_16u_C3R(
-                    (Npp16u*)(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-        }
-    }
-    template<typename scalar_t>
-    void gaussian_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        void * cSrc_tmp = nullptr;
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            if(typeid(scalar_t) == typeid(uint8_t)){
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             nppiFilterGauss_16u_C3R(
+    //                 (Npp16u*)(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    // }
+    // template<typename scalar_t>
+    // void gaussian_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     void * cSrc_tmp = nullptr;
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                nppiFilterGauss_8u_C4R(
-                    reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             nppiFilterGauss_8u_C4R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                 
-                nppiFilterGauss_16u_C4R(
-                    (Npp16u*)(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-        }
-    }
+    //             nppiFilterGauss_16u_C4R(
+    //                 (Npp16u*)(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    // }
 
-    template<typename scalar_t>
-    void laplacian_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        void * cSrc_tmp = nullptr;
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            if(typeid(scalar_t) == typeid(uint8_t)){
+    // template<typename scalar_t>
+    // void laplacian_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     void * cSrc_tmp = nullptr;
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
                 
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                nppiFilterLaplace_8u_C1R(
-                    reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else if(typeid(scalar_t) == typeid(int16_t)){
+    //             nppiFilterLaplace_8u_C1R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(int16_t)){
                 
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                 
-                nppiFilterLaplace_16s_C1R(
-                    reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp16s*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-        }
-    }
-    template<typename scalar_t>
-    void laplacian_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        void * cSrc_tmp = nullptr;
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            if(typeid(scalar_t) == typeid(uint8_t)){
+    //             nppiFilterLaplace_16s_C1R(
+    //                 reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16s*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    // }
+    // template<typename scalar_t>
+    // void laplacian_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     void * cSrc_tmp = nullptr;
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
                 
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                nppiFilterLaplace_8u_C3R(
-                    reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else if(typeid(scalar_t) == typeid(int16_t)){
+    //             nppiFilterLaplace_8u_C3R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(int16_t)){
                 
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                 
-                nppiFilterLaplace_16s_C3R(
-                    reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp16s*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-        }
-    }
-    template<typename scalar_t>
-    void laplacian_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        void * cSrc_tmp = nullptr;
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            if(typeid(scalar_t) == typeid(uint8_t)){
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             nppiFilterLaplace_16s_C3R(
+    //                 reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16s*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    // }
+    // template<typename scalar_t>
+    // void laplacian_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, int pre_dim, int post_dim){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     void * cSrc_tmp = nullptr;
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                nppiFilterLaplace_8u_C4R(
-                    reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else if(typeid(scalar_t) == typeid(int16_t)){
-                mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //             nppiFilterLaplace_8u_C4R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(int16_t)){
+    //             mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //             nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                nppiFilterLaplace_16s_C4R(
-                    reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                    nstep_a * sizeof(scalar_t),
-                    reinterpret_cast<Npp16s*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_size[mask]
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-        }
-    }
+    //             nppiFilterLaplace_16s_C4R(
+    //                 reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                 nstep_a * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16s*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_size[mask]
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    // }
     
-    template<typename scalar_t>
-    void sobel_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int pre_dim, int post_dim, bool horiz=true){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a), *out_ptr;
-        void* cSrc_tmp = nullptr;
-        // cudaDeviceSynchronize();
-        // cudaError_t err = cudaGetLastError();
-        // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-        // printf("0000\n");
-        ewise_async_1op(a, out);
-        // cudaDeviceSynchronize();
-        // err = cudaGetLastError();
-        // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-        // printf("-1-1-1-1\n");
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        // cudaDeviceSynchronize();
-        // err = cudaGetLastError();
-        // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-        // printf("-2-2-2-2\n");
+    // template<typename scalar_t>
+    // void sobel_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int pre_dim, int post_dim, bool horiz=true){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a), *out_ptr;
+    //     void* cSrc_tmp = nullptr;
+    //     // cudaDeviceSynchronize();
+    //     // cudaError_t err = cudaGetLastError();
+    //     // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    //     // printf("0000\n");
+    //     ewise_async_1op(a, out);
+    //     // cudaDeviceSynchronize();
+    //     // err = cudaGetLastError();
+    //     // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    //     // printf("-1-1-1-1\n");
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     // cudaDeviceSynchronize();
+    //     // err = cudaGetLastError();
+    //     // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    //     // printf("-2-2-2-2\n");
         
-        // assert(pre_dim * post_dim <= a_handle.size && pre_dim * post_dim <= out.size);
-        for(int z = 0; z < pre_dim; ++z){
-            // cudaDeviceSynchronize();
-            // err = cudaGetLastError();
-            // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-            // printf("1111, %d, %d, %d, %d, %d, %d, %d, %d\n", z, post_dim, pre_dim, nstep_a, a_handle.size, out.size, roi_npp.width, roi_npp.height);
-            out_ptr = out.ptr + z * post_dim;
-            if (horiz){
-                // state_check("0");
-                if(typeid(scalar_t) == typeid(uint8_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //     // assert(pre_dim * post_dim <= a_handle.size && pre_dim * post_dim <= out.size);
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         // cudaDeviceSynchronize();
+    //         // err = cudaGetLastError();
+    //         // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    //         // printf("1111, %d, %d, %d, %d, %d, %d, %d, %d\n", z, post_dim, pre_dim, nstep_a, a_handle.size, out.size, roi_npp.width, roi_npp.height);
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if (horiz){
+    //             // state_check("0");
+    //             if(typeid(scalar_t) == typeid(uint8_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelHoriz_8u_C1R(
-                        reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp8u*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                    // state_check("2");
-                }
-                else if(typeid(scalar_t) == typeid(int16_t)){
+    //                 nppiFilterSobelHoriz_8u_C1R(
+    //                     reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp8u*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //                 // state_check("2");
+    //             }
+    //             else if(typeid(scalar_t) == typeid(int16_t)){
                     
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelHoriz_16s_C1R(
-                        reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp16s*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else{
-                    std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-                }
-                // state_check("1");
-            }
-            else{
-                if(typeid(scalar_t) == typeid(uint8_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelHoriz_16s_C1R(
+    //                     reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp16s*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else{
+    //                 std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //             }
+    //             // state_check("1");
+    //         }
+    //         else{
+    //             if(typeid(scalar_t) == typeid(uint8_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelVert_8u_C1R(
-                        reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp8u*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else if(typeid(scalar_t) == typeid(int16_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelVert_8u_C1R(
+    //                     reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp8u*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else if(typeid(scalar_t) == typeid(int16_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelVert_16s_C1R(
-                        reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp16s*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else{
-                    std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-                }
-            }
+    //                 nppiFilterSobelVert_16s_C1R(
+    //                     reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp16s*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else{
+    //                 std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //             }
+    //         }
             
-            // state_check("2");
-            if (z % OVERLAP_IMG_TIME == 0 && z != 0){
-                cudaDeviceSynchronize();
-            }
-            // state_check("3");
-            // cudaDeviceSynchronize();
-            // cudaError_t err = cudaGetLastError();
-            // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-            // printf("2222\n");
-        }
-    }
-    template<typename scalar_t>
-    void sobel_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int pre_dim, int post_dim, bool horiz=true){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        void* cSrc_tmp = nullptr;
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            if (horiz){
-                if(typeid(scalar_t) == typeid(uint8_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //         // state_check("2");
+    //         if (z % OVERLAP_IMG_TIME == 0 && z != 0){
+    //             cudaDeviceSynchronize();
+    //         }
+    //         // state_check("3");
+    //         // cudaDeviceSynchronize();
+    //         // cudaError_t err = cudaGetLastError();
+    //         // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    //         // printf("2222\n");
+    //     }
+    // }
+    // template<typename scalar_t>
+    // void sobel_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int pre_dim, int post_dim, bool horiz=true){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     void* cSrc_tmp = nullptr;
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if (horiz){
+    //             if(typeid(scalar_t) == typeid(uint8_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelHoriz_8u_C3R(
-                        reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp8u*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else if(typeid(scalar_t) == typeid(int16_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelHoriz_8u_C3R(
+    //                     reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp8u*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else if(typeid(scalar_t) == typeid(int16_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelHoriz_16s_C3R(
-                        reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp16s*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else{
-                    std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-                }
-            }
-            else{
-                if(typeid(scalar_t) == typeid(uint8_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelHoriz_16s_C3R(
+    //                     reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp16s*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else{
+    //                 std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //             }
+    //         }
+    //         else{
+    //             if(typeid(scalar_t) == typeid(uint8_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelVert_8u_C3R(
-                        (Npp8u*)(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp8u*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else if(typeid(scalar_t) == typeid(int16_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelVert_8u_C3R(
+    //                     (Npp8u*)(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp8u*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else if(typeid(scalar_t) == typeid(int16_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelVert_16s_C3R(
-                        reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp16s*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else{
-                    std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-                }
-            }
-            cudaDeviceSynchronize();
-        }
-    }
-    template<typename scalar_t>
-    void sobel_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int pre_dim, int post_dim, bool horiz=true){
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        void* cSrc_tmp = nullptr;
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            if (horiz){
-                if(typeid(scalar_t) == typeid(uint8_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelVert_16s_C3R(
+    //                     reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp16s*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else{
+    //                 std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //             }
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    // }
+    // template<typename scalar_t>
+    // void sobel_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int pre_dim, int post_dim, bool horiz=true){
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     void* cSrc_tmp = nullptr;
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if (horiz){
+    //             if(typeid(scalar_t) == typeid(uint8_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelHoriz_8u_C4R(
-                        reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp8u*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else if(typeid(scalar_t) == typeid(int16_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelHoriz_8u_C4R(
+    //                     reinterpret_cast<Npp8u*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp8u*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else if(typeid(scalar_t) == typeid(int16_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelHoriz_16s_C4R(
-                        reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp16s*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else{
-                    std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-                }
-            }
-            else{
-                if(typeid(scalar_t) == typeid(uint8_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelHoriz_16s_C4R(
+    //                     reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp16s*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else{
+    //                 std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //             }
+    //         }
+    //         else{
+    //             if(typeid(scalar_t) == typeid(uint8_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelVert_8u_C4R(
-                        (Npp8u*)(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp8u*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else if(typeid(scalar_t) == typeid(int16_t)){
-                    mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-                    Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                    NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
-                    nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
+    //                 nppiFilterSobelVert_8u_C4R(
+    //                     (Npp8u*)(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp8u*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else if(typeid(scalar_t) == typeid(int16_t)){
+    //                 mem_pool_alloc((roi_npp.width + 2) * (roi_npp.height + 2) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //                 Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //                 NppiSize c_roi_npp = {roi_npp.width + 2, roi_npp.height + 2};
+    //                 nppiCopyConstBorder_16u_C1R(reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + 2) * sizeof(scalar_t), c_roi_npp, 1, 1, 0);
                     
-                    nppiFilterSobelVert_16s_C4R(
-                        reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
-                        nstep_a * sizeof(scalar_t),
-                        reinterpret_cast<Npp16s*>(out_ptr),
-                        nstep_out * sizeof(scalar_t),
-                        roi_npp
-                    );
-                }
-                else{
-                    std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-                }
-            }
-            cudaDeviceSynchronize();
-        }
-    }
+    //                 nppiFilterSobelVert_16s_C4R(
+    //                     reinterpret_cast<Npp16s*>(cSrc + nstep_a + 2 + 1),
+    //                     nstep_a * sizeof(scalar_t),
+    //                     reinterpret_cast<Npp16s*>(out_ptr),
+    //                     nstep_out * sizeof(scalar_t),
+    //                     roi_npp
+    //                 );
+    //             }
+    //             else{
+    //                 std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //             }
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    // }
 
-    template<typename scalar_t>
-    void median_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
-        NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    // template<typename scalar_t>
+    // void median_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
+    //     NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
                 
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        void* cSrc_tmp = nullptr;
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     void* cSrc_tmp = nullptr;
         
-        Npp32u buffer_size;
-        for(int z = 0; z < pre_dim; ++z){
-            // printf("1111, %d, %d, %d, %d, %d, %d, %d, %d\n", z, post_dim, pre_dim, nstep_a, a_handle.size, out.size, roi_npp.width, roi_npp.height);
+    //     Npp32u buffer_size;
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         // printf("1111, %d, %d, %d, %d, %d, %d, %d, %d\n", z, post_dim, pre_dim, nstep_a, a_handle.size, out.size, roi_npp.width, roi_npp.height);
             
-            void* buffer_tmp = nullptr;
-            out_ptr = out.ptr + z * post_dim;
-            mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-            if(typeid(scalar_t) == typeid(uint8_t)){
+    //         void* buffer_tmp = nullptr;
+    //         out_ptr = out.ptr + z * post_dim;
+    //         mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
                 
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                // nppiCopyWrapBorder_8u_C1R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
-                nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x, 0);
-                NppStatus success1 = nppiFilterMedianGetBufferSize_8u_C1R(c_roi_npp, mask_npp, &buffer_size);
-                if (buffer_size != 0){
-                    mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
-                }
-                Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             // nppiCopyWrapBorder_8u_C1R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x, 0);
+    //             NppStatus success1 = nppiFilterMedianGetBufferSize_8u_C1R(c_roi_npp, mask_npp, &buffer_size);
+    //             if (buffer_size != 0){
+    //                 mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
+    //             }
+    //             Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                // printf("%d, %d\n", sizeof(Npp8u), sizeof(scalar_t));
-                // assert(sizeof(Npp8u) == sizeof(scalar_t));
-                nppiFilterMedian_8u_C1R(
-                    reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp,
-                    buffer
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             // printf("%d, %d\n", sizeof(Npp8u), sizeof(scalar_t));
+    //             // assert(sizeof(Npp8u) == sizeof(scalar_t));
+    //             nppiFilterMedian_8u_C1R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp,
+    //                 buffer
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
                 
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                nppiCopyWrapBorder_16u_C1R (reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             nppiCopyWrapBorder_16u_C1R (reinterpret_cast<Npp16u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
 
-                NppStatus success1 = nppiFilterMedianGetBufferSize_16u_C1R(c_roi_npp, mask_npp, &buffer_size);
-                if (buffer_size != 0){
-                    mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
-                }
-                Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
+    //             NppStatus success1 = nppiFilterMedianGetBufferSize_16u_C1R(c_roi_npp, mask_npp, &buffer_size);
+    //             if (buffer_size != 0){
+    //                 mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
+    //             }
+    //             Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterMedian_16u_C1R(
-                    reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp,
-                    buffer
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-            if (buffer_size != 0){
-                cuda_mem_pool.free(buffer_size, buffer_tmp, out.device_id, out.event_sign);
-            }
-            if (z % OVERLAP_IMG_TIME == 0 && z != 0){
-                cudaDeviceSynchronize();
-            }
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-    }
-    template<typename scalar_t>
-    void median_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
-        NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterMedian_16u_C1R(
+    //                 reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp,
+    //                 buffer
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    //         if (buffer_size != 0){
+    //             cuda_mem_pool.free(buffer_size, buffer_tmp, out.device_id, out.event_sign);
+    //         }
+    //         if (z % OVERLAP_IMG_TIME == 0 && z != 0){
+    //             cudaDeviceSynchronize();
+    //         }
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    // }
+    // template<typename scalar_t>
+    // void median_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
+    //     NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
     
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        void* cSrc_tmp = nullptr;
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     void* cSrc_tmp = nullptr;
         
-        Npp32u buffer_size;
-        for(int z = 0; z < pre_dim; ++z){
-            void* buffer_tmp = nullptr;
-            out_ptr = out.ptr + z * post_dim;
-            mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-            if(typeid(scalar_t) == typeid(uint8_t)){
+    //     Npp32u buffer_size;
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         void* buffer_tmp = nullptr;
+    //         out_ptr = out.ptr + z * post_dim;
+    //         mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
                 
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                nppiCopyWrapBorder_8u_C3R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             nppiCopyWrapBorder_8u_C3R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
 
-                NppStatus success1 = nppiFilterMedianGetBufferSize_8u_C3R(c_roi_npp, mask_npp, &buffer_size);
-                if (buffer_size != 0){
-                    mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
-                }
-                Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
+    //             NppStatus success1 = nppiFilterMedianGetBufferSize_8u_C3R(c_roi_npp, mask_npp, &buffer_size);
+    //             if (buffer_size != 0){
+    //                 mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
+    //             }
+    //             Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterMedian_8u_C3R(
-                    reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp,
-                    buffer
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                nppiCopyWrapBorder_16u_C3R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterMedian_8u_C3R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp,
+    //                 buffer
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             nppiCopyWrapBorder_16u_C3R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
 
-                NppStatus success1 = nppiFilterMedianGetBufferSize_16u_C3R(c_roi_npp, mask_npp, &buffer_size);
-                if (buffer_size != 0){
-                    mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
-                }
-                Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
+    //             NppStatus success1 = nppiFilterMedianGetBufferSize_16u_C3R(c_roi_npp, mask_npp, &buffer_size);
+    //             if (buffer_size != 0){
+    //                 mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
+    //             }
+    //             Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterMedian_16u_C3R(
-                    reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp,
-                    buffer
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-            if (buffer_size != 0){
-                cuda_mem_pool.free(buffer_size, buffer_tmp, out.device_id, out.event_sign);
-            }
-            if (z % OVERLAP_IMG_TIME == 0 && z != 0){
-                cudaDeviceSynchronize();
-            }
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-    }
-    template<typename scalar_t>
-    void median_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
-        NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterMedian_16u_C3R(
+    //                 reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp,
+    //                 buffer
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    //         if (buffer_size != 0){
+    //             cuda_mem_pool.free(buffer_size, buffer_tmp, out.device_id, out.event_sign);
+    //         }
+    //         if (z % OVERLAP_IMG_TIME == 0 && z != 0){
+    //             cudaDeviceSynchronize();
+    //         }
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    // }
+    // template<typename scalar_t>
+    // void median_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
+    //     NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
     
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        void* cSrc_tmp = nullptr;
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     void* cSrc_tmp = nullptr;
         
-        Npp32u buffer_size;
-        for(int z = 0; z < pre_dim; ++z){
-            mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-            void* buffer_tmp = nullptr;
-            out_ptr = out.ptr + z * post_dim;
-            if(typeid(scalar_t) == typeid(uint8_t)){
+    //     Npp32u buffer_size;
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //         void* buffer_tmp = nullptr;
+    //         out_ptr = out.ptr + z * post_dim;
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
                 
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                nppiCopyWrapBorder_8u_C4R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             nppiCopyWrapBorder_8u_C4R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
 
-                NppStatus success1 = nppiFilterMedianGetBufferSize_8u_C4R(c_roi_npp, mask_npp, &buffer_size);
-                if (buffer_size != 0){
-                    mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
-                }
-                Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
+    //             NppStatus success1 = nppiFilterMedianGetBufferSize_8u_C4R(c_roi_npp, mask_npp, &buffer_size);
+    //             if (buffer_size != 0){
+    //                 mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
+    //             }
+    //             Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterMedian_8u_C4R(
-                    reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp,
-                    buffer
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterMedian_8u_C4R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp,
+    //                 buffer
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
                 
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                nppiCopyWrapBorder_16u_C4R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             nppiCopyWrapBorder_16u_C4R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
 
-                NppStatus success1 = nppiFilterMedianGetBufferSize_16u_C4R(c_roi_npp, mask_npp, &buffer_size);
-                if (buffer_size != 0){
-                    mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
-                }
-                Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
+    //             NppStatus success1 = nppiFilterMedianGetBufferSize_16u_C4R(c_roi_npp, mask_npp, &buffer_size);
+    //             if (buffer_size != 0){
+    //                 mem_pool_alloc(buffer_size, buffer_tmp, out.device_id, out.stream_id);
+    //             }
+    //             Npp8u* buffer = reinterpret_cast<Npp8u*>(buffer_tmp);
                 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterMedian_16u_C4R(
-                    reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp,
-                    buffer
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-            if (buffer_size != 0){
-                cuda_mem_pool.free(buffer_size, buffer_tmp, out.device_id, out.event_sign);
-            }
-            cudaDeviceSynchronize();
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-    }
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterMedian_16u_C4R(
+    //                 reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp,
+    //                 buffer
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    //         if (buffer_size != 0){
+    //             cuda_mem_pool.free(buffer_size, buffer_tmp, out.device_id, out.event_sign);
+    //         }
+    //         cudaDeviceSynchronize();
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    // }
 
-    template<typename scalar_t>
-    void box_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
-        NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    // template<typename scalar_t>
+    // void box_filter_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
+    //     NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
     
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            void* cSrc_tmp = nullptr;
-            mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-            if(typeid(scalar_t) == typeid(uint8_t)){
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                // nppiCopyWrapBorder_8u_C1R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
-                nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x, 0);
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         void* cSrc_tmp = nullptr;
+    //         mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             // nppiCopyWrapBorder_8u_C1R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             nppiCopyConstBorder_8u_C1R(reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x, 0);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterBox_8u_C1R(
-                    reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterBox_8u_C1R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
                 
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                nppiCopyWrapBorder_16u_C1R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             nppiCopyWrapBorder_16u_C1R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterBox_16u_C1R(
-                    reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-            cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-    }
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterBox_16u_C1R(
+    //                 reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //         cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    // }
 
-    template<typename scalar_t>
-    void box_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
-        NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    // template<typename scalar_t>
+    // void box_filter_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
+    //     NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
     
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            void* cSrc_tmp = nullptr;
-            mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-            NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-            if(typeid(scalar_t) == typeid(uint8_t)){
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                nppiCopyWrapBorder_8u_C3R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterBox_8u_C3R(
-                    reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                nppiCopyWrapBorder_16u_C3R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterBox_16u_C3R(
-                    reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-            cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-    }
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         void* cSrc_tmp = nullptr;
+    //         mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //         NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             nppiCopyWrapBorder_8u_C3R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterBox_8u_C3R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             nppiCopyWrapBorder_16u_C3R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterBox_16u_C3R(
+    //                 reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //         cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    // }
     
-    template<typename scalar_t>
-    void box_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
-        NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    // template<typename scalar_t>
+    // void box_filter_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, int pre_dim, int post_dim){
+    //     NppiSize mask_npp = {std::get<1>(mask), std::get<0>(mask)};
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
     
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        scalar_t* out_ptr;
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
-        for(int z = 0; z < pre_dim; ++z){
-            out_ptr = out.ptr + z * post_dim;
-            void* cSrc_tmp = nullptr;
-            mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
-            if(typeid(scalar_t) == typeid(uint8_t)){
-                Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                nppiCopyWrapBorder_8u_C4R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     scalar_t* out_ptr;
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
+    //     for(int z = 0; z < pre_dim; ++z){
+    //         out_ptr = out.ptr + z * post_dim;
+    //         void* cSrc_tmp = nullptr;
+    //         mem_pool_alloc((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //         if(typeid(scalar_t) == typeid(uint8_t)){
+    //             Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             nppiCopyWrapBorder_8u_C4R (reinterpret_cast<Npp8u*>(a_ptr + z * post_dim), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterBox_8u_C4R(
-                    reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp8u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp
-                );
-            }
-            else if(typeid(scalar_t) == typeid(uint16_t)){
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterBox_8u_C4R(
+    //                 reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp8u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp
+    //             );
+    //         }
+    //         else if(typeid(scalar_t) == typeid(uint16_t)){
                 
-                Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-                NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
-                nppiCopyWrapBorder_16u_C4R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
+    //             Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //             NppiSize c_roi_npp = {roi_npp.width + mask_npp.width, roi_npp.height + mask_npp.height};
+    //             nppiCopyWrapBorder_16u_C4R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, (nstep_a + mask_npp.width) * sizeof(scalar_t), c_roi_npp, anchor_npp.y, anchor_npp.x);
 
-                int new_nstep_a = nstep_a + mask_npp.width;
-                nppiFilterBox_16u_C4R(
-                    reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                    (nstep_a + mask_npp.width) * sizeof(scalar_t),
-                    reinterpret_cast<Npp16u*>(out_ptr),
-                    nstep_out * sizeof(scalar_t),
-                    roi_npp,
-                    mask_npp,
-                    anchor_npp
-                );
-            }
-            else{
-                std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-            }
-            cudaDeviceSynchronize();
-            cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-    }
+    //             int new_nstep_a = nstep_a + mask_npp.width;
+    //             nppiFilterBox_16u_C4R(
+    //                 reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //                 (nstep_a + mask_npp.width) * sizeof(scalar_t),
+    //                 reinterpret_cast<Npp16u*>(out_ptr),
+    //                 nstep_out * sizeof(scalar_t),
+    //                 roi_npp,
+    //                 mask_npp,
+    //                 anchor_npp
+    //             );
+    //         }
+    //         else{
+    //             std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //         }
+    //         cudaDeviceSynchronize();
+    //         cuda_mem_pool.free((roi_npp.width + mask_npp.width) * (roi_npp.height + mask_npp.height) * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    // }
 
-    template<typename scalar_t>
-    void conv_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const Array<scalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& anchor, const std::tuple<int, int>& padding, int ndivisor){
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        NppiSize padding_npp = {std::get<1>(padding), std::get<0>(padding)};
-        NppiSize kernel_size_npp = {std::get<1>(kernel_size), std::get<0>(kernel_size)};
+    // template<typename scalar_t>
+    // void conv_C1R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const Array<scalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& anchor, const std::tuple<int, int>& padding, int ndivisor){
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     NppiSize padding_npp = {std::get<1>(padding), std::get<0>(padding)};
+    //     NppiSize kernel_size_npp = {std::get<1>(kernel_size), std::get<0>(kernel_size)};
     
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
 
-        void* cSrc_tmp = nullptr;
-        NppiSize c_roi_npp = {roi_npp.height + padding_npp.height * 2, roi_npp.width + padding_npp.width * 2};
-        mem_pool_alloc(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //     void* cSrc_tmp = nullptr;
+    //     NppiSize c_roi_npp = {roi_npp.height + padding_npp.height * 2, roi_npp.width + padding_npp.width * 2};
+    //     mem_pool_alloc(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
 
-        if(typeid(scalar_t) == typeid(uint8_t)){
-            Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-            nppiCopyConstBorder_8u_C1R (reinterpret_cast<Npp8u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
+    //     if(typeid(scalar_t) == typeid(uint8_t)){
+    //         Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //         nppiCopyConstBorder_8u_C1R (reinterpret_cast<Npp8u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
 
-            int new_nstep_a = nstep_a + padding_npp.width;
-            nppiFilter_8u_C1R(
-                reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
-                (Npp8u*)out.ptr,
-                nstep_out * sizeof(scalar_t),
-                roi_npp,
-                (Npp32s*)kernel.ptr,
-                kernel_size_npp,
-                anchor_npp,
-                (Npp32s)ndivisor
-            );
-        }
-        else if(typeid(scalar_t) == typeid(uint16_t)){
+    //         int new_nstep_a = nstep_a + padding_npp.width;
+    //         nppiFilter_8u_C1R(
+    //             reinterpret_cast<Npp8u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //             (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
+    //             (Npp8u*)out.ptr,
+    //             nstep_out * sizeof(scalar_t),
+    //             roi_npp,
+    //             (Npp32s*)kernel.ptr,
+    //             kernel_size_npp,
+    //             anchor_npp,
+    //             (Npp32s)ndivisor
+    //         );
+    //     }
+    //     else if(typeid(scalar_t) == typeid(uint16_t)){
             
-            Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-            nppiCopyConstBorder_16u_C1R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
+    //         Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //         nppiCopyConstBorder_16u_C1R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
 
-            int new_nstep_a = nstep_a + padding_npp.width;
-            nppiFilter_16u_C1R(
-                reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
-                (Npp16u*)out.ptr,
-                nstep_out * sizeof(scalar_t),
-                roi_npp,
-                (Npp32s*)kernel.ptr,
-                kernel_size_npp,
-                anchor_npp,
-                (Npp32s)ndivisor
-            );
-        }
-        else{
-            std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-        cuda_mem_pool.free(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-    }
+    //         int new_nstep_a = nstep_a + padding_npp.width;
+    //         nppiFilter_16u_C1R(
+    //             reinterpret_cast<Npp16u*>(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //             (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
+    //             (Npp16u*)out.ptr,
+    //             nstep_out * sizeof(scalar_t),
+    //             roi_npp,
+    //             (Npp32s*)kernel.ptr,
+    //             kernel_size_npp,
+    //             anchor_npp,
+    //             (Npp32s)ndivisor
+    //         );
+    //     }
+    //     else{
+    //         std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    //     cuda_mem_pool.free(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    // }
 
-    template<typename scalar_t>
-    void conv_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const Array<scalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& anchor, const std::tuple<int, int>& padding, int ndivisor){
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        NppiSize padding_npp = {std::get<1>(padding), std::get<0>(padding)};
-        NppiSize kernel_size_npp = {std::get<1>(kernel_size), std::get<0>(kernel_size)};
+    // template<typename scalar_t>
+    // void conv_C3R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const Array<scalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& anchor, const std::tuple<int, int>& padding, int ndivisor){
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     NppiSize padding_npp = {std::get<1>(padding), std::get<0>(padding)};
+    //     NppiSize kernel_size_npp = {std::get<1>(kernel_size), std::get<0>(kernel_size)};
     
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
 
-        void* cSrc_tmp = nullptr;
-        NppiSize c_roi_npp = {roi_npp.height + padding_npp.height * 2, roi_npp.width + padding_npp.width * 2};
-        mem_pool_alloc(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //     void* cSrc_tmp = nullptr;
+    //     NppiSize c_roi_npp = {roi_npp.height + padding_npp.height * 2, roi_npp.width + padding_npp.width * 2};
+    //     mem_pool_alloc(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
 
-        if(typeid(scalar_t) == typeid(uint8_t)){
-            Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-            nppiCopyConstBorder_8u_C3R (reinterpret_cast<Npp8u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
+    //     if(typeid(scalar_t) == typeid(uint8_t)){
+    //         Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //         nppiCopyConstBorder_8u_C3R (reinterpret_cast<Npp8u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
 
-            int new_nstep_a = nstep_a + padding_npp.width;
-            nppiFilter_8u_C3R(
-                (Npp8u*)(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
-                (Npp8u*)out.ptr,
-                nstep_out * sizeof(scalar_t),
-                roi_npp,
-                (Npp32s*)kernel.ptr,
-                kernel_size_npp,
-                anchor_npp,
-                (Npp32s)ndivisor
-            );
-        }
-        else if(typeid(scalar_t) == typeid(uint16_t)){
+    //         int new_nstep_a = nstep_a + padding_npp.width;
+    //         nppiFilter_8u_C3R(
+    //             (Npp8u*)(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //             (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
+    //             (Npp8u*)out.ptr,
+    //             nstep_out * sizeof(scalar_t),
+    //             roi_npp,
+    //             (Npp32s*)kernel.ptr,
+    //             kernel_size_npp,
+    //             anchor_npp,
+    //             (Npp32s)ndivisor
+    //         );
+    //     }
+    //     else if(typeid(scalar_t) == typeid(uint16_t)){
             
-            Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-            nppiCopyConstBorder_16u_C3R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
+    //         Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //         nppiCopyConstBorder_16u_C3R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
 
-            int new_nstep_a = nstep_a + padding_npp.width;
-            nppiFilter_16u_C3R(
-                (Npp16u*)(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
-                (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
-                (Npp16u*)out.ptr,
-                nstep_out * sizeof(scalar_t),
-                roi_npp,
-                (Npp32s*)kernel.ptr,
-                kernel_size_npp,
-                anchor_npp,
-                (Npp32s)ndivisor
-            );
-        }
-        else{
-            std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-        cuda_mem_pool.free(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-    }
+    //         int new_nstep_a = nstep_a + padding_npp.width;
+    //         nppiFilter_16u_C3R(
+    //             (Npp16u*)(cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x),
+    //             (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
+    //             (Npp16u*)out.ptr,
+    //             nstep_out * sizeof(scalar_t),
+    //             roi_npp,
+    //             (Npp32s*)kernel.ptr,
+    //             kernel_size_npp,
+    //             anchor_npp,
+    //             (Npp32s)ndivisor
+    //         );
+    //     }
+    //     else{
+    //         std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    //     cuda_mem_pool.free(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    // }
     
-    template<typename scalar_t>
-    void conv_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const Array<scalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& anchor, const std::tuple<int, int>& padding, int ndivisor){
-        NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
-        NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
-        NppiSize padding_npp = {std::get<1>(padding), std::get<0>(padding)};
-        NppiSize kernel_size_npp = {std::get<1>(kernel_size), std::get<0>(kernel_size)};
+    // template<typename scalar_t>
+    // void conv_C4R(Array<scalar_t>& a_handle, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const Array<scalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& anchor, const std::tuple<int, int>& padding, int ndivisor){
+    //     NppiPoint anchor_npp = {std::get<1>(anchor), std::get<0>(anchor)};
+    //     NppiSize roi_npp = {std::get<1>(ROI), std::get<0>(ROI)};
+    //     NppiSize padding_npp = {std::get<1>(padding), std::get<0>(padding)};
+    //     NppiSize kernel_size_npp = {std::get<1>(kernel_size), std::get<0>(kernel_size)};
     
-        Array<scalar_t> a(0, out.device_id);
-        scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-        ewise_async_1op(a, out);
-        if (nppGetStream() != streams[out.device_id][out.stream_id]){
-            nppSetStream(streams[out.device_id][out.stream_id]);
-        }
+    //     Array<scalar_t> a(0, out.device_id);
+    //     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
+    //     ewise_async_1op(a, out);
+    //     if (nppGetStream() != streams[out.device_id][out.stream_id]){
+    //         nppSetStream(streams[out.device_id][out.stream_id]);
+    //     }
 
-        void* cSrc_tmp = nullptr;
-        NppiSize c_roi_npp = {roi_npp.height + padding_npp.height * 2, roi_npp.width + padding_npp.width * 2};
-        mem_pool_alloc(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
+    //     void* cSrc_tmp = nullptr;
+    //     NppiSize c_roi_npp = {roi_npp.height + padding_npp.height * 2, roi_npp.width + padding_npp.width * 2};
+    //     mem_pool_alloc(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.stream_id);
 
-        if(typeid(scalar_t) == typeid(uint8_t)){
-            Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
-            nppiCopyConstBorder_8u_C4R (reinterpret_cast<Npp8u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
+    //     if(typeid(scalar_t) == typeid(uint8_t)){
+    //         Npp8u* cSrc = reinterpret_cast<Npp8u*>(cSrc_tmp);
+    //         nppiCopyConstBorder_8u_C4R (reinterpret_cast<Npp8u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
 
-            int new_nstep_a = nstep_a + padding_npp.width;
-            nppiFilter_8u_C4R(
-                (Npp8u*)cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x,
-                (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
-                (Npp8u*)out.ptr,
-                nstep_out * sizeof(scalar_t),
-                roi_npp,
-                (Npp32s*)kernel.ptr,
-                kernel_size_npp,
-                anchor_npp,
-                (Npp32s)ndivisor
-            );
-        }
-        else if(typeid(scalar_t) == typeid(uint16_t)){
+    //         int new_nstep_a = nstep_a + padding_npp.width;
+    //         nppiFilter_8u_C4R(
+    //             (Npp8u*)cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x,
+    //             (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
+    //             (Npp8u*)out.ptr,
+    //             nstep_out * sizeof(scalar_t),
+    //             roi_npp,
+    //             (Npp32s*)kernel.ptr,
+    //             kernel_size_npp,
+    //             anchor_npp,
+    //             (Npp32s)ndivisor
+    //         );
+    //     }
+    //     else if(typeid(scalar_t) == typeid(uint16_t)){
             
-            Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
-            nppiCopyConstBorder_16u_C4R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
+    //         Npp16u* cSrc = reinterpret_cast<Npp16u*>(cSrc_tmp);
+    //         nppiCopyConstBorder_16u_C4R (reinterpret_cast<Npp16u*>(a_ptr), nstep_a * sizeof(scalar_t), roi_npp, cSrc, c_roi_npp.width * sizeof(scalar_t), c_roi_npp, padding_npp.height, padding_npp.width, 0);
 
-            int new_nstep_a = nstep_a + padding_npp.width;
-            nppiFilter_16u_C4R(
-                (Npp16u*)cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x,
-                (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
-                (Npp16u*)out.ptr,
-                nstep_out * sizeof(scalar_t),
-                roi_npp,
-                (Npp32s*)kernel.ptr,
-                kernel_size_npp,
-                anchor_npp,
-                (Npp32s)ndivisor
-            );
-        }
-        else{
-            std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
-        }
-        cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
-        cuda_mem_pool.free(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
-    }
+    //         int new_nstep_a = nstep_a + padding_npp.width;
+    //         nppiFilter_16u_C4R(
+    //             (Npp16u*)cSrc + anchor_npp.y * new_nstep_a + anchor_npp.x,
+    //             (nstep_a + padding_npp.width * 2) * sizeof(scalar_t),
+    //             (Npp16u*)out.ptr,
+    //             nstep_out * sizeof(scalar_t),
+    //             roi_npp,
+    //             (Npp32s*)kernel.ptr,
+    //             kernel_size_npp,
+    //             anchor_npp,
+    //             (Npp32s)ndivisor
+    //         );
+    //     }
+    //     else{
+    //         std::cerr << "The given datatype " + std::string(typeid(scalar_t).name()) + " is not supported for matrix_inv in the current version." << std::endl;
+    //     }
+    //     cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
+    //     cuda_mem_pool.free(c_roi_npp.width * c_roi_npp.height * sizeof(scalar_t), cSrc_tmp, out.device_id, out.event_sign);
+    // }
 
     template<typename scalar_t, typename sscalar_t>
     void conv_1(Array<scalar_t>& a_handle, int nstep_a, int pre_dim, int post_dim, Array<scalar_t>& out, const Array<sscalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& padding, int stride, int dilation, int constant, int32_t offset_a, int32_t offset_k){  
@@ -3490,101 +3490,101 @@ void TEMPLATE_BIND_IMGSPROC(py::module& m){
     using namespace gpu;
     using namespace pygp_img;
     /*image operations*/
-    m.def("gaussian_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, uint8_t type, int pre_dim, int post_dim){
-        switch(type){
-            case 1:
-                gaussian_filter_C1R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
-                break;
-            case 3:
-                gaussian_filter_C3R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
-                break;
-            case 4:
-                gaussian_filter_C4R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
-                break;
-            default:
-                std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
-        }
-    });
+    // m.def("gaussian_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, uint8_t type, int pre_dim, int post_dim){
+    //     switch(type){
+    //         case 1:
+    //             gaussian_filter_C1R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
+    //             break;
+    //         case 3:
+    //             gaussian_filter_C3R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
+    //             break;
+    //         case 4:
+    //             gaussian_filter_C4R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
+    //             break;
+    //         default:
+    //             std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
+    //     }
+    // });
 
-    m.def("laplacian_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, uint8_t type, int pre_dim, int post_dim){
-        switch(type){
-            case 1:
-                laplacian_filter_C1R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
-                break;
-            case 3:
-                laplacian_filter_C3R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
-                break;
-            case 4:
-                laplacian_filter_C4R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
-                break;
-            default:
-                std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
-        }
-    });
+    // m.def("laplacian_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, uint8_t type, int pre_dim, int post_dim){
+    //     switch(type){
+    //         case 1:
+    //             laplacian_filter_C1R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
+    //             break;
+    //         case 3:
+    //             laplacian_filter_C3R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
+    //             break;
+    //         case 4:
+    //             laplacian_filter_C4R(a, nstep_a, out, nstep_out, ROI, mask, pre_dim, post_dim);
+    //             break;
+    //         default:
+    //             std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
+    //     }
+    // });
 
-    m.def("sobel_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, bool horiz, uint8_t type, int pre_dim, int post_dim){
-        switch(type){
-            case 1:
-                sobel_filter_C1R(a, nstep_a, out, nstep_out, ROI, pre_dim, post_dim, horiz);
-                break;
-            case 3:
-                sobel_filter_C3R(a, nstep_a, out, nstep_out, ROI, pre_dim, post_dim, horiz);
-                break;
-            case 4:
-                sobel_filter_C4R(a, nstep_a, out, nstep_out, ROI, pre_dim, post_dim, horiz);
-                break;
-            default:
-                std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
-        }
-    });
+    // m.def("sobel_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, bool horiz, uint8_t type, int pre_dim, int post_dim){
+    //     switch(type){
+    //         case 1:
+    //             sobel_filter_C1R(a, nstep_a, out, nstep_out, ROI, pre_dim, post_dim, horiz);
+    //             break;
+    //         case 3:
+    //             sobel_filter_C3R(a, nstep_a, out, nstep_out, ROI, pre_dim, post_dim, horiz);
+    //             break;
+    //         case 4:
+    //             sobel_filter_C4R(a, nstep_a, out, nstep_out, ROI, pre_dim, post_dim, horiz);
+    //             break;
+    //         default:
+    //             std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
+    //     }
+    // });
 
-    m.def("box_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, uint8_t type, int pre_dim, int post_dim){
-        switch(type){
-            case 1:
-                box_filter_C1R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
-                break;
-            case 3:
-                box_filter_C3R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
-                break;
-            case 4:
-                box_filter_C4R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
-                break;
-            default:
-                std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
-        }
-    });
+    // m.def("box_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, uint8_t type, int pre_dim, int post_dim){
+    //     switch(type){
+    //         case 1:
+    //             box_filter_C1R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
+    //             break;
+    //         case 3:
+    //             box_filter_C3R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
+    //             break;
+    //         case 4:
+    //             box_filter_C4R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
+    //             break;
+    //         default:
+    //             std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
+    //     }
+    // });
 
-    m.def("median_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, uint8_t type, int pre_dim, int post_dim){
-        switch(type){
-            case 1:
-                median_filter_C1R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
-                break;
-            case 3:
-                median_filter_C3R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
-                break;
-            case 4:
-                median_filter_C4R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
-                break;
-            default:
-                std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
-        }
-    });
+    // m.def("median_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const std::tuple<int, int>& mask, const std::tuple<int, int>& anchor, uint8_t type, int pre_dim, int post_dim){
+    //     switch(type){
+    //         case 1:
+    //             median_filter_C1R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
+    //             break;
+    //         case 3:
+    //             median_filter_C3R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
+    //             break;
+    //         case 4:
+    //             median_filter_C4R(a, nstep_a, out, nstep_out, ROI, mask, anchor, pre_dim, post_dim);
+    //             break;
+    //         default:
+    //             std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
+    //     }
+    // });
     
-    m.def("conv_2D", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const Array<scalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& anchor, const std::tuple<int, int>& padding, int ndivisor, uint8_t type){
-        switch(type){
-            case 1:
-                conv_C1R(a, nstep_a, out, nstep_out, ROI, kernel, kernel_size, anchor, padding, ndivisor);
-                break;
-            case 3:
-                conv_C3R(a, nstep_a, out, nstep_out, ROI, kernel, kernel_size, anchor, padding, ndivisor);
-                break;
-            case 4:
-                conv_C4R(a, nstep_a, out, nstep_out, ROI, kernel, kernel_size, anchor, padding, ndivisor);
-                break;
-            default:
-                std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
-        }
-    });
+    // m.def("conv_2D", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, const Array<scalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& anchor, const std::tuple<int, int>& padding, int ndivisor, uint8_t type){
+    //     switch(type){
+    //         case 1:
+    //             conv_C1R(a, nstep_a, out, nstep_out, ROI, kernel, kernel_size, anchor, padding, ndivisor);
+    //             break;
+    //         case 3:
+    //             conv_C3R(a, nstep_a, out, nstep_out, ROI, kernel, kernel_size, anchor, padding, ndivisor);
+    //             break;
+    //         case 4:
+    //             conv_C4R(a, nstep_a, out, nstep_out, ROI, kernel, kernel_size, anchor, padding, ndivisor);
+    //             break;
+    //         default:
+    //             std::cerr << "The support channel is 1, 3, 4, the current channel num is: " << type << std::endl;
+    //     }
+    // });
 
     
     m.def("conv", [](Array<scalar_t>& a, int nstep_a, int pre_dim, int post_dim, Array<scalar_t>& out, const Array<sscalar_t>& kernel, const std::tuple<int, int>& kernel_size, const std::tuple<int, int>& padding, int stride, int dilation, int constant, int32_t offset_a, int32_t offset_k){ 
