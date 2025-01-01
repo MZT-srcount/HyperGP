@@ -17,13 +17,13 @@ def get_cuda_path():
     print("CUDA PATH: ", cuda_path)
     return cuda_path
 
-# 设置平台标签
-if sys.platform == 'linux':
-    platform_tag = 'manylinux_2_24_x86_64'
-else:
-    platform_tag = sys.platform
+# # 设置平台标签
+# if sys.platform == 'linux':
+#     platform_tag = 'manylinux_2_24_x86_64'
+# else:
+#     platform_tag = sys.platform
     
-SUPPORTED_CUDA_VERSIONS = ["11.2.2"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
+SUPPORTED_CUDA_VERSIONS = ["10.2.89"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
 
 # 定义 CMake 配置
 # def get_cmake_args(cuda_version):
@@ -55,7 +55,7 @@ def get_cmake_args(cuda_version):
     return cmake_args
 
 # 动态生成版本号
-version = "0.1.2-9"
+version = "0.1.3"
 local_version = os.getenv("LOCAL_VERSION", "1")  # 从环境变量获取本地版本号，默认为 "1"
 full_version = f"{version}-{local_version}"
 

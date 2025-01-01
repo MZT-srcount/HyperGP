@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
+        python-version: ["3.11"]#["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
     steps:
       # 1. 检出代码
       - uses: actions/checkout@v3
@@ -21,7 +21,7 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit
         with:
-          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+          cuda: '10.2.89'  # 根据你的需求指定 CUDA 版本
           log-file-suffix: '${{matrix.python-version}}.txt'
 
       - name: Install compatible gcc version
@@ -46,7 +46,7 @@ jobs:
       # - name: Set up CUDA
       #   uses: nvidia/setup-cuda@v1
       #   with:
-      #     cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
+      #     cuda-version: '10.2.89'  # 根据你的需求指定 CUDA 版本
       # - name: Set CUDA environment variables
       #   run: |
       #     echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
@@ -131,17 +131,17 @@ jobs:
           # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
           # conda activate base  # 激活 base 环境
           python ./setup.py bdist_wheel #sdist
-          # mv dist wheelhouse
+          mv dist wheelhouse
           
-      # 5. 使用 auditwheel 修复 wheel 文件
-      # - name: Repair wheel with auditwheel
-      #   run: |
-      #     # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-      #     # conda activate base  # 激活 base 环境
-      #     mkdir -p dist
-      #     for whl in wheelhouse/*.whl; do
-      #       auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
-      #     done
+      5. 使用 auditwheel 修复 wheel 文件
+      - name: Repair wheel with auditwheel
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          mkdir -p dist
+          for whl in wheelhouse/*.whl; do
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
+          done
 
           # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
           # for gz in wheelhouse/*.tar.gz; do
