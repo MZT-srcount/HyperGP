@@ -86,27 +86,27 @@ jobs:
         path: dist/
     
   publish:
-  runs-on: ubuntu-20.04
-  needs: build
-  steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: dist/
+    runs-on: ubuntu-20.04
+    needs: build
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
 
-    - name: Combine artifacts
-      run: |
-        mkdir -p combined_dist
-        find dist/ -type f -name "*.whl" -exec cp {} combined_dist/ \;
-        find dist/ -type f -name "*.tar.gz" -exec cp {} combined_dist/ \;
+      - name: Combine artifacts
+        run: |
+          mkdir -p combined_dist
+          find dist/ -type f -name "*.whl" -exec cp {} combined_dist/ \;
+          find dist/ -type f -name "*.tar.gz" -exec cp {} combined_dist/ \;
 
-    - name: Check combined_dist
-      run: |
-        ls -l combined_dist/
+      - name: Check combined_dist
+        run: |
+          ls -l combined_dist/
 
-    - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        packages_dir: combined_dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: combined_dist
