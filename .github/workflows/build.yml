@@ -14,7 +14,33 @@ on:
 #on: [push, pull_request] # 触发条件：当有 push 或 pull_request 时运行 
 
 jobs:
+  setup:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install compatible gcc version
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-8 g++-8
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+          gcc --version  # 检查 gcc 版本
+
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+
+      - name: Save CUDA environment variables
+        run: |
+          echo "CUDA_HOME=$CUDA_HOME" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
   build:
+    needs: setup
     runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
     strategy:
       matrix:
@@ -33,17 +59,6 @@ jobs:
       #   with:
       #     cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
 
-
-      - name: Clear cache
-        run: |
-          sudo rm -rf /home/runner/work/_temp/_github_workflow/cuda_installer-linux-5.15.0-1074-azure-10.2.89
-      - name: Set up CUDA
-        uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        # if: matrix.python-version == '3.9'  # 只在第一个任务中安装
-        with:
-          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
-          cache: false  # 禁用缓存
       # 2. 设置 Python 环境
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
