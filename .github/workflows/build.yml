@@ -30,10 +30,10 @@ jobs:
           bash miniconda.sh -b -p $HOME/miniconda
           echo "$HOME/miniconda/bin" >> $GITHUB_PATH
 
-      - name: Set up CUDA
-        uses: nvidia/setup-cuda@v1
-        with:
-          cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
+      # - name: Set up CUDA
+      #   uses: nvidia/setup-cuda@v1
+      #   with:
+      #     cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
 
       - name: Install CUDA toolkit with conda
         run: |
