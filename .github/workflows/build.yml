@@ -58,15 +58,20 @@ jobs:
       #   uses: nvidia/setup-cuda@v1
       #   with:
       #     cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
+      # - name: Set CUDA environment variables
+      #   run: |
+      #     echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
+      #     echo "PATH=${{ needs.setup.outputs.path }}" >> $GITHUB_ENV
+      #     echo "LD_LIBRARY_PATH=${{ needs.setup.outputs.ld_library_path }}" >> $GITHUB_ENV
+      - name: Set CUDA environment variables
+        run: |
+          echo "CUDA_HOME=$CUDA_HOME" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
       - name: Install which
         run: |
           apt-get update
           apt-get install -y which
-      - name: Set CUDA environment variables
-        run: |
-          echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
-          echo "PATH=${{ needs.setup.outputs.path }}" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=${{ needs.setup.outputs.ld_library_path }}" >> $GITHUB_ENV
 
 
       # 2. 设置 Python 环境
