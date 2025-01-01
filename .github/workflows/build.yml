@@ -64,6 +64,11 @@ jobs:
           echo "PATH=${{ needs.setup.outputs.path }}" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=${{ needs.setup.outputs.ld_library_path }}" >> $GITHUB_ENV
 
+      - name: Install which
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y which
+          
       # 2. 设置 Python 环境
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
