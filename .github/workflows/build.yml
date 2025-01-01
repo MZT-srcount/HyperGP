@@ -41,7 +41,7 @@ jobs:
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit
         with:
-          cuda: '10.2.89'  # 根据你的需求指定 CUDA 版本
+          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
 
       # 2. 设置 Python 环境
       - name: Set up Python ${{ matrix.python-version }}
