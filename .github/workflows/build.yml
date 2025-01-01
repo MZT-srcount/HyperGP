@@ -44,13 +44,16 @@ jobs:
       - name: Install CUDA toolkit with conda
         run: |
           conda install  -c conda-forge cudatoolkit=10.2
+          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          conda activate base  # 激活 base 环境
 
       
-      - name: Set CUDA environment variables
+      - name: Set Conda environment variables
         run: |
+          echo "CONDA_PREFIX=$HOME/miniconda" >> $GITHUB_ENV
           echo "CUDA_HOME=$CONDA_PREFIX" >> $GITHUB_ENV
           echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_EN
 
       - name: Check CUDA installation
         run: |
