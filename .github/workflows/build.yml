@@ -14,12 +14,8 @@ on:
 #on: [push, pull_request] # 触发条件：当有 push 或 pull_request 时运行 
 
 jobs:
-  setup:
+  cp309:
     runs-on: ubuntu-20.04
-    outputs:
-      cuda_home: ${{ steps.set_cuda_env.outputs.cuda_home }}
-      path: ${{ steps.set_cuda_env.outputs.path }}
-      ld_library_path: ${{ steps.set_cuda_env.outputs.ld_library_path }}
     steps:
       - uses: actions/checkout@v3
 
@@ -37,104 +33,15 @@ jobs:
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
 
-      - name: Save CUDA environment variables
-        id: set_cuda_env
-        run: |
-          echo "CUDA_HOME=$CUDA_HOME" >> $GITHUB_ENV
-          echo "PATH=$PATH" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
-          echo "::set-output name=cuda_home::$CUDA_HOME"
-          echo "::set-output name=path::$PATH"
-          echo "::set-output name=ld_library_path::$LD_LIBRARY_PATH"
-
       - name: Check CUDA installation 1
         run: |
           which nvcc            # 检查 nvcc 是否在 PATH 中
           nvcc --version        # 检查 nvcc 版本
           ls /usr/local
-  
-  build:
-    needs: setup
-    runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
-    steps:
-      # 1. 检出代码
-      - uses: actions/checkout@v3
-      - name: Set CUDA environment variables
-        run: |
-          echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
-          echo "PATH=${{ needs.setup.outputs.path }}" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=${{ needs.setup.outputs.ld_library_path }}" >> $GITHUB_ENV
-
-      - name: Check CUDA installation 2
-        run: |
-          ls /usr/local
-          which nvcc            # 检查 nvcc 是否在 PATH 中
-          nvcc --version        # 检查 nvcc 版本
-      # - name: Install Miniconda
-      #   run: |
-      #     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-      #     bash miniconda.sh -b -p $HOME/miniconda
-      #     echo "$HOME/miniconda/bin" >> $GITHUB_PATH
-
-      # - name: Set up CUDA
-      #   uses: nvidia/setup-cuda@v1
-      #   with:
-      #     cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
-      # - name: Set CUDA environment variables
-      #   run: |
-      #     echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
-      #     echo "PATH=${{ needs.setup.outputs.path }}" >> $GITHUB_ENV
-      #     echo "LD_LIBRARY_PATH=${{ needs.setup.outputs.ld_library_path }}" >> $GITHUB_ENV
-      # - name: Set CUDA environment variables
-      #   run: |
-      #     echo "CUDA_HOME=$CUDA_HOME" >> $GITHUB_ENV
-      #     echo "PATH=$PATH" >> $GITHUB_ENV
-      #     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
-      # - name: Install which
-      #   run: |
-      #     sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g' /etc/apt/sources.list
-      #     sudo apt-get update
-      #     sudo apt-get install -y which
-
-
-      # 2. 设置 Python 环境
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 309
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
-          
-      # - name: Install CUDA toolkit with conda
-      #   run: |
-      #     source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-      #     conda activate base  # 激活 base 环境
-      #     conda install  -c conda-forge cudatoolkit=10.2 --force-reinstall
-
-      
-      # - name: Set Conda environment variables
-      #   run: |
-      #     echo "CONDA_PREFIX=$HOME/miniconda" >> $GITHUB_ENV
-      #     echo "CUDA_HOME=$CONDA_PREFIX" >> $GITHUB_ENV
-      #     echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
-      #     echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-
-      # - name: Check CUDA installation
-      #   run: |
-      #     source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-      #     conda activate base  # 激活 base 环境
-      #     ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
-      #     ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
-      #     which nvcc            # 检查 nvcc 是否在 PATH 中
-      #     nvcc --version        # 检查 nvcc 版本
-      
-      # - name: Reinstall CUDA toolkit with conda
-      #   run: |
-      #     source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-      #     conda activate base  # 激活 base 环境
-      #     conda install -c conda-forge cudatoolkit=10.2 --force-reinstall
-
+          python-version: 3.09
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
@@ -142,7 +49,13 @@ jobs:
           # conda activate base  # 激活 base 环境
           python -m pip install --upgrade pip
           python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
-          
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
 
       - name: Debug environment
         run: |
@@ -188,28 +101,383 @@ jobs:
           # for gz in wheelhouse/*.tar.gz; do
           #   mv "$gz" dist/
           # done
+      # # 9. 发布到 PyPI
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_API_TOKEN }}
+      #     packages_dir: dist
 
-  #     - name: Upload artifacts
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: dist-${{ matrix.python-version }}
-  #         path: dist/
+  cp310:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
 
-  # publish:
-  #   runs-on: ubuntu-20.04
-  #   needs: build
-  #   steps:
-  #     - name: Download all artifacts
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         path: dist/
+      - name: Install compatible gcc version
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-8 g++-8
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+          gcc --version  # 检查 gcc 版本
 
-  #     - name: Combine artifacts
-  #       run: |
-  #         mkdir -p combined_dist
-  #         find dist/ -type f -name "*.whl" -exec cp {} combined_dist/ \;
-  #         find dist/ -type f -name "*.tar.gz" -exec cp {} combined_dist/ \;
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
 
+      - name: Check CUDA installation 1
+        run: |
+          which nvcc            # 检查 nvcc 是否在 PATH 中
+          nvcc --version        # 检查 nvcc 版本
+          ls /usr/local
+      - name: Set up Python 310
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+
+      - name: Debug environment
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip list
+          which python
+          ls usr/local
+          python -c "import skbuild; print(skbuild.__version__)"
+          
+      - name: Clean build directories
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          rm -rf _skbuild/ dist/ build/
+
+     # 4. 构建 wheel 文件
+      - name: Build wheel
+        env:
+          LOCAL_VERSION: 1  # 设置本地版本号
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python ./setup.py bdist_wheel #sdist
+          mv dist wheelhouse
+          
+      # 5. 使用 auditwheel 修复 wheel 文件
+      - name: Repair wheel with auditwheel
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          mkdir -p dist
+          for whl in wheelhouse/*.whl; do
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
+          done
+
+          # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
+          # for gz in wheelhouse/*.tar.gz; do
+          #   new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
+          #   mv "$gz" "$new_name"
+          # done
+          
+          # for gz in wheelhouse/*.tar.gz; do
+          #   mv "$gz" dist/
+          # done
+      # # 9. 发布到 PyPI
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_API_TOKEN }}
+      #     packages_dir: dist
+  cp311:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install compatible gcc version
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-8 g++-8
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+          gcc --version  # 检查 gcc 版本
+
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+
+      - name: Check CUDA installation 1
+        run: |
+          which nvcc            # 检查 nvcc 是否在 PATH 中
+          nvcc --version        # 检查 nvcc 版本
+          ls /usr/local
+      - name: Set up Python 311
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+
+      - name: Debug environment
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip list
+          which python
+          ls usr/local
+          python -c "import skbuild; print(skbuild.__version__)"
+          
+      - name: Clean build directories
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          rm -rf _skbuild/ dist/ build/
+
+     # 4. 构建 wheel 文件
+      - name: Build wheel
+        env:
+          LOCAL_VERSION: 1  # 设置本地版本号
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python ./setup.py bdist_wheel #sdist
+          mv dist wheelhouse
+          
+      # 5. 使用 auditwheel 修复 wheel 文件
+      - name: Repair wheel with auditwheel
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          mkdir -p dist
+          for whl in wheelhouse/*.whl; do
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
+          done
+
+          # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
+          # for gz in wheelhouse/*.tar.gz; do
+          #   new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
+          #   mv "$gz" "$new_name"
+          # done
+          
+          # for gz in wheelhouse/*.tar.gz; do
+          #   mv "$gz" dist/
+          # done
+      # # 9. 发布到 PyPI
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_API_TOKEN }}
+      #     packages_dir: dist
+  cp312:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install compatible gcc version
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-8 g++-8
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+          gcc --version  # 检查 gcc 版本
+
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+
+      - name: Check CUDA installation 1
+        run: |
+          which nvcc            # 检查 nvcc 是否在 PATH 中
+          nvcc --version        # 检查 nvcc 版本
+          ls /usr/local
+      - name: Set up Python 312
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+
+      - name: Debug environment
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip list
+          which python
+          ls usr/local
+          python -c "import skbuild; print(skbuild.__version__)"
+          
+      - name: Clean build directories
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          rm -rf _skbuild/ dist/ build/
+
+     # 4. 构建 wheel 文件
+      - name: Build wheel
+        env:
+          LOCAL_VERSION: 1  # 设置本地版本号
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python ./setup.py bdist_wheel #sdist
+          mv dist wheelhouse
+          
+      # 5. 使用 auditwheel 修复 wheel 文件
+      - name: Repair wheel with auditwheel
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          mkdir -p dist
+          for whl in wheelhouse/*.whl; do
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
+          done
+
+          # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
+          # for gz in wheelhouse/*.tar.gz; do
+          #   new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
+          #   mv "$gz" "$new_name"
+          # done
+          
+          # for gz in wheelhouse/*.tar.gz; do
+          #   mv "$gz" dist/
+          # done
+      # # 9. 发布到 PyPI
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_API_TOKEN }}
+      #     packages_dir: dist
+  cp313:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install compatible gcc version
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-8 g++-8
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+          gcc --version  # 检查 gcc 版本
+
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+
+      - name: Check CUDA installation 1
+        run: |
+          which nvcc            # 检查 nvcc 是否在 PATH 中
+          nvcc --version        # 检查 nvcc 版本
+          ls /usr/local
+      - name: Set up Python 313
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+
+      - name: Debug environment
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python -m pip list
+          which python
+          ls usr/local
+          python -c "import skbuild; print(skbuild.__version__)"
+          
+      - name: Clean build directories
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          rm -rf _skbuild/ dist/ build/
+
+     # 4. 构建 wheel 文件
+      - name: Build wheel
+        env:
+          LOCAL_VERSION: 1  # 设置本地版本号
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          python ./setup.py bdist_wheel #sdist
+          mv dist wheelhouse
+          
+      # 5. 使用 auditwheel 修复 wheel 文件
+      - name: Repair wheel with auditwheel
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          mkdir -p dist
+          for whl in wheelhouse/*.whl; do
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
+          done
+
+          # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
+          # for gz in wheelhouse/*.tar.gz; do
+          #   new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
+          #   mv "$gz" "$new_name"
+          # done
+          
+          # for gz in wheelhouse/*.tar.gz; do
+          #   mv "$gz" dist/
+          # done
       # # 9. 发布到 PyPI
       # - name: Publish to PyPI
       #   uses: pypa/gh-action-pypi-publish@release/v1
