@@ -100,7 +100,6 @@ endif()
 
 ### executor backend
 
-find_package(CUDA)
 if(CUDA_FOUND)
     message(STATUS "Found cuda, building cuda backend")
     include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} "src")
@@ -122,24 +121,24 @@ if(CUDA_FOUND)
         CUDA_VISIBILITY_PRESET "hidden"
     )
 endif()
-message(STATUS "Python3_INCLUDE_DIRS: ${CMAKE_INSTALL_LIBDIR}")
+message(STATUS "Python3_INCLUDE_DIRS: ${CMAKE_INSTALL_LIBDIR}, ${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Install pygp_utils modules
 install(TARGETS pygp_utils
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hypergp/lib
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
         )
 
 # Install pygp_cash modules
 install(TARGETS pygp_cash
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hypergp/lib
+        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
         )
 
 # Install CUDA modules（if exists）
 if(CUDA_FOUND)
     install(TARGETS ndarray_cuda_backend
-            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hypergp/lib
+            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
             )
     install(TARGETS executor
-            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/hypergp/lib
+            LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
             )
 endif()
