@@ -16,7 +16,7 @@ def get_cuda_path():
         cuda_path = "/usr/local/cuda"  # 默认 CUDA 路径
     return cuda_path
 
-SUPPORTED_CUDA_VERSIONS = ["10.2"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
+SUPPORTED_CUDA_VERSIONS = ["10.2.89"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
 
 # 定义 CMake 配置
 # def get_cmake_args(cuda_version):
