@@ -43,7 +43,7 @@ jobs:
           
       - name: Install CUDA toolkit with conda
         run: |
-          conda install  -c conda-forge cudatoolkit=12.0
+          conda install  -c conda-forge cudatoolkit=10.2
 
       
       - name: Set CUDA environment variables
