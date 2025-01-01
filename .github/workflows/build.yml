@@ -40,7 +40,7 @@ jobs:
       - name: Set up CUDA
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit
-        if: matrix.python-version == '3.9'  # 只在第一个任务中安装
+        # if: matrix.python-version == '3.9'  # 只在第一个任务中安装
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
           cache: false  # 禁用缓存
