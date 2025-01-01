@@ -14,11 +14,9 @@ on:
 #on: [push, pull_request] # 触发条件：当有 push 或 pull_request 时运行 
 
 jobs:
-  cp309:
+  setup:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
-
       - name: Install compatible gcc version
         run: |
           sudo apt-get update
@@ -32,7 +30,10 @@ jobs:
         id: cuda-toolkit
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
-
+  cp309:
+    needs:setup
+    steps:
+      - uses: actions/checkout@v3
       - name: Check CUDA installation 1
         run: |
           which nvcc            # 检查 nvcc 是否在 PATH 中
@@ -110,40 +111,11 @@ jobs:
       #     packages_dir: dist
 
   cp310:
+    needs:setup
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install compatible gcc version
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-8 g++-8
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
-          gcc --version  # 检查 gcc 版本
-
-      - name: Set up CUDA
-        uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        with:
-          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
-
-      - name: Check CUDA installation 1
-        run: |
-          which nvcc            # 检查 nvcc 是否在 PATH 中
-          nvcc --version        # 检查 nvcc 版本
-          ls /usr/local
-      - name: Set up Python 310
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.10
-      # 3. 安装构建工具
-      - name: Install dependencies
-        run: |
-          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          # conda activate base  # 激活 base 环境
-          python -m pip install --upgrade pip
-          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
@@ -204,23 +176,9 @@ jobs:
       #     password: ${{ secrets.PYPI_API_TOKEN }}
       #     packages_dir: dist
   cp311:
-    runs-on: ubuntu-20.04
+    needs:setup
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install compatible gcc version
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-8 g++-8
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
-          gcc --version  # 检查 gcc 版本
-
-      - name: Set up CUDA
-        uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        with:
-          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
 
       - name: Check CUDA installation 1
         run: |
@@ -298,23 +256,9 @@ jobs:
       #     password: ${{ secrets.PYPI_API_TOKEN }}
       #     packages_dir: dist
   cp312:
-    runs-on: ubuntu-20.04
+    needs:setup
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install compatible gcc version
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-8 g++-8
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
-          gcc --version  # 检查 gcc 版本
-
-      - name: Set up CUDA
-        uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        with:
-          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
 
       - name: Check CUDA installation 1
         run: |
@@ -392,23 +336,10 @@ jobs:
       #     password: ${{ secrets.PYPI_API_TOKEN }}
       #     packages_dir: dist
   cp313:
+    needs:setup
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-
-      - name: Install compatible gcc version
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-8 g++-8
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
-          gcc --version  # 检查 gcc 版本
-
-      - name: Set up CUDA
-        uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        with:
-          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
 
       - name: Check CUDA installation 1
         run: |
