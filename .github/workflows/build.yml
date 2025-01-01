@@ -15,76 +15,82 @@ on:
 
 jobs:
   build:
-  runs-on: ubuntu-20.04
-  strategy:
-    matrix:
-      python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
-  steps:
-    - uses: actions/checkout@v3
+    runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
+    steps:
+      # 1. 检出代码
+      - uses: actions/checkout@v3
 
-    - name: Install Miniconda
-      run: |
-        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-        bash miniconda.sh -b -p $HOME/miniconda
-        echo "$HOME/miniconda/bin" >> $GITHUB_PATH
 
-    - name: Install CUDA toolkit with conda
-      run: |
-        conda install -c conda-forge cudatoolkit=10.1
+      - name: Install Miniconda
+        run: |
+          wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+          bash miniconda.sh -b -p $HOME/miniconda
+          echo "$HOME/miniconda/bin" >> $GITHUB_PATH
 
-    - name: Set CUDA environment variables
-      run: |
-        echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib" >> $GITHUB_ENV
-        echo "CUDA_HOME=$HOME/miniconda" >> $GITHUB_ENV
+      - name: Install CUDA toolkit with conda
+        run: |
+          conda install  -c conda-forge cudatoolkit=10.1
+      
+      - name: Set CUDA environment variables
+        run: |
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib" >> $GITHUB_ENV
+          echo "CUDA_HOME=$HOME/miniconda" >> $GITHUB_ENV
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      # 2. 设置 Python 环境
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      # 3. 安装构建工具
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+          
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
+      - name: Debug environment
+        run: |
+          python -m pip list
+          which python
+          python -c "import skbuild; print(skbuild.__version__)"
+          
+      - name: Clean build directories
+        run: |
+          rm -rf _skbuild/ dist/ build/
 
-    - name: Debug environment
-      run: |
-        python -m pip list
-        which python
-        python -c "import skbuild; print(skbuild.__version__)"
+     # 4. 构建 wheel 文件
+      - name: Build wheel
+        run: |
+          python ./setup.py sdist bdist_wheel 
+          mv dist wheelhouse
+          
+      # 5. 使用 auditwheel 修复 wheel 文件
+      - name: Repair wheel with auditwheel
+        run: |
+          mkdir -p dist
+          for whl in wheelhouse/*.whl; do
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
+          done
 
-    - name: Clean build directories
-      run: |
-        rm -rf _skbuild/ dist/ build/
+          python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
+          for gz in wheelhouse/*.tar.gz; do
+            new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
+            mv "$gz" "$new_name"
+          done
+          
+          for gz in wheelhouse/*.tar.gz; do
+            mv "$gz" dist/
+          done
 
-    - name: Build wheel
-      run: |
-        python ./setup.py sdist bdist_wheel
-        mv dist wheelhouse
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.python-version }}
+          path: dist/
 
-    - name: Repair wheel with auditwheel
-      run: |
-        mkdir -p dist
-        for whl in wheelhouse/*.whl; do
-          auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
-        done
-
-        python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
-        for gz in wheelhouse/*.tar.gz; do
-          new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
-          mv "$gz" "$new_name"
-        done
-
-        for gz in wheelhouse/*.tar.gz; do
-          mv "$gz" dist/
-        done
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: dist-${{ matrix.python-version }}
-        path: dist/
-    
   publish:
     runs-on: ubuntu-20.04
     needs: build
@@ -100,10 +106,7 @@ jobs:
           find dist/ -type f -name "*.whl" -exec cp {} combined_dist/ \;
           find dist/ -type f -name "*.tar.gz" -exec cp {} combined_dist/ \;
 
-      - name: Check combined_dist
-        run: |
-          ls -l combined_dist/
-
+      # 9. 发布到 PyPI
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
