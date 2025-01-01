@@ -1,6 +1,10 @@
 name: Build Wheels
 
-on: [push, pull_request]  # 触发条件：当有 push 或 pull_request 时运行 on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main  # 推送到 main 分支时触发
+#on: [push, pull_request] # 触发条件：当有 push 或 pull_request 时运行 
 
 jobs:
   build:
