@@ -66,7 +66,7 @@ jobs:
         env:
           LOCAL_VERSION: 1  # 设置本地版本号
         run: |
-          python ./setup.py sdist bdist_wheel 
+          python ./setup.py bdist_wheel #sdist
           mv dist wheelhouse
           
       # 5. 使用 auditwheel 修复 wheel 文件
@@ -87,26 +87,26 @@ jobs:
             mv "$gz" dist/
           done
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-${{ matrix.python-version }}
-          path: dist/
+  #     - name: Upload artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: dist-${{ matrix.python-version }}
+  #         path: dist/
 
-  publish:
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: dist/
+  # publish:
+  #   runs-on: ubuntu-20.04
+  #   needs: build
+  #   steps:
+  #     - name: Download all artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         path: dist/
 
-      - name: Combine artifacts
-        run: |
-          mkdir -p combined_dist
-          find dist/ -type f -name "*.whl" -exec cp {} combined_dist/ \;
-          find dist/ -type f -name "*.tar.gz" -exec cp {} combined_dist/ \;
+  #     - name: Combine artifacts
+  #       run: |
+  #         mkdir -p combined_dist
+  #         find dist/ -type f -name "*.whl" -exec cp {} combined_dist/ \;
+  #         find dist/ -type f -name "*.tar.gz" -exec cp {} combined_dist/ \;
 
       # 9. 发布到 PyPI
       - name: Publish to PyPI
@@ -114,4 +114,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          packages_dir: combined_dist
+          packages_dir: dist
