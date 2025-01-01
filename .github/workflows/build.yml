@@ -43,13 +43,15 @@ jobs:
           
       - name: Install CUDA toolkit with conda
         run: |
-          conda install  -c conda-forge cudatoolkit=10.2
+          conda install  -c conda-forge cudatoolkit=12.0
 
+      
       - name: Set CUDA environment variables
         run: |
           echo "CUDA_HOME=$CONDA_PREFIX" >> $GITHUB_ENV
-          echo "PATH=$CUDA_HOME/bin:$PATH" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=$CUDA_HOME/lib:$LD_LIBRARY_PATH" >> $GITHUB_EN
+          echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
