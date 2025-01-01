@@ -80,7 +80,7 @@ if(POLICY CMP0146)
     cmake_policy(SET CMP0146 NEW)  # 启用现代 CUDA 查找
 endif()
 
-find_package(CUDA REQUIRED)
+find_package(CUDA)
 
 
 if(CUDA_FOUND)
