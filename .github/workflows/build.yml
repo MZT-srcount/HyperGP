@@ -51,7 +51,7 @@ jobs:
           echo "CUDA_HOME=$CONDA_PREFIX" >> $GITHUB_ENV
           echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-          ls $CUDA_HOME
+          # ls $CUDA_HOME
           which nvcc
 
       # 3. 安装构建工具
