@@ -58,6 +58,11 @@ jobs:
       #   uses: nvidia/setup-cuda@v1
       #   with:
       #     cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
+      - name: Set CUDA environment variables
+        run: |
+          echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
+          echo "PATH=${{ needs.setup.outputs.path }}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=${{ needs.setup.outputs.ld_library_path }}" >> $GITHUB_ENV
 
       # 2. 设置 Python 环境
       - name: Set up Python ${{ matrix.python-version }}
