@@ -14,7 +14,6 @@ on:
 #on: [push, pull_request] # 触发条件：当有 push 或 pull_request 时运行 
 
 jobs:
-
   setup:
     runs-on: ubuntu-20.04
     outputs:
@@ -53,6 +52,8 @@ jobs:
           which nvcc            # 检查 nvcc 是否在 PATH 中
           nvcc --version        # 检查 nvcc 版本
           ls /usr/local
+  
+
   build:
     needs: setup
     runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
@@ -61,8 +62,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
     steps:
       # 1. 检出代码
-            - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v3
       - name: Set CUDA environment variables
         run: |
           echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
