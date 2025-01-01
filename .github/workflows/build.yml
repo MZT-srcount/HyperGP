@@ -84,7 +84,7 @@ jobs:
           name: dist-${{ matrix.python-version }}
           path: dist/
 
-publish:
+  publish:
     runs-on: ubuntu-20.04
     needs: build-and-publish
     steps:
