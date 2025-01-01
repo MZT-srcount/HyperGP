@@ -40,10 +40,6 @@ jobs:
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
       - name: Check CUDA installation 1
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
-          ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
-          ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
           which nvcc            # 检查 nvcc 是否在 PATH 中
           nvcc --version        # 检查 nvcc 版本
 
@@ -103,14 +99,14 @@ jobs:
       #     echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
       #     echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
-      - name: Check CUDA installation
-        run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
-          ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
-          ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
-          which nvcc            # 检查 nvcc 是否在 PATH 中
-          nvcc --version        # 检查 nvcc 版本
+      # - name: Check CUDA installation
+      #   run: |
+      #     source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+      #     conda activate base  # 激活 base 环境
+      #     ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
+      #     ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
+      #     which nvcc            # 检查 nvcc 是否在 PATH 中
+      #     nvcc --version        # 检查 nvcc 版本
       
       # - name: Reinstall CUDA toolkit with conda
       #   run: |
