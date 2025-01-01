@@ -57,15 +57,26 @@ jobs:
 
       - name: Check CUDA installation
         run: |
+          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          conda activate base  # 激活 base 环境
+          conda list cudatoolkit  # 检查 cudatoolkit 是否已安装
+
           ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
           ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
           which nvcc            # 检查 nvcc 是否在 PATH 中
           nvcc --version        # 检查 nvcc 版本
-          
+      
+      - name: Reinstall CUDA toolkit with conda
+        run: |
+          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          conda activate base  # 激活 base 环境
+          conda install -c conda-forge cudatoolkit=10.2 --force-reinstall
 
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
+          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          conda activate base  # 激活 base 环境
           python -m pip install --upgrade pip
           python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
           
@@ -85,12 +96,16 @@ jobs:
         env:
           LOCAL_VERSION: 1  # 设置本地版本号
         run: |
+          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          conda activate base  # 激活 base 环境
           python ./setup.py bdist_wheel #sdist
           mv dist wheelhouse
           
       # 5. 使用 auditwheel 修复 wheel 文件
       - name: Repair wheel with auditwheel
         run: |
+          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          conda activate base  # 激活 base 环境
           mkdir -p dist
           for whl in wheelhouse/*.whl; do
             auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
