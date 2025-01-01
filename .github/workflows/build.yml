@@ -68,11 +68,11 @@ jobs:
           echo "CUDA_HOME=$CUDA_HOME" >> $GITHUB_ENV
           echo "PATH=$PATH" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
-      - name: Install which
-        run: |
-          sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g' /etc/apt/sources.list
-          sudo apt-get update
-          sudo apt-get install -y which
+      # - name: Install which
+      #   run: |
+      #     sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g' /etc/apt/sources.list
+      #     sudo apt-get update
+      #     sudo apt-get install -y which
 
 
       # 2. 设置 Python 环境
