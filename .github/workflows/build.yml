@@ -30,8 +30,9 @@ jobs:
         id: cuda-toolkit
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+          
   cp309:
-    needs:setup
+    needs: setup
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
