@@ -45,7 +45,7 @@ jobs:
         run: |
           source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
           conda activate base  # 激活 base 环境
-          conda install  -c conda-forge cudatoolkit=10.2
+          conda install  -c conda-forge cudatoolkit=10.2 --force-reinstall
 
       
       - name: Set Conda environment variables
@@ -64,11 +64,11 @@ jobs:
           which nvcc            # 检查 nvcc 是否在 PATH 中
           nvcc --version        # 检查 nvcc 版本
       
-      - name: Reinstall CUDA toolkit with conda
-        run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
-          conda install -c conda-forge cudatoolkit=10.2 --force-reinstall
+      # - name: Reinstall CUDA toolkit with conda
+      #   run: |
+      #     source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+      #     conda activate base  # 激活 base 环境
+      #     conda install -c conda-forge cudatoolkit=10.2 --force-reinstall
 
       # 3. 安装构建工具
       - name: Install dependencies
