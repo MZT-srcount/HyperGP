@@ -27,7 +27,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
           gcc --version  # 检查 gcc 版本
 
-      - name: Set up CUDA
+      - name: Set up CUDA cp309
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit-309
         with:
@@ -124,7 +124,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
           gcc --version  # 检查 gcc 版本
 
-      - name: Set up CUDA
+      - name: Set up CUDA cp310
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit-310
         with:
@@ -220,7 +220,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
           gcc --version  # 检查 gcc 版本
 
-      - name: Set up CUDA
+      - name: Set up CUDA cp311
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit-311
         with:
@@ -316,7 +316,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
           gcc --version  # 检查 gcc 版本
 
-      - name: Set up CUDA
+      - name: Set up CUDA cp312
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit-312
         with:
@@ -412,7 +412,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
           gcc --version  # 检查 gcc 版本
 
-      - name: Set up CUDA
+      - name: Set up CUDA cp313
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit-313
         with:
