@@ -77,11 +77,11 @@ jobs:
             auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
           done
 
-          python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
-          for gz in wheelhouse/*.tar.gz; do
-            new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
-            mv "$gz" "$new_name"
-          done
+          # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
+          # for gz in wheelhouse/*.tar.gz; do
+          #   new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
+          #   mv "$gz" "$new_name"
+          # done
           
           for gz in wheelhouse/*.tar.gz; do
             mv "$gz" dist/
