@@ -35,34 +35,40 @@ jobs:
       #   with:
       #     cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
 
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '11.2'  # 根据你的需求指定 CUDA 版本
+
       # 2. 设置 Python 环境
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           
-      - name: Install CUDA toolkit with conda
-        run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
-          conda install  -c conda-forge cudatoolkit=10.2 --force-reinstall
+      # - name: Install CUDA toolkit with conda
+      #   run: |
+      #     source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+      #     conda activate base  # 激活 base 环境
+      #     conda install  -c conda-forge cudatoolkit=10.2 --force-reinstall
 
       
-      - name: Set Conda environment variables
-        run: |
-          echo "CONDA_PREFIX=$HOME/miniconda" >> $GITHUB_ENV
-          echo "CUDA_HOME=$CONDA_PREFIX" >> $GITHUB_ENV
-          echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+      # - name: Set Conda environment variables
+      #   run: |
+      #     echo "CONDA_PREFIX=$HOME/miniconda" >> $GITHUB_ENV
+      #     echo "CUDA_HOME=$CONDA_PREFIX" >> $GITHUB_ENV
+      #     echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
+      #     echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
-      - name: Check CUDA installation
-        run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
-          ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
-          ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
-          which nvcc            # 检查 nvcc 是否在 PATH 中
-          nvcc --version        # 检查 nvcc 版本
+      # - name: Check CUDA installation
+      #   run: |
+      #     source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+      #     conda activate base  # 激活 base 环境
+      #     ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
+      #     ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
+      #     which nvcc            # 检查 nvcc 是否在 PATH 中
+      #     nvcc --version        # 检查 nvcc 版本
       
       # - name: Reinstall CUDA toolkit with conda
       #   run: |
@@ -73,24 +79,24 @@ jobs:
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
           python -m pip install --upgrade pip
           python -m pip install --force-reinstall build auditwheel scikit-build pybind11 patchelf
           
 
       - name: Debug environment
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
           python -m pip list
           which python
           python -c "import skbuild; print(skbuild.__version__)"
           
       - name: Clean build directories
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
           rm -rf _skbuild/ dist/ build/
 
      # 4. 构建 wheel 文件
@@ -98,16 +104,16 @@ jobs:
         env:
           LOCAL_VERSION: 1  # 设置本地版本号
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
           python ./setup.py bdist_wheel #sdist
           mv dist wheelhouse
           
       # 5. 使用 auditwheel 修复 wheel 文件
       - name: Repair wheel with auditwheel
         run: |
-          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-          conda activate base  # 激活 base 环境
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
           mkdir -p dist
           for whl in wheelhouse/*.whl; do
             auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64

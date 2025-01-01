@@ -19,17 +19,30 @@ def get_cuda_path():
 SUPPORTED_CUDA_VERSIONS = ["10.2"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
 
 # 定义 CMake 配置
-def get_cmake_args(cuda_version):
+# def get_cmake_args(cuda_version):
     
+#     cuda_path = os.getenv("CUDA_HOME", None)
+#     if cuda_path is None:
+#         print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+#         cuda_path = os.getenv("CONDA_PREFIX", "/usr/local/cuda")  # 默认使用 Conda 环境路径
+
+#     cmake_args = [
+#         f"-DPython_ROOT_DIR={os.path.dirname(sys.executable)}",
+#         f"-DPYTHON_EXECUTABLE={sys.executable}",
+#         f"-DCUDA_TOOLKIT_ROOT_DIR={cuda_path}",
+#         "-DCUDA_NVCC_FLAGS=--default-stream per-thread;-O3",
+#     ]
+#     return cmake_args
+
+def get_cmake_args(cuda_version):
     cuda_path = os.getenv("CUDA_HOME", None)
     if cuda_path is None:
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-        cuda_path = os.getenv("CONDA_PREFIX", "/usr/local/cuda")  # 默认使用 Conda 环境路径
+        cuda_path = "/usr/local/cuda"  # 默认 CUDA 路径
 
     cmake_args = [
         f"-DPython_ROOT_DIR={os.path.dirname(sys.executable)}",
         f"-DPYTHON_EXECUTABLE={sys.executable}",
-        f"-DCUDA_TOOLKIT_ROOT_DIR={cuda_path}",
+        f"-DCUDA_TOOLKIT_ROOT_DIR={cuda_path}",  # 使用 CUDA_HOME 设置 CUDA 路径
         "-DCUDA_NVCC_FLAGS=--default-stream per-thread;-O3",
     ]
     return cmake_args
