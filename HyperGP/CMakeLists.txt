@@ -67,6 +67,7 @@ endif()
 ### CUDA BACKEND
 ############################################################################
 
+
 set(CUDA_NVCC_FLAGS
         --default-stream per-thread
         -O3
@@ -75,6 +76,8 @@ set(CUDA_NVCC_FLAGS
 ### tensor backend
 
 find_package(CUDA)
+
+
 if(CUDA_FOUND)
     message(STATUS "Found cuda, building cuda backend")
     include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} "src")
@@ -95,6 +98,8 @@ if(CUDA_FOUND)
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
     )
+else()
+    message(FATAL_ERROR "CUDA not found, CUDA backend will not be built")
 endif()
 
 
