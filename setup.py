@@ -17,6 +17,12 @@ def get_cuda_path():
     print("CUDA PATH: ", cuda_path)
     return cuda_path
 
+# 设置平台标签
+if sys.platform == 'linux':
+    platform_tag = 'manylinux_2_24_x86_64'
+else:
+    platform_tag = sys.platform
+    
 SUPPORTED_CUDA_VERSIONS = ["11.2.2"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
 
 # 定义 CMake 配置
@@ -77,10 +83,16 @@ for cuda_version in SUPPORTED_CUDA_VERSIONS:
                 'tqdm'
             ],
             python_requires=">=3.9, <=3.13", 
-            package_data={
-                'HyperGP': ['*.so'],  # 包含 .so 文件
-            },
+            # package_data={
+            #     'HyperGP': ['*.so'],  # 包含 .so 文件
+            # },
+            zip_safe=True,  # 启用压缩
             include_package_data=True,  # 确保包含非 Python 文件
+            options={
+                'bdist_wheel': {
+                    'plat_name': platform_tag,
+                }
+            }
         )
     except SKBuildError as e:
         print(f"An error occurred while building for CUDA {cuda_version}:", file=sys.stderr)
