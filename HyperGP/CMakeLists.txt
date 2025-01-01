@@ -85,7 +85,7 @@ if(CUDA_FOUND)
 
     CUDA_ADD_LIBRARY(ndarray_cuda_backend MODULE src/ndarray_cuda_backend.cu OPTIONS ${ARCH_FLAGS})
 
-    target_link_libraries(ndarray_cuda_backend ${LINKER_LIBS} ${CUDA_cublas_LIBRARY} ${CUDA_npp_LIBRARY})
+    target_link_libraries(ndarray_cuda_backend ${LINKER_LIBS} ${CUDA_cublas_LIBRARY} )#${CUDA_npp_LIBRARY}
     pybind11_extension(ndarray_cuda_backend)
     pybind11_strip(ndarray_cuda_backend)
 
