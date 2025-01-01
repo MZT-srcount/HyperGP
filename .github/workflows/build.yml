@@ -114,7 +114,7 @@ jobs:
           # conda activate base  # 激活 base 环境
           python -m pip list
           which python
-          ls usr/local
+          ls /usr/local
           python -c "import skbuild; print(skbuild.__version__)"
           
       - name: Clean build directories
@@ -174,10 +174,10 @@ jobs:
   #         find dist/ -type f -name "*.whl" -exec cp {} combined_dist/ \;
   #         find dist/ -type f -name "*.tar.gz" -exec cp {} combined_dist/ \;
 
-      # # 9. 发布到 PyPI
-      # - name: Publish to PyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.PYPI_API_TOKEN }}
-      #     packages_dir: dist
+      # 9. 发布到 PyPI
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dist
