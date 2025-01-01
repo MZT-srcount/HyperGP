@@ -56,6 +56,11 @@ jobs:
       - name: TEST CUDA PATH
         run: |
           ls /usr/local/
+      - name: TEST CUDA PATH_2
+        run: |
+          ls /usr/local/
+          ls $CUDA_HOME
+          
 
       # 3. 安装构建工具
       - name: Install dependencies
