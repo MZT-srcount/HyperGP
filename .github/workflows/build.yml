@@ -63,6 +63,8 @@ jobs:
 
      # 4. 构建 wheel 文件
       - name: Build wheel
+        env:
+          LOCAL_VERSION: 1  # 设置本地版本号
         run: |
           python ./setup.py sdist bdist_wheel 
           mv dist wheelhouse

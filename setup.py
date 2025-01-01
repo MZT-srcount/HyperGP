@@ -28,12 +28,17 @@ def get_cmake_args(cuda_version):
     ]
     return cmake_args
 
+# 动态生成版本号
+version = "0.1.2"
+local_version = os.getenv("LOCAL_VERSION", "1")  # 从环境变量获取本地版本号，默认为 "1"
+full_version = f"{version}-{local_version}"
+
 # 使用 scikit-build 进行构建
 for cuda_version in SUPPORTED_CUDA_VERSIONS:
     try:
         skbuild_setup(
             name='HyperGP',#f'HyperGP_cuda_{cuda_version.replace(".", "_")}',
-            version = '0.1.2', 
+            version = version, 
             description="A high performance heterogeneous parallel GP framework",
             author = 'Zhitong Ma',                   # Type in your name
             author_email = 'cszhitongma@mail.scut.edu.cn',      # Type in your E-Mail
