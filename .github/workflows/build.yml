@@ -51,14 +51,13 @@ jobs:
           echo "CUDA_HOME=$CONDA_PREFIX" >> $GITHUB_ENV
           echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-          # ls $CUDA_HOME
-      
-      - name: TEST CUDA PATH
+
+      - name: Check CUDA installation
         run: |
-          ls /usr/local/
-      - name: TEST CUDA PATH_2
-        run: |
-          ls $CUDA_HOME/bin
+          ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
+          ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
+          which nvcc            # 检查 nvcc 是否在 PATH 中
+          nvcc --version        # 检查 nvcc 版本
           
 
       # 3. 安装构建工具
