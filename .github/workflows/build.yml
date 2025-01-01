@@ -66,8 +66,8 @@ jobs:
 
       - name: Install which
         run: |
-          sudo apt-get update
-          sudo apt-get install which
+          apt-get update
+          apt-get install -y which
 
       # 2. 设置 Python 环境
       - name: Set up Python ${{ matrix.python-version }}
