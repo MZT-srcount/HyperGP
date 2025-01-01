@@ -67,7 +67,6 @@ endif()
 ### CUDA BACKEND
 ############################################################################
 
-
 set(CUDA_NVCC_FLAGS
         --default-stream per-thread
         -O3
@@ -75,14 +74,7 @@ set(CUDA_NVCC_FLAGS
 
 ### tensor backend
 
-# 设置 CMake 策略
-if(POLICY CMP0146)
-    cmake_policy(SET CMP0146 NEW)  # 启用现代 CUDA 查找
-endif()
-
 find_package(CUDA)
-
-
 if(CUDA_FOUND)
     message(STATUS "Found cuda, building cuda backend")
     include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} "src")
@@ -103,8 +95,6 @@ if(CUDA_FOUND)
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
     )
-else()
-    message(FATAL_ERROR "CUDA not found, CUDA backend will not be built")
 endif()
 
 
