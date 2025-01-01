@@ -55,7 +55,7 @@ def get_cmake_args(cuda_version):
     return cmake_args
 
 # 动态生成版本号
-version = "0.1.3"
+version = "0.1.1"
 local_version = os.getenv("LOCAL_VERSION", "1")  # 从环境变量获取本地版本号，默认为 "1"
 full_version = f"{version}-{local_version}"
 

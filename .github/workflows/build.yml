@@ -25,7 +25,7 @@ jobs:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
           gcc --version  # 检查 gcc 版本
-          
+
       - name: Set up CUDA
         uses: Jimver/cuda-toolkit@v0.2.19
         id: cuda-toolkit
@@ -133,6 +133,7 @@ jobs:
           # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
           # conda activate base  # 激活 base 环境
           python ./setup.py bdist_wheel #sdist
+          python ./.github/workflows/version_set.py
           mv dist wheelhouse
           
       # 5. 使用 auditwheel 修复 wheel 文件
