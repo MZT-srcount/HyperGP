@@ -53,7 +53,7 @@ jobs:
           echo "CONDA_PREFIX=$HOME/miniconda" >> $GITHUB_ENV
           echo "CUDA_HOME=$CONDA_PREFIX" >> $GITHUB_ENV
           echo "PATH=$CONDA_PREFIX/bin:$PATH" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_EN
+          echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
 
       - name: Check CUDA installation
         run: |
