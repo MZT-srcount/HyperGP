@@ -70,8 +70,8 @@ jobs:
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
       - name: Install which
         run: |
-          apt-get update
-          apt-get install -y which
+          sudo apt-get update
+          sudo apt-get install -y which
 
 
       # 2. 设置 Python 环境
