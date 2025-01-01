@@ -1,6 +1,9 @@
 name: Build Wheels
 
-on: [push, pull_request]  # 触发条件：当有 push 或 pull_request 时运行
+on:
+  push:
+    tags:
+      - 'v*'  # 触发条件：推送标签时
 
 jobs:
   build:
@@ -73,6 +76,26 @@ jobs:
           for gz in wheelhouse/*.tar.gz; do
             mv "$gz" dist/
           done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist-${{ matrix.python-version }}
+          path: dist/
+
+publish:
+    runs-on: ubuntu-20.04
+    needs: build-and-publish
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: dist/
+
+      - name: Combine artifacts
+        run: |
+          mkdir -p combined_dist
+          find . -path "./dist-*/dist/*" -exec cp {} combined_dist/ \;
 
       # 9. 发布到 PyPI
       - name: Publish to PyPI
