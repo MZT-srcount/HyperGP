@@ -14,7 +14,21 @@ on:
 #on: [push, pull_request] # 触发条件：当有 push 或 pull_request 时运行 
 
 jobs:
+  conda_install:
+    runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
+    steps:
+    
+      - name: Clear cache
+        run: |
+          sudo rm -rf /home/runner/work/_temp/_github_workflow/cuda_installer-linux-5.15.0-1074-azure-10.2.89
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+
   build:
+    needs: conda_install
     runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
     strategy:
       matrix:
@@ -34,14 +48,6 @@ jobs:
       #   uses: nvidia/setup-cuda@v1
       #   with:
       #     cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
-      - name: Clear cache
-        run: |
-          sudo rm -rf /home/runner/work/_temp/_github_workflow/cuda_installer-linux-5.15.0-1074-azure-10.2.89
-      - name: Set up CUDA
-        uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        with:
-          cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
 
       # 2. 设置 Python 环境
       - name: Set up Python ${{ matrix.python-version }}
