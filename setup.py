@@ -88,11 +88,11 @@ for cuda_version in SUPPORTED_CUDA_VERSIONS:
             # },
             zip_safe=True,  # 启用压缩
             include_package_data=True,  # 确保包含非 Python 文件
-            options={
-                'bdist_wheel': {
-                    'plat_name': platform_tag,
-                }
-            }
+            # options={
+            #     'bdist_wheel': {
+            #         'plat_name': platform_tag,
+            #     }
+            # }
         )
     except SKBuildError as e:
         print(f"An error occurred while building for CUDA {cuda_version}:", file=sys.stderr)
