@@ -30,14 +30,19 @@ jobs:
           bash miniconda.sh -b -p $HOME/miniconda
           echo "$HOME/miniconda/bin" >> $GITHUB_PATH
 
-      - name: Install CUDA toolkit with conda
-        run: |
-          conda install  -c conda-forge cudatoolkit=11.2
+      - name: Set up CUDA
+        uses: actions/setup-cuda@v1
+        with:
+          cuda-version: '11.2'  # 根据你的需求指定 CUDA 版本
+
+      # - name: Install CUDA toolkit with conda
+      #   run: |
+      #     conda install  -c conda-forge cudatoolkit=11.2
       
-      - name: Set CUDA environment variables
-        run: |
-          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib" >> $GITHUB_ENV
-          echo "CUDA_HOME=$HOME/miniconda" >> $GITHUB_ENV
+      # - name: Set CUDA environment variables
+      #   run: |
+      #     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib" >> $GITHUB_ENV
+      #     echo "CUDA_HOME=$HOME/miniconda" >> $GITHUB_ENV
 
       # 2. 设置 Python 环境
       - name: Set up Python ${{ matrix.python-version }}
