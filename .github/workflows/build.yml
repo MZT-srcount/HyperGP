@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
     strategy:
       matrix:
-        python-version: ["3.11"]#["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
     steps:
       # 1. 检出代码
       - uses: actions/checkout@v3
@@ -27,9 +27,9 @@ jobs:
       - name: Install compatible gcc version
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc-8 g++-8
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+          sudo apt-get install -y gcc-7.5 g++-7.5
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7.5 7.5
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7.5 7.5
           gcc --version  # 检查 gcc 版本
           
       - name: Check CUDA installation 2
