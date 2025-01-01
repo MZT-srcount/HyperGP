@@ -30,7 +30,7 @@ jobs:
         id: cuda-toolkit
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
-          
+
   cp309:
     needs: setup
     runs-on: ubuntu-20.04
@@ -113,7 +113,7 @@ jobs:
       #     packages_dir: dist
 
   cp310:
-    needs:setup
+    needs: setup
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -178,7 +178,7 @@ jobs:
       #     password: ${{ secrets.PYPI_API_TOKEN }}
       #     packages_dir: dist
   cp311:
-    needs:setup
+    needs: setup
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -259,7 +259,7 @@ jobs:
       #     password: ${{ secrets.PYPI_API_TOKEN }}
       #     packages_dir: dist
   cp312:
-    needs:setup
+    needs: setup
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
@@ -340,7 +340,7 @@ jobs:
       #     password: ${{ secrets.PYPI_API_TOKEN }}
       #     packages_dir: dist
   cp313:
-    needs:setup
+    needs: setup
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
