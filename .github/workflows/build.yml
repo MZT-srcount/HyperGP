@@ -33,6 +33,7 @@ jobs:
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
           cache-key: cuda-309  # 使用 matrix 值作为缓存键
+          artifact-name: cuda-build1  # 使用唯一的 Artifact 名称
 
       - name: Check CUDA installation 1
         run: |
@@ -42,7 +43,7 @@ jobs:
       - name: Set up Python 309
         uses: actions/setup-python@v4
         with:
-          python-version: 3.09
+          python-version: 3.9
       # 3. 安装构建工具
       - name: Install dependencies
         run: |
@@ -129,6 +130,7 @@ jobs:
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
           cache-key: cuda-310  # 使用 matrix 值作为缓存键
+          artifact-name: cuda-build2  # 使用唯一的 Artifact 名称
 
       - name: Check CUDA installation 1
         run: |
@@ -224,6 +226,7 @@ jobs:
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
           cache-key: cuda-311  # 使用 matrix 值作为缓存键
+          artifact-name: cuda-build3  # 使用唯一的 Artifact 名称
 
       - name: Check CUDA installation 1
         run: |
@@ -319,6 +322,7 @@ jobs:
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
           cache-key: cuda-312  # 使用 matrix 值作为缓存键
+          artifact-name: cuda-build4  # 使用唯一的 Artifact 名称
 
       - name: Check CUDA installation 1
         run: |
@@ -414,6 +418,7 @@ jobs:
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
           cache-key: cuda-313  # 使用 matrix 值作为缓存键
+          artifact-name: cuda-build5  # 使用唯一的 Artifact 名称
 
       - name: Check CUDA installation 1
         run: |
