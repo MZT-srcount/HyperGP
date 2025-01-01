@@ -23,6 +23,7 @@ def get_cmake_args(cuda_version):
     
     cuda_path = os.getenv("CUDA_HOME", None)
     if cuda_path is None:
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
         cuda_path = os.getenv("CONDA_PREFIX", "/usr/local/cuda")  # 默认使用 Conda 环境路径
 
     cmake_args = [
