@@ -1,9 +1,6 @@
 name: Build Wheels
 
-on:
-  push:
-    tags:
-      - 'v*'  # 触发条件：推送标签时
+on: [push]  # 触发条件：当有 push 或 pull_request 时运行 on: [push, pull_request]
 
 jobs:
   build:
@@ -103,4 +100,3 @@ publish:
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          
