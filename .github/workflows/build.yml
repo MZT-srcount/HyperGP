@@ -32,6 +32,7 @@ jobs:
         id: cuda-toolkit-309
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+          cache-key: cuda-309  # 使用 matrix 值作为缓存键
 
       - name: Check CUDA installation 1
         run: |
@@ -127,6 +128,7 @@ jobs:
         id: cuda-toolkit-310
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+          cache-key: cuda-310  # 使用 matrix 值作为缓存键
 
       - name: Check CUDA installation 1
         run: |
@@ -221,6 +223,7 @@ jobs:
         id: cuda-toolkit-311
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+          cache-key: cuda-311  # 使用 matrix 值作为缓存键
 
       - name: Check CUDA installation 1
         run: |
@@ -315,6 +318,7 @@ jobs:
         id: cuda-toolkit-312
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+          cache-key: cuda-312  # 使用 matrix 值作为缓存键
 
       - name: Check CUDA installation 1
         run: |
@@ -409,6 +413,7 @@ jobs:
         id: cuda-toolkit-313
         with:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
+          cache-key: cuda-313  # 使用 matrix 值作为缓存键
 
       - name: Check CUDA installation 1
         run: |
