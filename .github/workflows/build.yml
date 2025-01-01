@@ -83,12 +83,16 @@ jobs:
 
       - name: Debug environment
         run: |
+          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          conda activate base  # 激活 base 环境
           python -m pip list
           which python
           python -c "import skbuild; print(skbuild.__version__)"
           
       - name: Clean build directories
         run: |
+          source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          conda activate base  # 激活 base 环境
           rm -rf _skbuild/ dist/ build/
 
      # 4. 构建 wheel 文件
