@@ -93,6 +93,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-20.04
+    needs: jobs
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
