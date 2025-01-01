@@ -61,10 +61,10 @@ jobs:
           conda activate base  # 激活 base 环境
           conda list cudatoolkit  # 检查 cudatoolkit 是否已安装
 
-          ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
-          ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
-          which nvcc            # 检查 nvcc 是否在 PATH 中
-          nvcc --version        # 检查 nvcc 版本
+          # ls $CONDA_PREFIX/bin  # 检查是否包含 nvcc
+          # ls $CONDA_PREFIX/lib  # 检查是否包含 CUDA 库文件
+          # which nvcc            # 检查 nvcc 是否在 PATH 中
+          # nvcc --version        # 检查 nvcc 版本
       
       - name: Reinstall CUDA toolkit with conda
         run: |
