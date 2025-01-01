@@ -53,7 +53,6 @@ jobs:
           nvcc --version        # 检查 nvcc 版本
           ls /usr/local
   
-
   build:
     needs: setup
     runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
@@ -71,9 +70,9 @@ jobs:
 
       - name: Check CUDA installation 2
         run: |
+          ls /usr/local
           which nvcc            # 检查 nvcc 是否在 PATH 中
           nvcc --version        # 检查 nvcc 版本
-          ls /usr/local
       # - name: Install Miniconda
       #   run: |
       #     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
