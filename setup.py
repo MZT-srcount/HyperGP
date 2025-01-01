@@ -16,20 +16,20 @@ def get_cuda_path():
         cuda_path = "/usr/local/cuda"  # 默认 CUDA 路径
     return cuda_path
 
-SUPPORTED_CUDA_VERSIONS = ["10.2"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
+SUPPORTED_CUDA_VERSIONS = ["11.2"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
 
 # 定义 CMake 配置
 def get_cmake_args(cuda_version):
     cmake_args = [
         f"-DPython_ROOT_DIR={os.path.dirname(sys.executable)}",
         f"-DPYTHON_EXECUTABLE={sys.executable}",
-        f"-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-{cuda_version}",
+        # f"-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-{cuda_version}",
         "-DCUDA_NVCC_FLAGS=--default-stream per-thread;-O3",
     ]
     return cmake_args
 
 # 动态生成版本号
-version = "0.1.2-7"
+version = "0.1.2-8"
 local_version = os.getenv("LOCAL_VERSION", "1")  # 从环境变量获取本地版本号，默认为 "1"
 full_version = f"{version}-{local_version}"
 
