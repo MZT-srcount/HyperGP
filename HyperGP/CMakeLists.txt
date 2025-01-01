@@ -75,10 +75,10 @@ set(CUDA_NVCC_FLAGS
 
 ### tensor backend
 
-# # 设置 CMake 策略
-# if(POLICY CMP0146)
-#     cmake_policy(SET CMP0146 NEW)  # 启用现代 CUDA 查找
-# endif()
+# 设置 CMake 策略
+if(POLICY CMP0146)
+    cmake_policy(SET CMP0146 NEW)  # 启用现代 CUDA 查找
+endif()
 
 find_package(CUDA)
 
