@@ -103,7 +103,7 @@ jobs:
       - name: Combine artifacts
         run: |
           mkdir -p combined_dist
-          find . -path "./dist-*/dist/*" -exec cp {} combined_dist/ \;
+          find . -path "./dist/*" -exec cp {} combined_dist/ \;
 
       # 9. 发布到 PyPI
       - name: Publish to PyPI
