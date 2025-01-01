@@ -129,6 +129,7 @@ jobs:
           # conda activate base  # 激活 base 环境
           python -m pip list
           which python
+          which nvcc
           python -c "import skbuild; print(skbuild.__version__)"
           
       - name: Clean build directories

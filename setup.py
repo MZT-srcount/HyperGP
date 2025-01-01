@@ -14,6 +14,7 @@ def get_cuda_path():
     cuda_path = os.getenv("CUDA_HOME", None)
     if cuda_path is None:
         cuda_path = "/usr/local/cuda"  # 默认 CUDA 路径
+    print("CUDA PATH: ", cuda_path)
     return cuda_path
 
 SUPPORTED_CUDA_VERSIONS = ["11.2.2"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]

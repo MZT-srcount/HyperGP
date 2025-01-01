@@ -120,6 +120,8 @@ if(CUDA_FOUND)
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
     )
+else
+    message(STATUS "Can not found cuda")
 endif()
 message(STATUS "Python3_INCLUDE_DIRS: ${CMAKE_INSTALL_LIBDIR}, ${CMAKE_CURRENT_SOURCE_DIR}")
 
