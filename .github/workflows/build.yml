@@ -14,8 +14,13 @@ on:
 #on: [push, pull_request] # 触发条件：当有 push 或 pull_request 时运行 
 
 jobs:
+
   setup:
     runs-on: ubuntu-20.04
+    outputs:
+      cuda_home: ${{ steps.set_cuda_env.outputs.cuda_home }}
+      path: ${{ steps.set_cuda_env.outputs.path }}
+      ld_library_path: ${{ steps.set_cuda_env.outputs.ld_library_path }}
     steps:
       - uses: actions/checkout@v3
 
@@ -34,15 +39,20 @@ jobs:
           cuda: '11.2.2'  # 根据你的需求指定 CUDA 版本
 
       - name: Save CUDA environment variables
+        id: set_cuda_env
         run: |
           echo "CUDA_HOME=$CUDA_HOME" >> $GITHUB_ENV
           echo "PATH=$PATH" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "::set-output name=cuda_home::$CUDA_HOME"
+          echo "::set-output name=path::$PATH"
+          echo "::set-output name=ld_library_path::$LD_LIBRARY_PATH"
+
       - name: Check CUDA installation 1
         run: |
           which nvcc            # 检查 nvcc 是否在 PATH 中
           nvcc --version        # 检查 nvcc 版本
-
+          ls /usr/local
   build:
     needs: setup
     runs-on: ubuntu-20.04  # 使用最新的 Ubuntu 环境
@@ -51,7 +61,19 @@ jobs:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 支持的 Python 版本
     steps:
       # 1. 检出代码
-      - uses: actions/checkout@v3
+            - uses: actions/checkout@v3
+
+      - name: Set CUDA environment variables
+        run: |
+          echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
+          echo "PATH=${{ needs.setup.outputs.path }}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=${{ needs.setup.outputs.ld_library_path }}" >> $GITHUB_ENV
+
+      - name: Check CUDA installation 2
+        run: |
+          which nvcc            # 检查 nvcc 是否在 PATH 中
+          nvcc --version        # 检查 nvcc 版本
+          ls /usr/local
       # - name: Install Miniconda
       #   run: |
       #     wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -67,11 +89,11 @@ jobs:
       #     echo "CUDA_HOME=${{ needs.setup.outputs.cuda_home }}" >> $GITHUB_ENV
       #     echo "PATH=${{ needs.setup.outputs.path }}" >> $GITHUB_ENV
       #     echo "LD_LIBRARY_PATH=${{ needs.setup.outputs.ld_library_path }}" >> $GITHUB_ENV
-      - name: Set CUDA environment variables
-        run: |
-          echo "CUDA_HOME=$CUDA_HOME" >> $GITHUB_ENV
-          echo "PATH=$PATH" >> $GITHUB_ENV
-          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
+      # - name: Set CUDA environment variables
+      #   run: |
+      #     echo "CUDA_HOME=$CUDA_HOME" >> $GITHUB_ENV
+      #     echo "PATH=$PATH" >> $GITHUB_ENV
+      #     echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
       # - name: Install which
       #   run: |
       #     sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.tuna.tsinghua.edu.cn/ubuntu/|g' /etc/apt/sources.list
@@ -129,7 +151,7 @@ jobs:
           # conda activate base  # 激活 base 环境
           python -m pip list
           which python
-          which nvcc
+          ls usr/local
           python -c "import skbuild; print(skbuild.__version__)"
           
       - name: Clean build directories
