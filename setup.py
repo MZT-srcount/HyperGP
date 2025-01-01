@@ -23,7 +23,7 @@ def get_cmake_args(cuda_version):
     cmake_args = [
         f"-DPython_ROOT_DIR={os.path.dirname(sys.executable)}",
         f"-DPYTHON_EXECUTABLE={sys.executable}",
-        # f"-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-{cuda_version}",
+        f"-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-{cuda_version}",
         "-DCUDA_NVCC_FLAGS=--default-stream per-thread;-O3",
     ]
     return cmake_args
