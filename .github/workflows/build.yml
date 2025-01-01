@@ -17,13 +17,6 @@ jobs:
       # 1. 检出代码
       - uses: actions/checkout@v3
       
-      - name: Set up CUDA
-        uses: Jimver/cuda-toolkit@v0.2.19
-        id: cuda-toolkit
-        with:
-          cuda: '10.2.89'  # 根据你的需求指定 CUDA 版本
-          log-file-suffix: '${{matrix.python-version}}.txt'
-
       - name: Install compatible gcc version
         run: |
           sudo apt-get update
@@ -31,6 +24,14 @@ jobs:
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7.5 7.5
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7.5 7.5
           gcc --version  # 检查 gcc 版本
+          
+      - name: Set up CUDA
+        uses: Jimver/cuda-toolkit@v0.2.19
+        id: cuda-toolkit
+        with:
+          cuda: '10.2.89'  # 根据你的需求指定 CUDA 版本
+          log-file-suffix: '${{matrix.python-version}}.txt'
+
           
       - name: Check CUDA installation 2
         run: |
