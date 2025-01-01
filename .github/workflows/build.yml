@@ -54,6 +54,7 @@ jobs:
           # ls $CUDA_HOME
       
       - name: TEST CUDA PATH
+        run: |
           ls /usr/local/
 
       # 3. 安装构建工具
