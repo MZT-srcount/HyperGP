@@ -86,7 +86,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-20.04
-    needs: build-and-publish
+    build-and-publish
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
