@@ -162,19 +162,18 @@ class GpOptimizer(BaseStruct, __Mods):
             self.__getattribute__(mod)._popSet(self, **kwargs)
 
     def _run_independent(self, iter, device=[0]):
-        
         for i in tqdm(range(iter)):
-            # print('iteration: %d'%i)
-            
+    
             mask_list = [[mask() if callable(mask) else mask for mask in masks] for masks in self.components['mask_list']]
             unit_size_list = [self._mask_check(mask) for mask in mask_list]
 
-            for j, (func, from_l, to_l, mask_l) in enumerate(zip(self.components['func_list'], self.components['from_list'], self.components['to_list'], mask_list)):
-                # print('func: ', func)
-                for k in range(len(from_l)):
-                    if isinstance(from_l[k], str):
-                        # print(from_l[k], len(self.workflowstates[from_l[k]]), mask_l[k], func)
-                        from_l[k] = self.workflowstates[from_l[k]]
+            for j, (func, from_l_pre, to_l, mask_l) in enumerate(zip(self.components['func_list'], self.components['from_list'], self.components['to_list'], mask_list)):
+                from_l = [[] for l in range(len(from_l_pre))]
+                for k in range(len(from_l_pre)):
+                    if isinstance(from_l_pre[k], str):
+                        from_l[k] = self.workflowstates[from_l_pre[k]]
+                    else:
+                        from_l[k] = from_l_pre[k]
                 states = [States(**{self.components['param_list'][j][k]:source[mask_l[k][z]] for k, source in enumerate(from_l) if isinstance(mask_l[k], list)}) for z in range(unit_size_list[j])]
                 states_kwargs = {self.components['param_list'][j][k]:from_l[k] for k, mask in enumerate(mask_l) if isinstance(mask, int)}
                 if len(states) == 0:
@@ -224,7 +223,7 @@ class GpOptimizer(BaseStruct, __Mods):
                         else:
                             result.append(res)
                     if isinstance(to_l[0], str):
-                        self.workflowstates[to_l[0]] = result
+                        self.workflowstates[to_l[0]] = result if len(result) > 1 else result[0]
                     else:
                         to_l[0].extend(result)
             
@@ -310,7 +309,7 @@ class GpOptimizer(BaseStruct, __Mods):
         self.components = package[3]
         self.monitors = package[4]
 
-    def __parallel(self, method, states, gparallel, parallel=True, kwargs={}):
+    def __parallel(self, method, states, gparallel, parallel=False, kwargs={}):
         if isinstance(method, list) and len(method) != len(states):
             raise ValueError('The method size %d not equal to the cond size %d' % (len(method), len(states)))
         default_devid = query_device()

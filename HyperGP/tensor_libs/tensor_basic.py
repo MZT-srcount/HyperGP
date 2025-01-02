@@ -18,6 +18,15 @@ class Tensor(Value):
             cached_data = array_api._array(array, dtype=dtype, device=device, device_id=device_id)
         self._init(None, [], cached_data)
 
+    def __int__(self):
+        return int(self.cached_data.numpy())
+    
+    def __float__(self):
+        return float(self.cached_data.numpy())
+    
+    def __bool__(self):
+        return bool(self.cached_data.numpy())
+    
     @property
     def realize_cached_data(self):
         if self.cached_data is not None:

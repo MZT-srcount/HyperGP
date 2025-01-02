@@ -14,11 +14,14 @@ class WorkflowStates(States):
     #     return copy.deepcopy(self.__dict__, memo)
 
 class ParaStates(States):
-    def __init__(self, func, source, to, mask, parallel=False, func_mask=None):
+    def __init__(self, func, source=[], mask=None, to=[], parallel=False, func_mask=None):
         self["func"]=func
         self["source"]=source
         self["to"]=to
-        self["mask"]=mask
+        if mask is None:
+            self["mask"]=[1 for s in source]
+        else:
+            self["mask"]=mask
         self["parallel"]=parallel
         self["func_mask"]=func_mask
     def __getattr__(self, item):

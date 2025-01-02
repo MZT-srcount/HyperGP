@@ -23,7 +23,7 @@ def concatenate(arrays:tuple, dim=0, device=None):
     post_len = prob(arrays[cdds[0]].shape[dim + 1:])
     if not all([arrays[cdd].shape[:dim] == arrays[cdds[0]].shape[:dim] and arrays[cdd].shape[dim + 1:] == arrays[cdds[0]].shape[dim + 1:] for cdd in cdds]):
         raise ValueError("all the input array dimensions except for the concatenation axis must match exactly")
-    new_shape = arrays[cdds[0]].shape[:dim] + (np.sum([arrays[cdd].shape[dim] for cdd in cdds]), ) + arrays[cdds[0]].shape[dim + 1:]
+    new_shape = arrays[cdds[0]].shape[:dim] + (int(np.sum([arrays[cdd].shape[dim] for cdd in cdds])), ) + arrays[cdds[0]].shape[dim + 1:]
     dtype = arrays[0].dtype
     for i in range(len(arrays)):
         dtype = _out_dtype(arrays[i].dtype, dtype)

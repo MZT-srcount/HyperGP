@@ -142,7 +142,6 @@ class NDArray:
     def __setstate__(self, state):
         array = NDArray(state[0], state[1], gpu() if state[2] == "gpu" else cpu())
         self._init(array)
-
     
     def _setstate(state):
         return NDArray(state[0], _dtype_strmap[state[1]], gpu() if state[2] == "gpu" else cpu())
@@ -168,9 +167,9 @@ class NDArray:
         
     #[ ] TODO: It seems the offset compute in each opers is wrong
     def __getitem__(self, idxs):
-        # print("idxs", idxs)
         if not isinstance(idxs, tuple):
             idxs = (idxs, )
+        
         assert len(idxs) <= len(self.shape), "Need indexes leq to number of dimensions"
         
         assert all([isinstance(idx, slice) or isinstance(idx, list) or isinstance(idx, int) for idx in idxs]),\
@@ -397,7 +396,8 @@ class NDArray:
     def __gt__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_bool)
         if isinstance(other, NDArray):
-            assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            if self.shape != other.shape and self.shape != other.reshape(self.shape):
+                raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
             self.device.ewise_ge(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
             self.device.scalar_ge(self._handle, other, out._handle, self._offset)
@@ -409,7 +409,8 @@ class NDArray:
     def __ge__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_bool)
         if isinstance(other, NDArray):
-            assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
+                raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
             self.device.ewise_ge(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
             self.device.scalar_ge(self._handle, other, out._handle, self._offset)
