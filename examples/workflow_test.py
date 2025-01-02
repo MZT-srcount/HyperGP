@@ -9,10 +9,12 @@ LastEditTime: 2025-01-02 10:13:04
 import random, HyperGP, numpy as np
 from HyperGP.states import ProgBuildStates, ParaStates
 
-input_array = HyperGP.Tensor(np.random.uniform(0, 10, size=(2, 10000)))
-target = HyperGP.exp((input_array[0] + 1) * (input_array[0] + 1)) / (input_array[1] + input_array[0])
 
 pop_size = 100
+input_size = 10000
+
+input_array = HyperGP.Tensor(np.random.uniform(0, 10, size=(2, input_size)))
+target = HyperGP.exp((input_array[0] + 1) * (input_array[0] + 1)) / (input_array[1] + input_array[0])
 
 pset = HyperGP.PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2)])
 pop = HyperGP.Population()
