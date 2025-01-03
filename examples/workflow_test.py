@@ -10,8 +10,8 @@ import random, HyperGP, numpy as np
 from HyperGP.states import ProgBuildStates, ParaStates
 
 
-pop_size = 1000
-input_size = 1000
+pop_size = 100
+input_size = 10000
 
 input_array = HyperGP.Tensor(np.random.uniform(0, 100, size=(2, input_size)))
 target = (input_array[0] + input_array[0] * input_array[1] * input_array[1]) * (input_array[0]) / (input_array[1] + input_array[0])
@@ -56,5 +56,5 @@ optimizer.iter_component(
                     mask=[1, 1, 1, 1])
     )
 # optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list")
-optimizer.run(100)
+optimizer.run(500)
 print('final res: ', HyperGP.tensor.min(optimizer.workflowstates.pfit_list))

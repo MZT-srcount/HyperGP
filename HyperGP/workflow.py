@@ -163,7 +163,7 @@ class GpOptimizer(BaseStruct, __Mods):
             self.__setattr__(mod, self.available_mods.__getattribute__(mod)())
             self.__getattribute__(mod)._popSet(self, **kwargs)
 
-    def _run_independent(self, iter, device=[0], tqdm_diable=False):
+    def _run_independent(self, iter, device=[0], tqdm_diable=False, stop_criteria=None):
         for i in tqdm(range(iter), disable=tqdm_diable):
             
             mask_list = [[mask() if callable(mask) else mask for mask in masks] for masks in self.components['mask_list']]
@@ -237,17 +237,20 @@ class GpOptimizer(BaseStruct, __Mods):
                 if isinstance(monitor[1], list):
                     track_object = [self.workflowstates[key] for key in monitor[1]]
                     monitor[0](*track_object, save_path=monitor[2])
+            
+            if stop_criteria():
+                return 
 
 
-    def __run_parallel(self, iter, device=[0]):
+    def __run_parallel(self, iter, device=[0], tqdm_diable=False, stop_criteria=None):
         
         context = multiprocessing.get_context("spawn")
         manager_queue = context.Manager().Queue()
-        proc = context.Process(target=_state_transform, args=(iter, manager_queue, self._package, self.status, device))
+        proc = context.Process(target=_state_transform, args=(iter, manager_queue, self._package, self.status, device, tqdm_diable, stop_criteria))
         self.proc = proc
         self.queue = manager_queue
 
-    def run(self, iter, device=[0], async_parallel=False, tqdm_diable=False):
+    def run(self, iter, device=[0], async_parallel=False, tqdm_diable=False, stop_criteria=None):
         """
         Run the optimizer with iteration time and device
         
@@ -255,20 +258,26 @@ class GpOptimizer(BaseStruct, __Mods):
             iter(int): The iteration time
             device(list): GPU index list used in the optimizer
             async_parallel(boolean): Whether asynchronously execute the optimizer. If it is True, the method will immediately return, then a ``wait`` method is needed to wait the evolution process finish.
-        
+            tqdm_diable(boolean): Whether use a tqdm show
+            stop_criteria(func-like): early stop condition
         Examples:
 
             >>> optimizer.run(10)
 
             or run it asynchronously:
+            
             >>> optimizer.run(10, async_parallel=True)
             >>> optimizer.wait()
 
+            early stop:
+
+            >>> optimizer.run(500, stop_criteria=lambda: HyperGP.tensor.min(optimizer.workflowstates.fit_list) < 1e10)
+
         """
         if async_parallel:
-            self.__run_parallel(iter, device)
+            self.__run_parallel(iter, device, tqdm_diable=tqdm_diable, stop_criteria=stop_criteria)
         else:
-            self._run_independent(iter, device, tqdm_diable=tqdm_diable)
+            self._run_independent(iter, device, tqdm_diable=tqdm_diable, stop_criteria=stop_criteria)
 
     def detach(self):
         """
@@ -335,7 +344,7 @@ class GpOptimizer(BaseStruct, __Mods):
                 
 
 
-def _state_transform(iter, ret_queue, package, status, device=[0]):
+def _state_transform(iter, ret_queue, package, status, device=[0], tqdm_diable=False, stop_criteria=None):
     new_optimizer = GpOptimizer(**status)
     new_optimizer._update(package)
     new_optimizer._run_independent(iter, device)
