@@ -85,6 +85,7 @@ def ops_run(runner, a, b, dim_0=0, dim_1=0):
             )
     # if pre_dim_a != pre_dim_b and not (pre_dim_a % pre_dim_b == 0 and post_dim_a > post_dim_b) and not (pre_dim_a % pre_dim_b == 0 and post_dim_b > post_dim_a):
     #     UserWarning("The input size is not equal {dim_a}:{dim_b}".format(a._shape[:dim_0 + 1], b._shape[:dim_1 + 1]))
+
     assert post_dim_a == post_dim_b or post_dim_b == 1 or post_dim_a == 1, "input size not equal to size in dim, %d!=%d"%(post_dim_a, post_dim_b)
     runner(a._handle, b._handle, out._handle, pre_dim_a, post_dim_a, pre_dim_b, post_dim_b, a._offset, b._offset)
     return out
@@ -189,7 +190,7 @@ class NDArray:
         
         """use _offset to avoid the frequent data transfer"""
         if len(idxs) == 1:
-            if isinstance(idxs[0], list) and isinstance(idxs[0][0], int):
+            if isinstance(idxs[0], list) and len(idxs[0]) == 1:
                 idx = idxs[0][0]
                 new_array = NDArray.make(tuple(new_shape), self._handle.dev_id, handle=self._handle, offset=idx * self._stride[0] + self._offset, device=self.device, dtype=self.dtype)
                 return new_array

@@ -10,8 +10,8 @@ import random, HyperGP, numpy as np
 from HyperGP.states import ProgBuildStates, ParaStates
 
 
-pop_size = 1000
-input_size = 10000
+pop_size = 4
+input_size = 10
 
 input_array = HyperGP.Tensor(np.random.uniform(0, 10, size=(2, input_size)))
 target = HyperGP.tensor.exp((input_array[0]) * (input_array[0])) / (input_array[1] + input_array[0])
@@ -21,7 +21,14 @@ pop = HyperGP.Population()
 pop.initPop(pop_size=pop_size, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 6], len_limit=100000))
 
 def evaluation(output, target):
+    print(output)
+    print(target)
     r1 = HyperGP.tensor.sub(output, target, dim_0=1)
+    print(r1)
+    print('==============================')
+    print(HyperGP.tensor.add(output, target, dim_0=1))
+    print(output.sum(dim=1).numpy(), np.sum(output.numpy(), axis=1))
+    assert 0==1
     return (r1 * r1).sum(dim=1).sqrt()
 
 output, _ = HyperGP.executor(pop.states['progs'].indivs, input=input_array, pset=pset)
@@ -48,7 +55,7 @@ optimizer.iter_component(
         ParaStates(func=HyperGP.ops.RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
                     mask=[lambda x=int(pop_size / 2):random.sample(range(pop_size), x), lambda x=int(pop_size / 2):random.sample(range(pop_size), x)]),
         ParaStates(func=HyperGP.ops.RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=pop_size), True], to=["p_list"],
-                    mask=[random.sample(range(pop_size), pop_size), 1, 1]),
+                    mask=[lambda x=pop_size:random.sample(range(pop_size), x), 1, 1]),
         ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None],
                     mask=[1, 1, 1]),
         ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"],
