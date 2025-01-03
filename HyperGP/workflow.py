@@ -12,6 +12,7 @@ import multiprocessing
 import copy
 # from HyperGP.src import check_gpu
 from tqdm import tqdm
+import sys
 
 class GpOptimizer(BaseStruct, __Mods):
     """
@@ -100,7 +101,7 @@ class GpOptimizer(BaseStruct, __Mods):
     def _mask_index(self, l, mask):
         return [l[m] for m in mask]
 
-    def monitor(self, tool, track_object, save_path):
+    def monitor(self, tool, track_object, save_path=None):
         """
         Register the components want to be iteratively executed.
 
@@ -113,7 +114,8 @@ class GpOptimizer(BaseStruct, __Mods):
             xxxxxxxxxxx
             )
         """
-
+        if getattr(tool, "init") and callable(tool.init):
+            tool.init()
         self.monitors.append([tool, track_object, save_path])
 
     def iter_component(self, *args):
@@ -161,9 +163,9 @@ class GpOptimizer(BaseStruct, __Mods):
             self.__setattr__(mod, self.available_mods.__getattribute__(mod)())
             self.__getattribute__(mod)._popSet(self, **kwargs)
 
-    def _run_independent(self, iter, device=[0]):
-        for i in tqdm(range(iter)):
-    
+    def _run_independent(self, iter, device=[0], tqdm_diable=False):
+        for i in tqdm(range(iter), disable=tqdm_diable):
+            
             mask_list = [[mask() if callable(mask) else mask for mask in masks] for masks in self.components['mask_list']]
             unit_size_list = [self._mask_check(mask) for mask in mask_list]
 
@@ -245,7 +247,7 @@ class GpOptimizer(BaseStruct, __Mods):
         self.proc = proc
         self.queue = manager_queue
 
-    def run(self, iter, device=[0], async_parallel=False):
+    def run(self, iter, device=[0], async_parallel=False, tqdm_diable=False):
         """
         Run the optimizer with iteration time and device
         
@@ -266,7 +268,7 @@ class GpOptimizer(BaseStruct, __Mods):
         if async_parallel:
             self.__run_parallel(iter, device)
         else:
-            self._run_independent(iter, device)
+            self._run_independent(iter, device, tqdm_diable=tqdm_diable)
 
     def detach(self):
         """
