@@ -56,5 +56,5 @@ optimizer.iter_component(
         ParaStates(func=selection, source=["p_list", "pp_list", "fit_list", "pfit_list"], to=["p_list", "pp_list", "fit_list", "pfit_list"],
                     mask=[1, 1, 1, 1])
     )
-optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list")
+# optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list")
 optimizer.run(50)
