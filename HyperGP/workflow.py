@@ -233,12 +233,13 @@ class GpOptimizer(BaseStruct, __Mods):
                 track_object = monitor[1]
                 if isinstance(monitor[1], str):
                     track_object = self.workflowstates[monitor[1]]
-                    monitor[0](track_object, save_path=monitor[2])
+                    monitor_ret = monitor[0](track_object, save_path=monitor[2])
                 if isinstance(monitor[1], list):
                     track_object = [self.workflowstates[key] for key in monitor[1]]
-                    monitor[0](*track_object, save_path=monitor[2])
-            
-            if stop_criteria():
+                    monitor_ret = monitor[0](*track_object, save_path=monitor[2])
+                if monitor_ret is not None and isinstance(monitor_ret, str):
+                    tqdm.write(monitor_ret)
+            if stop_criteria is not None and stop_criteria():
                 return 
 
 
@@ -265,7 +266,7 @@ class GpOptimizer(BaseStruct, __Mods):
             >>> optimizer.run(10)
 
             or run it asynchronously:
-            
+
             >>> optimizer.run(10, async_parallel=True)
             >>> optimizer.wait()
 

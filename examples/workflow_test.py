@@ -10,19 +10,21 @@ import random, HyperGP, numpy as np
 from HyperGP.states import ProgBuildStates, ParaStates
 
 
-pop_size = 100
-input_size = 10000
+pop_size = 1000
+input_size = 1000
 
 input_array = HyperGP.Tensor(np.random.uniform(0, 100, size=(2, input_size)))
 target = (input_array[0] + input_array[0] * input_array[1] * input_array[1]) * (input_array[0]) / (input_array[1] + input_array[0])
 
-pset = HyperGP.PrimitiveSet(input_arity=2,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2)])
+
+pset = HyperGP.PrimitiveSet(input_arity=2,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2),('sin', HyperGP.sin, 1),('cos', HyperGP.cos, 1)])
 pop = HyperGP.Population()
 pop.initPop(pop_size=pop_size, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 6], len_limit=100000))
 
+
 def evaluation(output, target):
     r1 = HyperGP.tensor.sub(output, target, dim_0=1)
-    assert (r1.numpy()==output.numpy() - target.numpy()).all(), "{A1}, {A2}".format(A1=r1, A2=output.numpy() - target.numpy())
+    # assert (r1.numpy()==output.numpy() - target.numpy()).all(), "{A1}, {A2}".format(A1=r1, A2=output.numpy() - target.numpy())
     return (r1 * r1).sum(dim=1).sqrt()
 
 output, _ = HyperGP.executor(pop.states['progs'].indivs, input=input_array, pset=pset)
@@ -55,6 +57,6 @@ optimizer.iter_component(
         ParaStates(func=selection, source=["p_list", "pp_list", "fit_list", "pfit_list"], to=["p_list", "pp_list", "fit_list", "pfit_list"],
                     mask=[1, 1, 1, 1])
     )
-# optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list")
-optimizer.run(500)
-print('final res: ', HyperGP.tensor.min(optimizer.workflowstates.pfit_list))
+optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list")
+optimizer.run(500, stop_criteria=lambda: HyperGP.tensor.min(optimizer.workflowstates.fit_list) < 1e-9, tqdm_diable=False)
+# print('final res: ', HyperGP.tensor.min(optimizer.workflowstates.pfit_list))

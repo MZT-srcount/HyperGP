@@ -346,7 +346,7 @@ class NDArray:
     def __mul__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
         if isinstance(other, NDArray):
-            if other.shape != self.shape:
+            if other.shape != self.shape and self.shape != other.reshape(self.shape).shape:
                 ops_run(self.device.ewise_mul_dim, self, other)
             else:
                 # assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
@@ -370,7 +370,8 @@ class NDArray:
     def pow(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
         if isinstance(other, NDArray):
-            assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
+                raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
             self.device.ewise_pow(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
             self.device.scalar_pow(self._handle, other, out._handle, self._offset)
@@ -379,7 +380,8 @@ class NDArray:
     def __lt__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_bool)
         if isinstance(other, NDArray):
-            assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
+                raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
             self.device.ewise_lt(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
             self.device.scalar_lt(self._handle, other, out._handle, self._offset)
@@ -388,7 +390,8 @@ class NDArray:
     def __le__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_bool)
         if isinstance(other, NDArray):
-            assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
+                raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
             self.device.ewise_le(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
             self.device.scalar_le(self._handle, other, out._handle, self._offset)
@@ -397,7 +400,7 @@ class NDArray:
     def __gt__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_bool)
         if isinstance(other, NDArray):
-            if self.shape != other.shape and self.shape != other.reshape(self.shape):
+            if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
                 raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
             self.device.ewise_ge(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
@@ -420,7 +423,8 @@ class NDArray:
     def __eq__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_bool)
         if isinstance(other, NDArray):
-            assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
+                raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
             self.device.ewise_eq(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
             self.device.scalar_eq(self._handle, other, out._handle, self._offset)

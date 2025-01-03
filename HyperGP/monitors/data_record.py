@@ -14,6 +14,6 @@ def statistics_record(data, save_path=None):
 
         with open(save_path, "+a") as f:
             f.write('\t'.join([str(HyperGP.tensor.min(data)), str(HyperGP.tensor.max(data)), str(HyperGP.tensor.mean(data)), str(HyperGP.tensor.var(data)), str(HyperGP.tensor.std(data))]) + '\n')
-    print(f"|{str(HyperGP.tensor.min(data)):^20}|{str(HyperGP.tensor.max(data)):^20}|{str(HyperGP.tensor.mean(data)):^20}|{str(HyperGP.tensor.var(data)):^20}|{str(HyperGP.tensor.std(data)):^20}|")
+    return f"|{str(HyperGP.tensor.min(data)):^20}|{str(HyperGP.tensor.max(data)):^20}|{str(HyperGP.tensor.mean(data)):^20}|{str(HyperGP.tensor.var(data)):^20}|{str(HyperGP.tensor.std(data)):^20}|" 
 
 statistics_record.init = statistics_record_initprint
