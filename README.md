@@ -99,7 +99,6 @@ $ make all
     # Init workflow
     optimizer = HyperGP.GpOptimizer()
     # Register relevant states
-    # print(len(pop.states['progs'].indivs))
     optimizer.status_init(
         p_list=pop.states['progs'].indivs, target=target,
         input=input_array,pset=pset,output=None,
