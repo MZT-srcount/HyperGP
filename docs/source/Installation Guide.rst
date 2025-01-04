@@ -16,7 +16,7 @@ Binaries
 
 HyperGP is available on PyPI and can be simply installed with:
 
-.. code-block:: python
+.. code-block:: bash
    :linenos:
 
     pip install HyperGP
@@ -32,7 +32,7 @@ If you are installing from source, you will need:
 
 An example of environment setup in Linux is shown below:
 
-.. code-block:: python
+.. code-block:: bash
    :linenos:
    
    $ conda env create -n HyperGP -f environment.yml
