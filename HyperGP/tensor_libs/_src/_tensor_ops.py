@@ -1,4 +1,4 @@
-from ...src.ops_dim import substract, add, multiply, divide, concatenate as concat
+from ...src.ops_dim import substract as _sub, add as _add, multiply as _mul, divide as _div, pows as _pow, concatenate as concat
 from ...src.ndarray import _where, _all, _any, _zeros, _ones, _full, _empty, _uniform
 from ...src.ndarray import *
 from ...src import float64
@@ -33,6 +33,14 @@ class EWiseDotDim(TensorOp):
     def compute(self, a, b, dim_0=0, dim_1=0):
         return a.dot(b, dim_0, dim_1)
 
+class EWisePow(TensorOp):
+    op = 'pow'
+    idx = 0
+    def compute(self, a, b, dim_0=0, dim_1=0):
+        if dim_0 == 0 and dim_1 == 0:
+            return a.pow(b)
+        else:
+            return _pow(a, b, dim_0, dim_1)
 class EWiseAdd(TensorOp):
     op = 'add'
     idx = 0
@@ -40,7 +48,7 @@ class EWiseAdd(TensorOp):
         if dim_0 == 0 and dim_1 == 0:
             return a + b
         else:
-            return add(a, b, dim_0, dim_1)
+            return _add(a, b, dim_0, dim_1)
 
 class EWiseMul(TensorOp):
     op = 'mul'
@@ -49,7 +57,7 @@ class EWiseMul(TensorOp):
         if dim_0 == 0 and dim_1 == 0:
             return a * b
         else:
-            return multiply(a, b, dim_0, dim_1)
+            return _mul(a, b, dim_0, dim_1)
 
 class EWiseSub(TensorOp):
     op = 'sub'
@@ -58,7 +66,7 @@ class EWiseSub(TensorOp):
         if dim_0 == 0 and dim_1 == 0:
             return a - b
         else:
-            return substract(a, b, dim_0, dim_1)
+            return _sub(a, b, dim_0, dim_1)
 
 class EWiseDiv(TensorOp):
     op = 'div'
@@ -67,7 +75,7 @@ class EWiseDiv(TensorOp):
         if dim_0 == 0 and dim_1 == 0:
             return a / b
         else:
-            return divide(a, b, dim_0, dim_1)
+            return _div(a, b, dim_0, dim_1)
 
 class EWiseAssign_R2L(TensorOp):
     op = 'assigin_r2l'
@@ -293,6 +301,9 @@ class ScalarAdd(TensorOp):
     def compute(self, a, b):
         return a + b
     
+class ScalarPow(TensorOp):
+    def compute(self, a, b):
+        return a.pow(b)
 
 class ScalarMul(TensorOp):
     op = 'mul'

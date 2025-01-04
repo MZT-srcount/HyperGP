@@ -15,6 +15,9 @@ def multiply(a, b, dim_0=0, dim_1=0):
 def divide(a, b, dim_0=0, dim_1=0):
     return ops_run(a.device.ewise_div_dim, a, b, dim_0, dim_1)
 
+def pows(a, b, dim_0=0, dim_1=0):
+    return ops_run(a.device.ewise_pow_dim, a, b, dim_0, dim_1)
+
 def concatenate(arrays:tuple, dim=0, device=None):
     assert isinstance(arrays, tuple), "The inputs should be organized as tuple"
     assert all([isinstance(array, NDArray) for array in arrays]), "{TYPE}".format(TYPE=[type(array) for array in arrays])

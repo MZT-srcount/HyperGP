@@ -110,6 +110,24 @@ class Tensor(Value):
 
         return tensor
 
+    def __pow__(self, other):
+        
+        if MOD == "IMM":
+            if isinstance(other, Tensor):
+                tensor = Tensor(self.cached_data.pow(other.cached_data))
+            else:
+                tensor = Tensor(self.cached_data.pow(Tensor(other).cached_data))
+        else:
+            if isinstance(other, Tensor):
+                tensor = Tensor.make_from_op(EWisePow(), [self, other])
+            else:
+                tensor = Tensor.make_from_op(ScalarPow(), [self, other])
+        
+            if MOD == "Async":
+                tensor.realize_cached_data
+
+        return tensor
+    
     def __sub__(self, other):
         
         if MOD == "IMM":

@@ -1350,6 +1350,9 @@ __device__ void _scalar_compute_dim_1(scalar_t* a, scalar_t b, scalar_t* out, in
         case 3:
             _scalar_div_gpu<scalar_t>(len, tid, t_n, a, b, out);
             break;
+        case 4:
+            _scalar_pow_gpu<scalar_t>(len, tid, t_n, a, b, out);
+            break;
         default:
             printf("Warning: the input type out of available type");
     }
@@ -1378,6 +1381,11 @@ __device__ void _scalar_compute_dim_2(scalar_t a, scalar_t* b, scalar_t* out, in
                 out[i] = a / b[i];
             }
             break;
+        case 4:
+            for(int i = tid; i < len; i += t_n){
+                out[i] = pow(a, b[i]);
+            }
+            break;
         default:
             printf("Warning: the input type out of available type");
     }
@@ -1397,6 +1405,9 @@ __device__ void _ewise_compute_dim(scalar_t* a, scalar_t* b, scalar_t* out, int 
             break;
         case 3:
             if(len - tid >= 0) _ewise_div_gpu<scalar_t>(len - tid, tid, t_n, a, b, out);
+            break;
+        case 4:
+            if(len - tid >= 0) _ewise_pow_gpu<scalar_t>(len - tid, tid, t_n, a, b, out);
             break;
         default:
             printf("Warning: the input type out of available type");
@@ -3913,8 +3924,7 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
 
     
 
-    m.def("ewise_sub_dim", [](const Array<scalar_t>& a, const Array<sscalar_t>& b, Array<tscalar_t>&out, int pre_dim_a=0, int post_dim_a, int pre_dim_b, int post_dim_b, int offset_a, int offset_b){
-        
+    m.def("ewise_sub_dim", [](const Array<scalar_t>& a, const Array<sscalar_t>& b, Array<tscalar_t>&out, int pre_dim_a=0, int post_dim_a, int pre_dim_b, int post_dim_b, int offset_a, int offset_b){ 
         operator_dim<scalar_t, sscalar_t, tscalar_t>(a, b, out, pre_dim_a, post_dim_a, pre_dim_b, post_dim_b, offset_a, offset_b, 1);
     });
     m.def("ewise_add_dim", [](const Array<scalar_t>& a, const Array<sscalar_t>& b, Array<tscalar_t>&out, int pre_dim_a=0, int post_dim_a, int pre_dim_b, int post_dim_b, int offset_a, int offset_b){
@@ -3925,6 +3935,9 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
     });
     m.def("ewise_div_dim", [](const Array<scalar_t>& a, const Array<sscalar_t>& b, Array<tscalar_t>&out, int pre_dim_a=0, int post_dim_a, int pre_dim_b, int post_dim_b, int offset_a, int offset_b){
         operator_dim<scalar_t, sscalar_t, tscalar_t>(a, b, out, pre_dim_a, post_dim_a, pre_dim_b, post_dim_b, offset_a, offset_b, 3);
+    });
+    m.def("ewise_pow_dim", [](const Array<scalar_t>& a, const Array<sscalar_t>& b, Array<tscalar_t>&out, int pre_dim_a=0, int post_dim_a, int pre_dim_b, int post_dim_b, int offset_a, int offset_b){
+        operator_dim<scalar_t, sscalar_t, tscalar_t>(a, b, out, pre_dim_a, post_dim_a, pre_dim_b, post_dim_b, offset_a, offset_b, 4);
     });
 
 

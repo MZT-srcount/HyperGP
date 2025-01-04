@@ -89,6 +89,8 @@ def _supported_dtype(dtype):
             return _uint32
         elif dtype==np.uint64:
             return _uint64
+        elif dtype==np.bool_:
+            return _bool
         raise NotImplementedError("The datatype {DT} is not supported in the current version".format(DT=dtype))
     return dtype
 

@@ -1,6 +1,5 @@
-from ..src.ops_dim import substract, add, multiply, divide, concatenate as concat
+from ..src.ops_dim import substract as _substract, add as _add, multiply as _multiply, divide as _divide, concatenate as _concat, pows as _pow
 from ..src.ndarray import _where, _all, _any, _zeros, _ones, _full, _empty, _uniform
-from ..src.ops_dim import add as _add
 from ..src import float64
 from ._src._tensor_ops import *
 from ._src.basic import MOD
@@ -105,7 +104,7 @@ def sub(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 	if not isinstance(y, Tensor):
 		y = Tensor(y)
 	if MOD == "IMM":
-		return Tensor(substract(x.cached_data, y.cached_data, dim_0, dim_1))
+		return Tensor(_substract(x.cached_data, y.cached_data, dim_0, dim_1))
 	else:
 		tensor = Tensor.make_from_op(EWiseSub(), [x, y, dim_0, dim_1])
 		if MOD == "Async":
@@ -142,7 +141,7 @@ def mul(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 	if not isinstance(y, Tensor):
 		y = Tensor(y)
 	if MOD == "IMM":
-		return Tensor(multiply(x.cached_data, y.cached_data, dim_0, dim_1))
+		return Tensor(_multiply(x.cached_data, y.cached_data, dim_0, dim_1))
 	else:
 		tensor = Tensor.make_from_op(EWiseMul(), [x, y, dim_0, dim_1])
 		if MOD == "Async":
@@ -178,7 +177,7 @@ def div(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 	if not isinstance(y, Tensor):
 		y = Tensor(y)
 	if MOD == "IMM":
-		return Tensor(divide(x.cached_data, y.cached_data, dim_0, dim_1))
+		return Tensor(_divide(x.cached_data, y.cached_data, dim_0, dim_1))
 	else:
 		tensor = Tensor.make_from_op(EWiseDiv(), [x, y, dim_0, dim_1])
 		if MOD == "Async":
@@ -188,11 +187,10 @@ def div(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 
 
 def pow(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
-	raise NotImplementedError("Not Implement in current version.")
 	if MOD == "IMM":
-		return Tensor(divide(Tensor(x).cached_data, y.cached_data, dim_0, dim_1))
+		return Tensor(_pow(Tensor(x).cached_data, y.cached_data, dim_0, dim_1))
 	else:
-		tensor = Tensor.make_from_op(EWiseDiv(), [Tensor(x), y, dim_0, dim_1])
+		tensor = Tensor.make_from_op(EWisePow(), [Tensor(x), y, dim_0, dim_1])
 		if MOD == "Async":
 			tensor.realize_cached_data
 	return tensor
@@ -905,7 +903,7 @@ def concatenate(arrays, dim=0, device=None):
 	"""
 	assert isinstance(arrays, tuple), "The input arrays should be organized as tuple"
 	cdds = tuple(Tensor(array).cached_data for array in arrays)
-	return Tensor(concat(cdds, dim, device))
+	return Tensor(_concat(cdds, dim, device))
 
 
 def where(condition, true_array, false_array):

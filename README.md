@@ -63,6 +63,14 @@ $ make all
 
 # Quick Start for Symbolic Regression
 
+## Run the examples
+
+```
+python ./examples/workflow_test.py
+```
+
+## Build a new example
+
 1. **import modoule**: Three types module should be import to run:  
   
    - *basic components*:  
