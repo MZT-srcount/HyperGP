@@ -158,7 +158,7 @@ python ./examples/workflow_test.py
 
 
 | **Example**                | **Doc Link** | **Runable Examples** |
-| --------------------------- | ----------------------|
+| --------------------------- | ----------------------| ----------------------|
 | Example on Symbolic Regression               | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Symbolic Regression]()|
 | Example on Image Classification        | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Image Classification]()|
 | Multi-Population Run           | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Multi-Population]()|
