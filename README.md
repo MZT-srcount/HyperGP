@@ -5,14 +5,14 @@
 [![readthedocs](https://img.shields.io/badge/docs-passing-green)](https://hypergp.readthedocs.io/en/latest/)
 [![coverage](https://img.shields.io/badge/coverage-passing-green)]()
 
-PyGP is an open-source high performance framework, providing convenient distributed heterogeneous accleration for the custom prototyping of Genetic Programming (GP) and its variants. To ensure both flexibility and high performance, PyGP encompasses a variety of technologies for GP characteristics to provide convenient prototyping and efficient acceleration of various custom algorithms. To enable quick prototyping within PyGP for research on different types of genetic programming and different application fields, adaptability is also emphasized in building the PyGP framework, to support a wide range of potential applications, such as symbolic regression and image classification. 
-
 <p align="center">
   <a href="https://hypergp.readthedocs.io/en/latest/Quick%20Start.html">Main Features</a> |
   <a href="https://github.com/MZT-srcount/HyperGP?tab=readme-ov-file#installation">Installation</a> |
   <a href="https://hypergp.readthedocs.io/en/latest/Quick%20Start.html">Documentation</a> |
   <a href="https://github.com/MZT-srcount/HyperGP?tab=readme-ov-file#quick-start-for-symbolic-regression">Examples</a> |
 </p>
+
+PyGP is an open-source high performance framework, providing convenient distributed heterogeneous accleration for the custom prototyping of Genetic Programming (GP) and its variants. To ensure both flexibility and high performance, PyGP encompasses a variety of technologies for GP characteristics to provide convenient prototyping and efficient acceleration of various custom algorithms. To enable quick prototyping within PyGP for research on different types of genetic programming and different application fields, adaptability is also emphasized in building the PyGP framework, to support a wide range of potential applications, such as symbolic regression and image classification. 
 
 ## Main Features
 
