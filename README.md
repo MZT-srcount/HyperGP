@@ -157,14 +157,14 @@ python ./examples/workflow_test.py
 # More User-cases and Applications
 
 
-| **Example**                | **Link** |
+| **Example**                | **Doc Link** | **Runable Examples** |
 | --------------------------- | ----------------------|
-| Example on Symbolic Regression               | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
-| Example on Image Classification        | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
-| Multi-Population Run           | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
-| Multi-task Run             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
-| Custom Representation             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
-| Custom operators             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
-| Hybrid with other libraries             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() |
+| Example on Symbolic Regression               | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Symbolic Regression]()|
+| Example on Image Classification        | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Image Classification]()|
+| Multi-Population Run           | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Multi-Population]()|
+| Multi-task Run             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Multi-task]()|
+| Custom Representation             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Custom Representation]()|
+| Custom operators             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Custom operators]()|
+| Hybrid with other libraries             | [![readthedocs](https://img.shields.io/badge/docs-passing-green)]() | [Hybrid Programming]()|
 
 # Call for Contributions
