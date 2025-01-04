@@ -72,7 +72,7 @@ $ make all
 
 ## Run the examples
 
-There are already some examples at the [examples](./examples/) directory, you can directly run these examples after installing ``HyperGP`` and activating the environments.
+There are already some simple examples at the [examples](./examples/) directory, you can directly run these examples after installing ``HyperGP`` and activating the environments.
 
 ```bash
 python ./examples/workflow_test.py
@@ -80,7 +80,7 @@ python ./examples/workflow_test.py
 
 ## Build a new example
 
-1. **import modoule**: Three types module should be import to run:  
+1. **Import modoule**: Three types module should be import to run:  
   
    - *basic components*:  
       - ``Population`` to initialize population
@@ -99,7 +99,7 @@ python ./examples/workflow_test.py
     from HyperGP.states import ProgBuildStates, ParaStates
 ```
 
-2. **generate the training data**: We can use ``Tensor`` module to generate the array, or use to encapsulate the ``numpy.ndarray`` or the ``list``
+2. **Generate the training data**: We can use ``Tensor`` module to generate the array, or use to encapsulate the ``numpy.ndarray`` or the ``list``
 
 ```python
     # Generate training set
@@ -124,7 +124,7 @@ python ./examples/workflow_test.py
 ```
 
 
-4. **build the self-define evaluation function**: Here we use rmse as an example.
+4. **Build the self-define evaluation function**: Here we use rmse as an example.
 
 ```python
     def evaluation(output, target):
@@ -132,7 +132,7 @@ python ./examples/workflow_test.py
         return (r1 ** 2).sum(dim=1).sqrt()
 ```
 
-5. **add the component user want to iteratively run**
+5. **Add the component user want to iteratively run**
 
 ```python
     # Add components
@@ -147,7 +147,7 @@ python ./examples/workflow_test.py
                     mask=[1, 1])
     )
 ```
-6. **run the optimizer**
+6. **Run the optimizer**
 
 ```python
     # Iteratively run
