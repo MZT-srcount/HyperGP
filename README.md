@@ -10,6 +10,7 @@
   <a href="https://github.com/MZT-srcount/HyperGP?tab=readme-ov-file#installation">Installation</a> |
   <a href="https://hypergp.readthedocs.io/en/latest/Quick%20Start.html">Documentation</a> |
   <a href="https://github.com/MZT-srcount/HyperGP?tab=readme-ov-file#quick-start-for-symbolic-regression">Examples</a> |
+  <a href="https://github.com/MZT-srcount/HyperGP?tab=readme-ov-file#call-for-contributions">Contributing</a> |
 </p>
 
 HyperGP is an open-source high performance framework, providing convenient distributed heterogeneous accleration for the custom prototyping of Genetic Programming (GP) and its variants. To ensure both flexibility and high performance, HyperGP encompasses a variety of technologies for GP characteristics to provide convenient prototyping and efficient acceleration of various custom algorithms. To enable quick prototyping within HyperGP for research on different types of genetic programming and different application fields, adaptability is also emphasized in building the HyperGP framework, to support a wide range of potential applications, such as symbolic regression and image classification. 
