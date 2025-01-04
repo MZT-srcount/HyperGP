@@ -46,7 +46,7 @@ Documentation is available online: https://hypergp.readthedocs.io/en/latest/Quic
 
 HyperGP is available on PyPI and can be simply installed with:
 
-```
+```bash
 pip install HyperGP
 ```
 
@@ -61,7 +61,7 @@ If you are installing from source, you will need:
 
 An example of environment setup in Linux is shown below:
 
-```
+```bash
 $ conda env create -n HyperGP -f environment.yml
 $ conda activate HyperGP
 $ cd HyperGP
@@ -72,7 +72,7 @@ $ make all
 
 ## Run the examples
 
-```
+```bash
 python ./examples/workflow_test.py
 ```
 
@@ -92,20 +92,21 @@ python ./examples/workflow_test.py
    - *states*:
       - such as ``ProgBuildStates``, ``ParaStates``
 
-```
+```python
     import random, HyperGP, numpy as np
     from HyperGP.states import ProgBuildStates, ParaStates
 ```
 
 2. **generate the training data**: We can use ``Tensor`` module to generate the array, or use to encapsulate the ``numpy.ndarray`` or the ``list``
-```
+
+```python
     # Generate training set
     input_array = HyperGP.Tensor(np.random.uniform(0, 100, size=(2, input_size)))
     target = (input_array[0] + input_array[0] * input_array[1] * input_array[1]) * (input_array[0]) / (input_array[1] + input_array[0])
 ```
 3. **Initialize the basic elements**: To run the program, a ``PrimitiveSet`` module is needed to define the used primitives and terminals, ``Population`` module is used to initialize the population, ``GPOptimizer`` is a workflow used to manage the evolution process.
 
-```
+```python
     # Generate primitive set
     pset = HyperGP.PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2)])
     # Init population
@@ -122,14 +123,16 @@ python ./examples/workflow_test.py
 
 
 4. **build the self-define evaluation function**: Here we use rmse as an example.
-```
+
+```python
     def evaluation(output, target):
         r1 = HyperGP.tensor.sub(output, target, dim_0=1)
         return (r1 ** 2).sum(dim=1).sqrt()
 ```
 
 5. **add the component user want to iteratively run**
-```
+
+```python
     # Add components
     optimizer.iter_component(
         ParaStates(func=HyperGP.ops.RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
@@ -143,7 +146,8 @@ python ./examples/workflow_test.py
     )
 ```
 6. **run the optimizer**
-```
+
+```python
     # Iteratively run
     optimizer.run(100)
 ```
