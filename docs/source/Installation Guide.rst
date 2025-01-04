@@ -32,10 +32,21 @@ If you are installing from source, you will need:
 
 An example of environment setup in Linux is shown below:
 
+- You should create a conda environment with some dependencies first:
+
 .. code-block:: bash
    :linenos:
    
    $ conda env create -n HyperGP -f environment.yml
    $ conda activate HyperGP
-   $ cd HyperGP
-   $ make all
+   $ python ./setup.py sdist bdist_wheel
+
+- Then, you can use the ``HyperGP`` through the ``pip install`` (replace the xxx to the actual string of the whl in ``/dist``):
+
+.. code-block:: bash
+   :linenos:
+
+   $ pip install HyperGP-xxx.whl
+
+- Or you can directly run the ``HyperGP`` through the source code.
+
