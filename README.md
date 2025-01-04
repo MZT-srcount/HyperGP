@@ -7,6 +7,12 @@
 
 PyGP is an open-source high performance framework, providing convenient distributed heterogeneous accleration for the custom prototyping of Genetic Programming (GP) and its variants. To ensure both flexibility and high performance, PyGP encompasses a variety of technologies for GP characteristics to provide convenient prototyping and efficient acceleration of various custom algorithms. To enable quick prototyping within PyGP for research on different types of genetic programming and different application fields, adaptability is also emphasized in building the PyGP framework, to support a wide range of potential applications, such as symbolic regression and image classification. 
 
+<p align="center">
+  <a href="https://hypergp.readthedocs.io/en/latest/Quick%20Start.html">Main Features</a> |
+  <a href="https://github.com/MZT-srcount/HyperGP?tab=readme-ov-file#installation">Installation</a> |
+  <a href="https://hypergp.readthedocs.io/en/latest/Quick%20Start.html">Documentation</a> |
+  <a href="https://github.com/MZT-srcount/HyperGP?tab=readme-ov-file#quick-start-for-symbolic-regression">Examples</a> |
+</p>
 
 ## Main Features
 
@@ -93,8 +99,8 @@ python ./examples/workflow_test.py
 2. **generate the training data**: We can use ``Tensor`` module to generate the array, or use to encapsulate the ``numpy.ndarray`` or the ``list``
 ```
     # Generate training set
-    input_array = HyperGP.Tensor(np.random.uniform(0, 10, size=(2, 10000)))
-    target = HyperGP.exp((input_array[0] + 1) * (input_array[0] + 1)) / (input_array[1] + input_array[0])
+    input_array = HyperGP.Tensor(np.random.uniform(0, 100, size=(2, input_size)))
+    target = (input_array[0] + input_array[0] * input_array[1] * input_array[1]) * (input_array[0]) / (input_array[1] + input_array[0])
 ```
 3. **Initialize the basic elements**: To run the program, a ``PrimitiveSet`` module is needed to define the used primitives and terminals, ``Population`` module is used to initialize the population, ``GPOptimizer`` is a workflow used to manage the evolution process.
 
@@ -118,7 +124,7 @@ python ./examples/workflow_test.py
 ```
     def evaluation(output, target):
         r1 = HyperGP.tensor.sub(output, target, dim_0=1)
-        return (r1 * r1).sum(dim=1).sqrt()
+        return (r1 ** 2).sum(dim=1).sqrt()
 ```
 
 5. **add the component user want to iteratively run**

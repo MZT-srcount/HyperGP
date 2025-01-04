@@ -86,14 +86,17 @@ class ExecutableExpr:
                 idx += self.exec_unit_len
 
             # print('1---------------------------------------------------', batch_num, time.time() - st)
+            output_shape = None
+            none_equal_list = []
             for i in range(prog_size):
-                if len(mid_output[len(input) + i].shape) == 0 or mid_output[len(input) + i].shape[0] == 1:
-                    output_segs[i].append(mid_output[len(input) + i].copy())
-                output_segs[i].append(mid_output[len(input) + i].copy())
-
-            # print("batch: ", z,  batch_num, HyperGP.src.ndarray.gpu().cuda_mem_available(0) / (1024. ** 3), batch_range.stop - batch_range.start)
-            
-                
+                prob_shape = prob(mid_output[len(input) + i].shape)
+                if (prob_shape == 0 or prob_shape == 1):
+                    none_equal_list.append(i)
+                else:
+                    output_shape = mid_output[len(input) + i].shape
+                output_segs[i].append(mid_output[len(input) + i])
+            for i in none_equal_list:
+                output_segs[i] = [HyperGP.full(shape=output_shape, fill_value=float(output_segs[i][num])) for num, tensor in enumerate(output_segs[i])]
             batch_last = batch_init + batch_size * z
         # print('0---------------------------------------------------', batch_num, time.time() - st)
         # output = [HyperGP.concatenate(tuple(output)) for out in output_segs]

@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 
-#define STREAM_NUM_NDARRAY 12
+#define STREAM_NUM_NDARRAY 6
 #define DEAULT_ELEMENT_SIZE 1 // the default create num each time
 #define MAX_ELEMENT_SIZE 4   // max remain size when free(each elem size)
 #define OVERLAP_IMG_TIME 10

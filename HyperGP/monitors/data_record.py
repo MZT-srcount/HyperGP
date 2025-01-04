@@ -3,17 +3,17 @@ import HyperGP
 import numpy as np
 
 def statistics_record_initprint():
-    print(f"|{"min":-^20}|{"max":-^20}|{"mean":-^20}|{"var":-^20}|{"std":-^20}|")
-    print(f"|{'-'*20:^20}|{'-'*20:^20}|{'-'*20:^20}|{'-'*20:^20}|{'-'*20:^20}|")
+    print(f"|{"min":-^30}|{"max":-^30}|{"mean":-^30}|{"var":-^30}|{"std":-^30}|")
+    print(f"|{'-'*30:^30}|{'-'*30:^30}|{'-'*30:^30}|{'-'*30:^30}|{'-'*30:^30}|")
 
-def statistics_record(data, save_path=None):
+def statistics_record(fits, save_path=None):
     if save_path is not None:
         if not os.path.exists(save_path):
             with open(save_path, "w") as f:
                 f.write('\t'.join(['min', 'max', 'mean', 'var', 'std']) + '\n')
 
         with open(save_path, "+a") as f:
-            f.write('\t'.join([str(HyperGP.tensor.min(data)), str(HyperGP.tensor.max(data)), str(HyperGP.tensor.mean(data)), str(HyperGP.tensor.var(data)), str(HyperGP.tensor.std(data))]) + '\n')
-    return f"|{str(HyperGP.tensor.min(data)):^20}|{str(HyperGP.tensor.max(data)):^20}|{str(HyperGP.tensor.mean(data)):^20}|{str(HyperGP.tensor.var(data)):^20}|{str(HyperGP.tensor.std(data)):^20}|" 
+            f.write('\t'.join([float(HyperGP.tensor.min(fits)), float(HyperGP.tensor.max(fits)), float(HyperGP.tensor.mean(fits)), float(HyperGP.tensor.var(fits)), float(HyperGP.tensor.std(fits))]) + '\n')
+    return f"|{float(HyperGP.tensor.min(fits)):^30}|{float(HyperGP.tensor.max(fits)):^30}|{float(HyperGP.tensor.mean(fits)):^30}|{float(HyperGP.tensor.var(fits)):^30}|{float(HyperGP.tensor.std(fits)):^30}|" 
 
 statistics_record.init = statistics_record_initprint

@@ -1096,7 +1096,12 @@ def full(shape: tuple, fill_value: float, dtype=None, device_id=query_device()):
 		xxxxx
 
 	"""
-	tensor = Tensor(_full(shape, fill_value, dtype=dtype, device_id=device_id))
+	if isinstance(fill_value, Tensor):
+		tensor = Tensor(_full(shape, fill_value.cached_data, dtype=dtype, device_id=device_id))
+	elif isinstance(fill_value, int) or isinstance(fill_value, float):
+		tensor = Tensor(_full(shape, fill_value, dtype=dtype, device_id=device_id))
+	else:
+		raise ValueError("The fill value should be a 'Hyper.Tensor' or 'int/float' scalar value, where the current dtype is {fill_value}".format(fill_value=type(fill_value)))
 	return tensor
 
 def uniform(low=0, high=1, shape=(1,), dtype=float64, device_id=query_device()):

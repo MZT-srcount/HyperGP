@@ -97,8 +97,10 @@ class Tensor(Value):
         if MOD == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data + other.cached_data)
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(self.cached_data + other)
             else:
-                tensor = Tensor(self.cached_data + Tensor(other).cached_data)
+                tensor = Tensor(self.cached_data + array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 tensor = Tensor.make_from_op(EWiseAdd(), [self, other])
@@ -115,8 +117,10 @@ class Tensor(Value):
         if MOD == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data.pow(other.cached_data))
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(self.cached_data.pow(other))
             else:
-                tensor = Tensor(self.cached_data.pow(Tensor(other).cached_data))
+                tensor = Tensor(self.cached_data.pow(array_api._array(other)))
         else:
             if isinstance(other, Tensor):
                 tensor = Tensor.make_from_op(EWisePow(), [self, other])
@@ -133,8 +137,10 @@ class Tensor(Value):
         if MOD == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data - other.cached_data)
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(self.cached_data - other)
             else:
-                tensor = Tensor(self.cached_data - Tensor(other).cached_data)
+                tensor = Tensor(self.cached_data - array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 tensor = Tensor.make_from_op(EWiseSub(), [self, other])
@@ -150,8 +156,10 @@ class Tensor(Value):
         if MOD == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data * other.cached_data)
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(self.cached_data * other)
             else:
-                tensor = Tensor(self.cached_data * Tensor(other).cached_data)
+                tensor = Tensor(self.cached_data * array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 tensor = Tensor.make_from_op(EWiseMul(), [self, other])
@@ -167,8 +175,10 @@ class Tensor(Value):
         if MOD == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data / other.cached_data)
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(self.cached_data / other)
             else:
-                tensor = Tensor(self.cached_data / Tensor(other).cached_data)
+                tensor = Tensor(self.cached_data / array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 tensor = Tensor.make_from_op(EWiseDiv(), [self, other])
@@ -194,7 +204,7 @@ class Tensor(Value):
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data.dot(other.cached_data, dim_0, dim_1))
             else:
-                tensor = Tensor(self.cached_data.dot(Tensor(other).cached_data, dim_0, dim_1))
+                tensor = Tensor(self.cached_data.dot(array_api._array(other), dim_0, dim_1))
         else:
             if isinstance(other, Tensor):
                 tensor = Tensor.make_from_op(EWiseDotDim(), [self, other, dim_0, dim_1])
@@ -314,7 +324,7 @@ class Tensor(Value):
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data < other.cached_data)
             else:
-                res = Tensor(self.cached_data < Tensor(other).cached_data)
+                res = Tensor(self.cached_data < array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 res = Tensor.make_from_op(EWiseLt(), [self, other])
@@ -328,7 +338,7 @@ class Tensor(Value):
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data <= other.cached_data)
             else:
-                res = Tensor(self.cached_data <= Tensor(other).cached_data)
+                res = Tensor(self.cached_data <= array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 res = Tensor.make_from_op(EWiseLe(), [self, other])
@@ -342,7 +352,7 @@ class Tensor(Value):
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data > other.cached_data)
             else:
-                res = Tensor(self.cached_data > Tensor(other).cached_data)
+                res = Tensor(self.cached_data > array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 res = Tensor.make_from_op(EWiseGt(), [self, other])
@@ -356,7 +366,7 @@ class Tensor(Value):
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data >= other.cached_data)
             else:
-                res = Tensor(self.cached_data >= Tensor(other).cached_data)
+                res = Tensor(self.cached_data >= array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 res = Tensor.make_from_op(EWiseGe(), [self, other])
@@ -370,7 +380,7 @@ class Tensor(Value):
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data == other.cached_data)
             else:
-                res = Tensor(self.cached_data == Tensor(other).cached_data)
+                res = Tensor(self.cached_data == array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 res = Tensor.make_from_op(EWiseEq(), [self, other])
@@ -384,7 +394,7 @@ class Tensor(Value):
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data != other.cached_data)
             else:
-                res = Tensor(self.cached_data != Tensor(other).cached_data)
+                res = Tensor(self.cached_data != array_api._array(other))
         else:
             if isinstance(other, Tensor):
                 res = Tensor.make_from_op(EWiseNeq(), [self, other])

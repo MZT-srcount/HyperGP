@@ -100,7 +100,7 @@ class NDArray:
                 self._init(other.to(device))
         elif isinstance(other, np.ndarray):
             device = default_device() if device is None else device
-            dtype = _supported_dtype(other.dtype) if dtype==None else dtype
+            dtype = _supported_dtype(other.dtype) if dtype==None or dtype not in datatype_mapping else dtype
             if datatype_mapping[dtype] != other.dtype:
                 other = np.array(other)
             array = NDArray.make(other.shape, device_id=device_id, device=device, dtype=dtype)
@@ -783,7 +783,10 @@ def _full(shape, fill_value, dtype, device_id=__default_devid__):
     # assert isinstance(fill_value, int) or isinstance(fill_value, float), "full method only support built-in type"
     if dtype == None:
         if isinstance(fill_value, NDArray):
+            if prob(fill_value.shape) > 1:
+                raise ValueError("The fill_value should be a scalar value, while the current shape is:{shape}".format(shape=fill_value.shape))
             out = NDArray.make(shape, device_id, dtype=fill_value.dtype)
+            fill_value = float(fill_value.numpy())
         else:
             out = NDArray.make(shape, device_id, dtype=_supported_builtin_dtype(type(fill_value)))
     else:
