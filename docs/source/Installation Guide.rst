@@ -39,6 +39,12 @@ An example of environment setup in Linux is shown below:
    
    $ conda env create -n HyperGP -f environment.yml
    $ conda activate HyperGP
+
+- If you want to build a wheel in local, just run the following command:
+
+.. code-block:: bash
+   :linenos:
+   
    $ python ./setup.py sdist bdist_wheel
 
 - Then, you can use the ``HyperGP`` through the ``pip install`` (replace the xxx to the actual string of the whl in ``/dist``):
@@ -48,5 +54,13 @@ An example of environment setup in Linux is shown below:
 
    $ pip install HyperGP-xxx.whl
 
-- Or you can directly run the ``HyperGP`` through the source code.
+- Or you can directly directly run the ``HyperGP`` through the source code, with the following command:
 
+.. code-block:: bash
+   :linenos:
+
+   $ cd HyperGP
+   $ make compile
+   $ cd ..
+   
+   

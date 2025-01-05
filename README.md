@@ -65,7 +65,8 @@ An example of environment setup in Linux is shown below:
 $ conda env create -n HyperGP -f environment.yml
 $ conda activate HyperGP
 $ cd HyperGP
-$ make all
+$ make compile
+$ cd ..
 ```
 
 # Quick Start for Symbolic Regression

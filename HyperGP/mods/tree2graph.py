@@ -41,7 +41,6 @@ class ExecutableGen:
 
             ind_after_cashes = [[len(ind)] for ind in post_list]
             cash_records = [ind.states['cash_record'] + ind.states['record'] for ind in progs]
-            
         if len(cash_arrays) > 0:
             cash_arrays = np.vstack(cash_arrays)
         else:

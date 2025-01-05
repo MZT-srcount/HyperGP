@@ -159,6 +159,7 @@ namespace pygp_utils{
                         
                         if (i == 0){
                             exps[child_size + 2] = arguments_num + k;
+                            output[sym] = {arguments_num + k, max_layer + 1};
                         }
                         else{
                             /// [ ] TODO: record_dict should be replaced by list struct
@@ -225,9 +226,11 @@ namespace pygp_utils{
                 }
             }
             for(int i = 0; i < records[k].size(); ++i){
+                    
                 std::string sym = sym_set[records[k][i]];
                 (*record_posi).push_back(output[sym][0]);
                 (*record_strs).push_back(sym);
+                // printf("Here....%d, %d, %d, %d, %s\n", records[k][i], output[sym][0], cur_ind, compute_unit + cur_ind, sym.c_str());
             }
             init_origin_posi += idxs_ksize;
         }

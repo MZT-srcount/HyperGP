@@ -82,15 +82,15 @@ class TGPIndv(Program):
     def list(self, parent=False, childs=False):
          
         """
-        Generate the postorder traversal list of the program
+        Generate the preorder traversal list of the program
 
         Args:
-            parent(bool): whether generate the parent list with the postorder traversal list.
-            childs(bool): whether generate the child list with the postorder traversal list.
+            parent(bool): whether generate the parent list with the preorder traversal list.
+            childs(bool): whether generate the child list with the preorder traversal list.
         
         Returns:
-            Return the postorder traversal list.
-            If parent or childs is true, then return a list: [postorder list, parent list if parent=True, child list if childs=True]
+            Return the preorder traversal list.
+            If parent or childs is true, then return a list: [preorder list, parent list if parent=True, child list if childs=True]
 
         Examples:
             >>> print(ind.list())
