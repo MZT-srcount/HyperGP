@@ -462,12 +462,22 @@ void build_np(py::array_t<scalar_t>* d, scalar_t* ptr, std::vector<py::ssize_t> 
     if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));});
     *d = py::array_t<scalar_t>(init_shape, strides_r, ptr, deallocate_buffer_r);
 }
+
+template<typename scalar_t>
+__global__ void constant_fill(scalar_t* arrays, scalar_t* constant, size_t size){
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int t_n = blockDim.x * gridDim.x;
+    for(int i = tid; i < size; i += t_n){
+        arrays[i] = constant[0];
+    }
+}
+
 #include <ctime>
 template<typename scalar_t>
 void exec_cpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const& execs_layer,
         py::array_t<scalar_t> const& constants, py::array_t<scalar_t> const& inputs, 
         py::array_t<scalar_t> const& cashes_cpu, 
-        std::vector<size_t> const& records_list, const Array<scalar_t>& outputs, const Array<scalar_t>& records,
+        std::vector<int> const& records_list, const Array<scalar_t>& outputs, const Array<scalar_t>& records,
         std::tuple<size_t, size_t, size_t, size_t, size_t> paras){
     
     CHECK(cudaSetDevice(outputs.device_id));
@@ -613,6 +623,7 @@ void exec_cpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
     // cudaMemcpyAsync(inputs_gpu + d_batch * cashs_init_posi, buf_cashes.ptr, d_batch * ELEM_SIZE * cashes_len, cudaMemcpyHostToDevice, streams[0]);
     // st = std::clock();
     // printf("0 iteration: %d\n", iteration);
+    int fill_block_num = ceil(d_batch / 256.f) > 256 ? 256:ceil(d_batch / 256.f);
     for(int i = 0; i < iteration; ++i){
         // printf("iteration: %d, %ld\n", i, iteration);
         size_t offset = (i % STREAM_NUM) * xlen;
@@ -638,7 +649,12 @@ void exec_cpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
         
         cudaMemcpy2DAsync(outputs.ptr + d_batch * i, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + outputs_init_posi * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, outputs_size, cudaMemcpyDeviceToDevice, streams[i % STREAM_NUM]);
         for(int j = 0; j < record_num; ++j){
-            cudaMemcpy2DAsync(records.ptr + d_batch * i + data_size * j, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + records_list[j] * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, 1, cudaMemcpyDeviceToDevice, streams[i % STREAM_NUM]);
+            if (records_list[j] > 0){
+                cudaMemcpy2DAsync(records.ptr + d_batch * i + data_size * j, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + records_list[j] * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, 1, cudaMemcpyDeviceToDevice, streams[i % STREAM_NUM]);
+            }
+            else{
+                constant_fill<scalar_t><<<fill_block_num, 256, 0, streams[i % STREAM_NUM]>>>(records.ptr + d_batch * i + data_size * j, constants_gpu + (-records_list[j] - 1), d_batch);
+            }
         }
     }
     // printf("iteration: %d, %ld\n", iteration, iteration);
@@ -683,7 +699,7 @@ template<typename scalar_t>
 void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const& execs_layer,
         py::array_t<scalar_t> const& constants, InputCuda const& inputs, 
         py::array_t<scalar_t> const& cashes_cpu, 
-        std::vector<size_t> const& records_list, const Array<scalar_t>& outputs, const Array<scalar_t>& records,
+        std::vector<int> const& records_list, const Array<scalar_t>& outputs, const Array<scalar_t>& records,
         std::tuple<size_t, size_t, size_t, size_t, size_t> paras){
     
     CHECK(cudaSetDevice(outputs.device_id));
@@ -825,6 +841,8 @@ void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
     // cudaMemcpyAsync(inputs_gpu + d_batch * cashs_init_posi, buf_cashes.ptr, d_batch * ELEM_SIZE * cashes_len, cudaMemcpyHostToDevice, streams[0]);
     // st = std::clock();
     // printf("1 iteration: %d\n", iteration);
+    
+    int fill_block_num = ceil(d_batch / 256.f) > 256 ? 256:ceil(d_batch / 256.f);
     for(int i = 0; i < iteration; ++i){
         // printf("iteration: %d, %ld\n", i, iteration);
         size_t offset = (i % STREAM_NUM) * xlen;
@@ -849,7 +867,12 @@ void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
         
         cudaMemcpy2DAsync(outputs.ptr + d_batch * i, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + outputs_init_posi * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, outputs_size, cudaMemcpyDeviceToDevice, streams[i % STREAM_NUM]);
         for(int j = 0; j < record_num; ++j){
-            cudaMemcpy2DAsync(records.ptr + d_batch * i + data_size * j, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + records_list[j] * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, 1, cudaMemcpyDeviceToDevice, streams[i % STREAM_NUM]);
+            if (records_list[j] >= 0){
+                cudaMemcpy2DAsync(records.ptr + d_batch * i + data_size * j, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + records_list[j] * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, 1, cudaMemcpyDeviceToDevice, streams[i % STREAM_NUM]);
+            }
+            else{
+                constant_fill<scalar_t><<<fill_block_num, 256, 0, streams[i % STREAM_NUM]>>>(records.ptr + d_batch * i + data_size * j, constants_gpu + (-records_list[j] - 1), d_batch);
+            }
         }
     }
     // printf("iteration: %d, %ld\n", iteration, iteration);

@@ -53,4 +53,4 @@ class ExecutableGen:
 
         # print(sum([len(ind) for ind in ind_after_cashes]))
         # assert 0==1
-        return exp_set, States(constants=constant_set, layer_info=layer_info, x_len=x_len, record_set=cash_records, records_posi=records_posi, record_strs=record_strs, cash_array=cash_arrays, prog_size=len(progs))
+        return exp_set, States(constants=np.array(constant_set), layer_info=layer_info, x_len=x_len, record_set=cash_records, records_posi=records_posi, record_strs=record_strs, cash_array=cash_arrays, prog_size=len(progs))
