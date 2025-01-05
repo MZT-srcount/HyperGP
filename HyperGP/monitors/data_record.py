@@ -3,7 +3,7 @@ import HyperGP
 import numpy as np
 
 def statistics_record_initprint():
-    print(f"|{"min":-^30}|{"max":-^30}|{"mean":-^30}|{"var":-^30}|{"std":-^30}|")
+    print(f'|{"min":-^30}|{"max":-^30}|{"mean":-^30}|{"var":-^30}|{"std":-^30}|')
     print(f"|{'-'*30:^30}|{'-'*30:^30}|{'-'*30:^30}|{'-'*30:^30}|{'-'*30:^30}|")
 
 def statistics_record(fits, save_path=None):
