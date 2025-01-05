@@ -39,7 +39,7 @@ Here, We introduce the basic usage of HyperGP
    :linenos:
 
    # Generate primitive set
-   pset = HyperGP.PrimitiveSet(input_arity=2,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2),('sin', HyperGP.sin, 1),('cos', HyperGP.cos, 1)])
+   pset = HyperGP.PrimitiveSet(input_arity=2,  primitive_set=[('add', HyperGP.tensor.add, 2),('sub', HyperGP.tensor.sub, 2),('mul', HyperGP.tensor.mul, 2),('div', HyperGP.tensor.div, 2),('sin', HyperGP.tensor.sin, 1),('cos', HyperGP.tensor.cos, 1)])
 
 4. **initialize population**: with the ``PrimitiveSet``, we can use ``Population`` to initialize the population
     

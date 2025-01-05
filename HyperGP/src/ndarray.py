@@ -732,9 +732,9 @@ class NDArray:
 
 #[ ] TODO: Change to the boolean type(and NDArray should support for float32 int32 int64 type) 
 def _all(array:NDArray):
-    out = NDArray.make((1, ), array._handle.dev_id, device=array.device)
-    post_dim = 1, prob(array._shape)
-    array.device.ewise_sum(array, out, post_dim, array._offset)
+    out = NDArray.make((1, ), array._handle.dev_id, device=array.device, dtype=_float64)
+    post_dim = prob(array._shape)
+    array.device.ewise_sum(array._handle, out._handle, 1, post_dim, array._offset)
     if out.numpy() == post_dim:
         return True
     else:
@@ -742,9 +742,9 @@ def _all(array:NDArray):
     
     #[ ] TODO: Change to the boolean type(and NDArray should support for float32 int32 int64 type) 
 def _any(array:NDArray):
-    out = NDArray.make((1, ), array._handle.dev_id, device=array.device)
-    post_dim = 1, prob(array._shape)
-    array.device.ewise_sum(array, out, post_dim, array._offset)
+    out = NDArray.make((1, ), array._handle.dev_id, device=array.device, dtype=_float64)
+    post_dim = prob(array._shape)
+    array.device.ewise_sum(array._handle, out._handle, 1, post_dim, array._offset)
     if out.numpy() > 0:
         return True
     else:

@@ -1012,8 +1012,8 @@ __global__ void ewise_sum(const scalar_t* a_handle, sscalar_t* o, size_t len, in
     int tid = threadIdx.x;
     int tn = blockDim.x;
     int init_posi = bid * len;
-    extern __shared__ __align__(sizeof(scalar_t)) unsigned char share_tmp[];
-    scalar_t* internal_output = (scalar_t*)(share_tmp);
+    extern __shared__ __align__(sizeof(sscalar_t)) unsigned char share_tmp[];
+    sscalar_t* internal_output = (sscalar_t*)(share_tmp);
     internal_output[tid] = 0;
     internal_output[tid + tn] = 0;
     for(int i = tid; i < len; i += tn){
@@ -1040,8 +1040,8 @@ __global__ void ewise_min(const scalar_t* a_handle, sscalar_t* o, size_t len, in
     int tid = threadIdx.x;
     int tn = blockDim.x;
     int init_posi = bid * len;
-    extern __shared__ __align__(sizeof(scalar_t)) unsigned char share_tmp[];
-    scalar_t* internal_output = (scalar_t*)(share_tmp);
+    extern __shared__ __align__(sizeof(sscalar_t)) unsigned char share_tmp[];
+    sscalar_t* internal_output = (sscalar_t*)(share_tmp);
     internal_output[tid] = a[init_posi];
     internal_output[tid + tn] = a[init_posi];
     for(int i = tid; i < len; i += tn){
@@ -1072,8 +1072,8 @@ __global__ void ewise_max(const scalar_t* a_handle, sscalar_t* o, size_t len, in
     int tid = threadIdx.x;
     int tn = blockDim.x;
     int init_posi = bid * len;
-    extern __shared__ __align__(sizeof(scalar_t)) unsigned char share_tmp[];
-    scalar_t* internal_output = (scalar_t*)(share_tmp);
+    extern __shared__ __align__(sizeof(sscalar_t)) unsigned char share_tmp[];
+    sscalar_t* internal_output = (sscalar_t*)(share_tmp);
     internal_output[tid] = a[init_posi];
     internal_output[tid + tn] = a[init_posi];
     for(int i = tid; i < len; i += tn){
@@ -1104,8 +1104,8 @@ __global__ void ewise_mean(const scalar_t* a_handle, sscalar_t* o, size_t len, i
     int tid = threadIdx.x;
     int tn = blockDim.x;
     int init_posi = bid * len;
-    extern __shared__ __align__(sizeof(scalar_t)) unsigned char share_tmp[];
-    scalar_t* internal_output = (scalar_t*)(share_tmp);
+    extern __shared__ __align__(sizeof(sscalar_t)) unsigned char share_tmp[];
+    sscalar_t* internal_output = (sscalar_t*)(share_tmp);
     internal_output[tid] = 0;
     internal_output[tid + tn] = 0;
     for(int i = tid; i < len; i += tn){
@@ -1194,8 +1194,8 @@ __global__ void ewise_std(const scalar_t* a_handle, sscalar_t* o, size_t len, in
     int tid = threadIdx.x;
     int tn = blockDim.x;
     int init_posi = bid * len;
-    extern __shared__ __align__(sizeof(scalar_t)) unsigned char share_tmp[];
-    scalar_t* internal_output = (scalar_t*)(share_tmp);
+    extern __shared__ __align__(sizeof(sscalar_t)) unsigned char share_tmp[];
+    sscalar_t* internal_output = (sscalar_t*)(share_tmp);
     internal_output[tid] = 0;
     internal_output[tid + tn] = 0;
     for(int i = tid; i < len; i += tn){
@@ -1239,8 +1239,8 @@ __global__ void ewise_var(const scalar_t* a_handle, sscalar_t* o, size_t len, in
     int tid = threadIdx.x;
     int tn = blockDim.x;
     int init_posi = bid * len;
-    extern __shared__ __align__(sizeof(scalar_t)) unsigned char share_tmp[];
-    scalar_t* internal_output = (scalar_t*)(share_tmp);
+    extern __shared__ __align__(sizeof(sscalar_t)) unsigned char share_tmp[];
+    sscalar_t* internal_output = (sscalar_t*)(share_tmp);
     internal_output[tid] = 0;
     internal_output[tid + tn] = 0;
     for(int i = tid; i < len; i += tn){
@@ -1828,7 +1828,7 @@ void oper_dim_1(const Array<scalar_t>& a_handle, Array<sscalar_t>& out, int pre_
     
     Array<scalar_t> a(0, out.device_id);
     scalar_t* a_ptr = cpy_gpus(a_handle, out, a);
-    const size_t ELEM_SIZE = sizeof(scalar_t);
+    const size_t ELEM_SIZE = sizeof(sscalar_t);
     size_t block_num = ewise_async_1op(a, out);
     int thread_num = 1024;
     if (post_dim < thread_num){
@@ -4022,6 +4022,7 @@ PYBIND11_MODULE(ndarray_cuda_backend, m){
     TEMPLATE_BIND_ARRAY<float>(m);
     TEMPLATE_BIND_ARRAY<double>(m);
 
+    TEMPLATE_BIND_FUNCS<bool, bool, bool>(m);
     TEMPLATE_BIND_FUNCS<uint8_t, uint8_t, uint8_t>(m);
     TEMPLATE_BIND_FUNCS<uint16_t, uint16_t, uint16_t>(m);
     TEMPLATE_BIND_FUNCS<uint32_t, uint32_t, uint32_t>(m);
@@ -4044,6 +4045,7 @@ PYBIND11_MODULE(ndarray_cuda_backend, m){
     TEMPLATE_BIND_FUNCS_DIM1<float, float>(m);
     TEMPLATE_BIND_FUNCS_DIM1<double, double>(m);
 
+    TEMPLATE_BIND_FUNCS_DIM1<bool, float>(m);
     TEMPLATE_BIND_FUNCS_DIM1<uint8_t, float>(m);
     TEMPLATE_BIND_FUNCS_DIM1<uint16_t, float>(m);
     TEMPLATE_BIND_FUNCS_DIM1<uint32_t, float>(m);
@@ -4055,6 +4057,7 @@ PYBIND11_MODULE(ndarray_cuda_backend, m){
     TEMPLATE_BIND_FUNCS_DIM1<float, float>(m);
     TEMPLATE_BIND_FUNCS_DIM1<double, float>(m);
 
+    TEMPLATE_BIND_FUNCS_DIM1<bool, double>(m);
     TEMPLATE_BIND_FUNCS_DIM1<uint8_t, double>(m);
     TEMPLATE_BIND_FUNCS_DIM1<uint16_t, double>(m);
     TEMPLATE_BIND_FUNCS_DIM1<uint32_t, double>(m);
