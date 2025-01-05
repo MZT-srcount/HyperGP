@@ -5,7 +5,7 @@ workflow_test.py
 cibuildwheel.toml
 setup_1.py
 environment_1.yml
-/HyperGP/src/*.so
+# /HyperGP/src/*.so
 
 /_skbuild
 /wheelhouse
