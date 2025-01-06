@@ -6,6 +6,7 @@ cibuildwheel.toml
 setup_1.py
 environment_1.yml
 # /HyperGP/src/*.so
+tensor_test.py
 
 /_skbuild
 /wheelhouse

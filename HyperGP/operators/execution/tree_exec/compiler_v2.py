@@ -80,21 +80,21 @@ class ExecutableExpr:
                 arity = self.exec_list[idx + 1]
                 # print(self.exec_list[idx], arity, self.exec_list[idx + 2: idx+2+arity])
                 # print('11111', f_avec[self.exec_list[idx]])
-                # mid_output[0].device.cc()
+                mid_output[0].device.cc()
                 # mid_output[0].device.ewise_add(mid_output[0].cached_data._handle, mid_output[0].cached_data._handle, new_output.cached_data._handle, mid_output[0].cached_data._offset, mid_output[0].cached_data._offset)
-                mid_output[self.exec_list[idx + arity + 2]] = f_avec[self.exec_list[idx]](*[mid_output[i] for i in self.exec_list[idx+2:idx+2+arity]])
+                # mid_output[self.exec_list[idx + arity + 2]] = f_avec[self.exec_list[idx]](*[mid_output[i] for i in self.exec_list[idx+2:idx+2+arity]])
                 idx += self.exec_unit_len
 
             # print('1---------------------------------------------------', batch_num, time.time() - st)
             output_shape = None
             none_equal_list = []
             for i in range(prog_size):
-                prob_shape = prob(mid_output[len(input) + i].shape)
+                prob_shape = prob(mid_output[0].shape)
                 if (prob_shape == 0 or prob_shape == 1):
                     none_equal_list.append(i)
                 else:
-                    output_shape = mid_output[len(input) + i].shape
-                output_segs[i].append(mid_output[len(input) + i])
+                    output_shape = mid_output[0].shape
+                output_segs[i].append(mid_output[0])
             for i in none_equal_list:
                 output_segs[i] = [HyperGP.full(shape=output_shape, fill_value=float(output_segs[i][num])) for num, tensor in enumerate(output_segs[i])]
             batch_last = batch_init + batch_size * z
