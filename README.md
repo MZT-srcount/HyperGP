@@ -1,12 +1,14 @@
 # HyperGP: A high performance heterogeneous parallel GP framework
 
+.... Not finish yet ....
+
 [![License: BSD 3-Clause License](https://img.shields.io/badge/License-BSD%203--Clause-red)](https://github.com/MZT-srcount/HyperGP/blob/main/LICENSE)
 [![PyPI](https://img.shields.io/badge/PyPI-support-blue)](https://pypi.org/project/HyperGP/)
 [![readthedocs](https://img.shields.io/badge/docs-passing-green)](https://hypergp.readthedocs.io/en/latest/)
 [![coverage](https://img.shields.io/badge/coverage-passing-green)]()
 
 
-``HyperGP`` is an open-source high-performance framework, that provides convenient distributed heterogeneous acceleration for the custom prototyping of Genetic Programming (GP) and its variants. To ensure both flexibility and high performance, HyperGP encompasses a variety of technologies for GP characteristics to provide convenient prototyping and efficient acceleration of various custom algorithms. To enable quick prototyping within HyperGP for research on different types of genetic programming and different application fields, adaptability is also emphasized in building the HyperGP framework, to support a wide range of potential applications, like symbolic regression. 
+HyperGP is an open-source high-performance framework, that provides convenient distributed heterogeneous acceleration for the custom prototyping of Genetic Programming (GP) and its variants. To ensure both flexibility and high performance, HyperGP encompasses a variety of technologies for GP characteristics to provide convenient prototyping and efficient acceleration of various custom algorithms. To enable quick prototyping within HyperGP for research on different types of genetic programming and different application fields, adaptability is also emphasized in building the HyperGP framework, to support a wide range of potential applications, like symbolic regression. 
 
 <p align="center">
   <a href="https://hypergp.readthedocs.io/en/latest/Quick%20Start.html">Main Features</a> |
