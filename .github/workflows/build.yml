@@ -143,7 +143,7 @@ jobs:
           # conda activate base  # 激活 base 环境
           mkdir -p dist
           for whl in wheelhouse/*.whl; do
-            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_24_x86_64
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_36_x86_64
           done
 
           # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
