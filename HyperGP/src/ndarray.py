@@ -10,9 +10,12 @@ from .data_type import _bool, _int32, _int64, _int8, _float32, _float64, _uint16
 from .data_type import *
 from collections.abc import Iterable
 import math
+from . import device_info
 
 
 __default_devid__ = 0
+
+__global_mods__ = {}
 
 
 def prob(x):
@@ -28,8 +31,10 @@ def _array(data, dtype=float, device=None, device_id=__default_devid__):
 
 # def _array(dtype, size=0):
 #     if dtype="float32":
-        
 
+def global_streams_info():
+    from . import global_streams
+    return BackendDevice("global_streams", global_streams)
 
 def cpu_numpy():
     return BackendDevice('cpu_numpy', ndarray_np_backend)
@@ -41,16 +46,61 @@ def gpu():
     from . import ndarray_cuda_backend
     return BackendDevice("gpu", ndarray_cuda_backend)
 
+def basic_ops_gpu():
+    from . import basic_tensor_ops
+    if "basic_ops" not in __global_mods__:
+        __global_mods__["basic_ops"] = BackendDevice("basic_ops", basic_tensor_ops)
+        __global_mods__["basic_ops"].set_gstreams(global_streams_info().get_gstreams())
+    return __global_mods__["basic_ops"]
+
+def nn_ops_gpu():
+    from . import nn_ops
+    if "nn_ops" not in __global_mods__:
+        __global_mods__["nn_ops"] = BackendDevice("nn_ops", nn_ops)
+        __global_mods__["nn_ops"].set_gstreams(global_streams_info().get_gstreams())
+    return __global_mods__["nn_ops"]
+
+def broadcast_ops_gpu():
+    from . import broadcast_ops
+    if "broadcast_ops" not in __global_mods__:
+        __global_mods__["broadcast_ops"] = BackendDevice("broadcast_ops", broadcast_ops)
+        __global_mods__["broadcast_ops"].set_gstreams(global_streams_info().get_gstreams())
+    return __global_mods__["broadcast_ops"]
+
+def device_info_gpu():
+    from . import device_info
+    if "device_info" not in __global_mods__:
+        __global_mods__["device_info"] = BackendDevice("device_info", device_info)
+        __global_mods__["device_info"].set_gstreams(global_streams_info().get_gstreams())
+    return __global_mods__["device_info"]
+
+
+def judge_ops_gpu():
+    from . import judge_ops
+    if "judge_ops" not in __global_mods__:
+        __global_mods__["judge_ops"] = BackendDevice("judge_ops", judge_ops)
+        __global_mods__["judge_ops"].set_gstreams(global_streams_info().get_gstreams())
+    return __global_mods__["judge_ops"]
+
+device_info_gpu().set_gstreams(global_streams_info().get_gstreams())
+basic_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
+broadcast_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
+judge_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
+nn_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
+
+backend_libs_name = [device_info_gpu, basic_ops_gpu, broadcast_ops_gpu, judge_ops_gpu, nn_ops_gpu]  
+# backend_libs = (lib() for lib in backend_libs_name)
+
 #[ ]TODO: change the computation way through changing the default_device
 def default_device():
-    return gpu()
+    return None
 
 def get_porperties():
     from . import ndarray_cuda_backend
     return BackendDevice("gpu", ndarray_cuda_backend).get_properties()
 
 def check_gpu():
-    gpu().check()
+    device_info_gpu().check()
 
 def device(device_id):
     global __default_devid__
@@ -62,38 +112,43 @@ def query_device():
 
 def ops_run(runner, a, b, dim_0=0, dim_1=0):
     if not isinstance(a, NDArray):
-        a = NDArray(a)
+        a = NDArray(a, dtype=None) if isinstance(a, np.ndarray) else NDArray(a, dtype=_float64)
 
-    assert abs(dim_0) < len(a._shape) or (dim_0 < 0 and -dim_0 <= len(a._shape)) or (dim_0 == 0 and len(a._shape) == 0), "input dim should smaller than array shape, where shape: {A} / dim: {B}".format(A=a._shape, B=dim_0)
+    if not (abs(dim_0) < len(a._shape) or (dim_0 < 0 and -dim_0 <= len(a._shape)) or (dim_0 == 0 and len(a._shape) == 0)):
+        raise IndexError("input dim should smaller than array shape, where shape: {A} / dim: {B}".format(A=a._shape, B=dim_0))
     if dim_0 != 0:
         pre_dim_a, post_dim_a = prob(a._shape[:dim_0]), prob(a._shape[dim_0:])
     else:
         pre_dim_a, post_dim_a = 1, prob(a._shape)
 
     if not isinstance(b, NDArray):
-        b = NDArray(b)
+        b = NDArray(b, dtype=None) if isinstance(b, np.ndarray) else NDArray(b, dtype=_float64)
     
-    assert abs(dim_1) < len(b._shape) or (dim_1 < 0 and -dim_1 <= len(b._shape)) or (dim_1 == 0 and len(b._shape) == 0), "input dim should smaller than array shape, where shape: {A} / dim: {B}".format(A=b._shape, B=dim_1)
+    if not (abs(dim_1) < len(b._shape) or (dim_1 < 0 and -dim_1 <= len(b._shape)) or (dim_1 == 0 and len(b._shape) == 0)):
+        raise IndexError("input dim should smaller than array shape, where shape: {A} / dim: {B}".format(A=b._shape, B=dim_1))
     if dim_1 != 0:
         pre_dim_b, post_dim_b = prob(b._shape[:dim_1]), prob(b._shape[dim_1:])
     else:
         pre_dim_b, post_dim_b = 1, prob(b._shape)
-
     out = NDArray.make(a.shape, device=a.device, dtype=_out_dtype(a.dtype, b.dtype)) if prob(a.shape) > prob(b.shape) else NDArray.make(b.shape, device=b.device, dtype=_out_dtype(a.dtype, b.dtype))
-    assert (pre_dim_a == pre_dim_b or (pre_dim_a % pre_dim_b == 0 and post_dim_a > post_dim_b) or (pre_dim_a % pre_dim_b == 0 and post_dim_b > post_dim_a), 
-            "The input size is not equal {dim_a}:{dim_b}".format(dim_a=a._shape[:dim_0 + 1], dim_b=b._shape[:dim_1 + 1])
-            )
+    if not (pre_dim_a == pre_dim_b or (pre_dim_a % pre_dim_b == 0 and post_dim_a >= post_dim_b) or (pre_dim_b % pre_dim_a == 0 and post_dim_b >= post_dim_a)):
+        raise ValueError("The input size is not equal {dim_a}:{dim_b}".format(dim_a=a._shape[:dim_0 + 1], dim_b=b._shape[:dim_1 + 1])) 
+        
+            
     # if pre_dim_a != pre_dim_b and not (pre_dim_a % pre_dim_b == 0 and post_dim_a > post_dim_b) and not (pre_dim_a % pre_dim_b == 0 and post_dim_b > post_dim_a):
     #     UserWarning("The input size is not equal {dim_a}:{dim_b}".format(a._shape[:dim_0 + 1], b._shape[:dim_1 + 1]))
 
-    assert post_dim_a == post_dim_b or post_dim_b == 1 or post_dim_a == 1, "input size not equal to size in dim, %d!=%d"%(post_dim_a, post_dim_b)
+    if not (post_dim_a == post_dim_b or post_dim_b == 1 or post_dim_a == 1):
+        raise ValueError("input size not equal to size in dim, %d!=%d"%(post_dim_a, post_dim_b))
     runner(a._handle, b._handle, out._handle, pre_dim_a, post_dim_a, pre_dim_b, post_dim_b, a._offset, b._offset)
+    
     return out
 
 #[ ] TODO: The output dtype should be considered, especially for the opers with 2 dims or more 
 class NDArray:
     def __init__(self, other, dtype, device=None, device_id=__default_devid__):
         if isinstance(other, NDArray):
+            
             if device is None:
                 self._init(other)
             else:
@@ -104,7 +159,7 @@ class NDArray:
             if datatype_mapping[dtype] != other.dtype:
                 other = np.array(other)
             array = NDArray.make(other.shape, device_id=device_id, device=device, dtype=dtype)
-            array.device.from_numpy(np.ascontiguousarray(other), array._handle)
+            basic_ops_gpu().from_numpy(np.ascontiguousarray(other), array._handle)
             self._init(array)
         else:
             array = NDArray(np.array(other), dtype, device=device)
@@ -124,7 +179,7 @@ class NDArray:
             return self
         else:
             out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self.dtype)
-            self.device.compact(
+            broadcast_ops_gpu().compact(
                 self._handle, out._handle, self.shape, self._stride, self._offset
             )
             return out
@@ -141,11 +196,11 @@ class NDArray:
         return (self.numpy(), self._dtype.__name__, self._device.name)
 
     def __setstate__(self, state):
-        array = NDArray(state[0], state[1], gpu() if state[2] == "gpu" else cpu())
+        array = NDArray(state[0], state[1], basic_ops_gpu() if state[2] == "gpu" else cpu())
         self._init(array)
     
     def _setstate(state):
-        return NDArray(state[0], _dtype_strmap[state[1]], gpu() if state[2] == "gpu" else cpu())
+        return NDArray(state[0], _dtype_strmap[state[1]], basic_ops_gpu() if state[2] == "gpu" else cpu())
 
     # To get the index list from the input slice
     def _get_unit_list(self, idxs):
@@ -171,10 +226,11 @@ class NDArray:
         if not isinstance(idxs, tuple):
             idxs = (idxs, )
         
-        assert len(idxs) <= len(self.shape), "Need indexes leq to number of dimensions"
+        if not len(idxs) <= len(self.shape):
+            raise ValueError("Need indexes leq to number of dimensions")
         
-        assert all([isinstance(idx, slice) or isinstance(idx, list) or isinstance(idx, int) for idx in idxs]),\
-        "The index type should be the same with seveal selection: int, list, slice, while the current is '{A}'".format(A=[type(idx) for idx in idxs])
+        if not all([isinstance(idx, slice) or isinstance(idx, list) or isinstance(idx, int) for idx in idxs]):
+            raise IndexError("The index type should be the same with seveal selection: int, list, slice, while the current is '{A}'".format(A=[type(idx) for idx in idxs]))
 
         idxs = [
             self._slice_process(sl, i)  if isinstance(sl, slice) else ([sl] if not isinstance(sl, list) else sl)
@@ -190,11 +246,13 @@ class NDArray:
         
         """use _offset to avoid the frequent data transfer"""
         if len(idxs) == 1:
-            if isinstance(idxs[0], list) and len(idxs[0]) == 1:
-                idx = idxs[0][0]
-                new_array = NDArray.make(tuple(new_shape), self._handle.dev_id, handle=self._handle, offset=idx * self._stride[0] + self._offset, device=self.device, dtype=self.dtype)
-                return new_array
-            if isinstance(idxs[0], slice) and idxs[0].step == 1:
+            if isinstance(idxs[0], list):
+                if len(idxs[0]) == 1:
+                    new_array = NDArray.make(tuple(new_shape), self._handle.dev_id, handle=self._handle, offset=idxs[0][0] * self._stride[0] + self._offset, device=self.device, dtype=self.dtype)
+                    return new_array
+                elif len(idxs[0]) == 0:
+                    return None
+            elif isinstance(idxs[0], slice) and idxs[0].step == 1:
                 new_array = NDArray.make(tuple(new_shape), self._handle.dev_id, handle=self._handle, offset=idxs[0].start * self._stride[0] + self._offset, device=self.device, dtype=self.dtype)
                 return new_array
         else:
@@ -205,8 +263,8 @@ class NDArray:
         new_array = NDArray.make(tuple(new_shape), self._handle.dev_id, device=self.device, dtype=self.dtype)
 
         step_list = [idx * self._stride[i] for i, sl in enumerate(idxs) for idx in (range(sl.start, sl.stop, sl.step) if isinstance(sl, slice) else sl)]
-        step_sizes = new_shape_tmp
-        self.device.transfer(new_array._handle, self._handle, step_list, step_sizes, self._stride[len(idxs) - 1], self._offset, 0, 0)
+        basic_ops_gpu().transfer(new_array._handle, self._handle, step_list, new_shape_tmp, self._stride[len(idxs) - 1], self._offset, 0, 0)
+        
         # unit_idxs, unit_len = self._get_unit_list(idxs)
         # self.device.old_transfer(new_array._handle, self._handle, unit_idxs, unit_len, self._offset, 0)
 
@@ -214,15 +272,19 @@ class NDArray:
     
     #[ ]TODO: __getitem__ returns a new array instead of the whole origin array
     def __setitem__(self, idxs, other):
-        
-        if not isinstance(idxs, tuple):
-            idxs = (idxs, )
         if not isinstance(other, NDArray):
             other = NDArray(np.array(other), dtype=self._dtype, device=self.device)
 
-        assert not any([isinstance(sl, list) for sl in idxs]), "There should be slice instead of list object in input idxs"
-        assert all([isinstance(idx, slice) or isinstance(idx, list) or isinstance(idx, int) for idx in idxs]),\
-        "The index type should be the same with seveal selection: int, list, slice, while the current is '{A}'".format(A=[type(idx) for idx in idxs])
+        if isinstance(idxs, int):
+            basic_ops_gpu().transfer_series(self._handle, other._handle, self._offset + idxs * self._stride[0], other._offset, prob(other._shape))
+            return 
+        if not isinstance(idxs, tuple):
+            idxs = (idxs, )
+        
+        # if any([isinstance(sl, list) for sl in idxs]):
+        #     raise IndexError("There should be slice instead of list object in input idxs")
+        if not all([isinstance(idx, slice) or isinstance(idx, list) or isinstance(idx, int) for idx in idxs]):
+            raise IndexError("The index type should be the same with seveal selection: int, list, slice, while the current is '{A}'".format(A=[type(idx) for idx in idxs]))
         
         idxs = [
             self._slice_process(sl, i)  if isinstance(sl, slice) else ([sl] if not isinstance(sl, list) else sl)
@@ -234,33 +296,31 @@ class NDArray:
         # unit_idxs, unit_len = self._get_unit_list(idxs)
         # self.device.old_transfer(self._handle, other._handle, unit_idxs, unit_len, self._offset, 1)
 
-        self.device.transfer(self._handle, other._handle, step_list, step_sizes, self._stride[len(idxs) - 1], other._offset, self._offset, 1)
-
-        
+        basic_ops_gpu().transfer(self._handle, other._handle, step_list, step_sizes, self._stride[len(idxs) - 1], other._offset, self._offset, 1)
         
     def _array(self, size, dtype, device_id):
         if dtype==_float32:
-            return self.device.Array_f(size, device_id)
+            return basic_ops_gpu().Array_f(size, device_id)
         if dtype==_float64:
-            return self.device.Array_d(size, device_id)
+            y = basic_ops_gpu()
+            return y.Array_d(size, device_id)
         if dtype==_int64:
-            return self.device.Array_l(size, device_id)
+            return basic_ops_gpu().Array_l(size, device_id)
         if dtype==_int32:
-            return self.device.Array_i(size, device_id)
+            return basic_ops_gpu().Array_i(size, device_id)
         if dtype==_int8:
-            return self.device.Array_a(size, device_id)
+            return basic_ops_gpu().Array_a(size, device_id)
         if dtype==_uint8:
-            return self.device.Array_h(size, device_id)
+            return basic_ops_gpu().Array_h(size, device_id)
         if dtype==_uint16:
-            return self.device.Array_t(size, device_id)
+            return basic_ops_gpu().Array_t(size, device_id)
         if dtype==_uint32:
-            return self.device.Array_j(size, device_id)
+            return basic_ops_gpu().Array_j(size, device_id)
         if dtype==_uint64:
-            return self.device.Array_m(size, device_id)
+            return basic_ops_gpu().Array_m(size, device_id)
         if dtype==_bool:
-            return self.device.Array_b(size, device_id)
+            return basic_ops_gpu().Array_b(size, device_id)
         raise NotImplementedError("The datatype '{DT}' is not supported in the current version".format(DT=dtype))
-    
         
     def make(shape, device_id=__default_devid__, strides=None, device=None, handle=None, offset=0, dtype=None):
         array = NDArray.__new__(NDArray)
@@ -310,39 +370,61 @@ class NDArray:
         if device == self.device:
             return self
         else:
-            array = self.device.to_numpy(self._shape, self._stride, self._offset)
-            return NDArray(array, device)
+            array = basic_ops_gpu().to_numpy(self._shape, self._stride, self._offset)
+            return NDArray(array, None, device)
     
     def numpy(self):
-        return self.device.to_numpy(self._handle, self._shape, self._stride, self._offset)
+        return basic_ops_gpu().to_numpy(self._handle, self._shape, self._stride, self._offset)
 
     def ptr(self):
         return self._handle.ptr()
 
     def __add__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
+        
         if isinstance(other, NDArray):
             if other.shape != self.shape:
-                ops_run(self.device.ewise_add_dim, self, other)
+                
+                ops_run(broadcast_ops_gpu().ewise_add_dim, self, other)
             else:
                 # assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
-                self.device.ewise_add(self._handle, other._handle, out._handle, self._offset, other._offset)
+                basic_ops_gpu().ewise_add(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_add(self._handle, other, out._handle, self._offset)
+            basic_ops_gpu().scalar_add(self._handle, other, out._handle, self._offset)
         return out
 
+    def __radd__(self, other):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
+        other = NDArray(other, dtype=self.dtype)
+        if other.shape != self.shape:
+            ops_run(broadcast_ops_gpu().ewise_add_dim, other, self)
+        else:
+            # assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            basic_ops_gpu().ewise_add(other._handle, self._handle, out._handle, other._offset, self._offset)
+        return out
+    
     def __sub__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
         if isinstance(other, NDArray):
             if other.shape != self.shape:
-                ops_run(self.device.ewise_sub_dim, self, other)
+                ops_run(broadcast_ops_gpu().ewise_sub_dim, self, other)
             else:
                 # assert self.shape == other.shape, "operation needs two equal-sized arrays, {s1}:{s2}".format(s1=self.shape, s2=other.shape)
-                self.device.ewise_sub(self._handle, other._handle, out._handle, self._offset, other._offset)
+                basic_ops_gpu().ewise_sub(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_sub(self._handle, other, out._handle, self._offset)
+            basic_ops_gpu().scalar_sub(self._handle, other, out._handle, self._offset)
         return out
 
+    def __rsub__(self, other):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
+        other = NDArray(other, dtype=self.dtype)
+        if other.shape != self.shape:
+            ops_run(broadcast_ops_gpu().ewise_sub_dim, other, self)
+        else:
+            # assert self.shape == other.shape, "operation needs two equal-sized arrays, {s1}:{s2}".format(s1=self.shape, s2=other.shape)
+            basic_ops_gpu().ewise_sub(other._handle, self._handle, out._handle, other._offset, self._offset)
+        return out
+    
     def __mul__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
         if isinstance(other, NDArray):
@@ -350,11 +432,21 @@ class NDArray:
                 ops_run(self.device.ewise_mul_dim, self, other)
             else:
                 # assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
-                self.device.ewise_mul(self._handle, other._handle, out._handle, self._offset, other._offset)
+                basic_ops_gpu().ewise_mul(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_mul(self._handle, other, out._handle, self._offset)
+            basic_ops_gpu().scalar_mul(self._handle, other, out._handle, self._offset)
         return out
            
+    def __rmul__(self, other):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
+        other = NDArray(other, dtype=self.dtype)
+        if other.shape != self.shape and self.shape != other.reshape(self.shape).shape:
+            ops_run(self.device.ewise_mul_dim, other, self)
+        else:
+            # assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            basic_ops_gpu().ewise_mul(other._handle, self._handle, out._handle, other._offset, self._offset)
+        return out
+
     def __truediv__(self, other):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
         if isinstance(other, NDArray):
@@ -362,9 +454,19 @@ class NDArray:
                 ops_run(self.device.ewise_div_dim, self, other)
             else:
                 # assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
-                self.device.ewise_div(self._handle, other._handle, out._handle, self._offset, other._offset)
+                basic_ops_gpu().ewise_div(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_div(self._handle, other, out._handle, self._offset)
+            basic_ops_gpu().scalar_div(self._handle, other, out._handle, self._offset)
+        return out
+    
+    def __rtruediv__(self, other):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_out_dtype(self.dtype, other.dtype) if isinstance(other, NDArray) else self.dtype)
+        other = NDArray(other, dtype=self.dtype)
+        if other.shape != self.shape:
+            ops_run(self.device.ewise_div_dim, other, self)
+        else:
+            # assert self.shape == other.shape, "operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape)
+            basic_ops_gpu().ewise_div(other._handle, self._handle, out._handle, other._offset, self._offset)
         return out
     
     def pow(self, other):
@@ -372,9 +474,9 @@ class NDArray:
         if isinstance(other, NDArray):
             if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
                 raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
-            self.device.ewise_pow(self._handle, other._handle, out._handle, self._offset, other._offset)
+            basic_ops_gpu().ewise_pow(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_pow(self._handle, other, out._handle, self._offset)
+            basic_ops_gpu().scalar_pow(self._handle, other, out._handle, self._offset)
         return out
     
     def __lt__(self, other):
@@ -382,9 +484,9 @@ class NDArray:
         if isinstance(other, NDArray):
             if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
                 raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
-            self.device.ewise_lt(self._handle, other._handle, out._handle, self._offset, other._offset)
+            judge_ops_gpu().ewise_lt(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_lt(self._handle, other, out._handle, self._offset)
+            judge_ops_gpu().scalar_lt(self._handle, other, out._handle, self._offset)
         return out.numpy()
     
     def __le__(self, other):
@@ -392,9 +494,9 @@ class NDArray:
         if isinstance(other, NDArray):
             if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
                 raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
-            self.device.ewise_le(self._handle, other._handle, out._handle, self._offset, other._offset)
+            judge_ops_gpu().ewise_le(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_le(self._handle, other, out._handle, self._offset)
+            judge_ops_gpu().scalar_le(self._handle, other, out._handle, self._offset)
         return out.numpy()
     
     def __gt__(self, other):
@@ -402,9 +504,9 @@ class NDArray:
         if isinstance(other, NDArray):
             if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
                 raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
-            self.device.ewise_ge(self._handle, other._handle, out._handle, self._offset, other._offset)
+            judge_ops_gpu().ewise_ge(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_ge(self._handle, other, out._handle, self._offset)
+            judge_ops_gpu().scalar_ge(self._handle, other, out._handle, self._offset)
         return out.numpy()
 
     def __iter__(self):
@@ -415,9 +517,9 @@ class NDArray:
         if isinstance(other, NDArray):
             if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
                 raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
-            self.device.ewise_ge(self._handle, other._handle, out._handle, self._offset, other._offset)
+            judge_ops_gpu().ewise_ge(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_ge(self._handle, other, out._handle, self._offset)
+            judge_ops_gpu().scalar_ge(self._handle, other, out._handle, self._offset)
         return out.numpy()
 
     def __eq__(self, other):
@@ -425,9 +527,11 @@ class NDArray:
         if isinstance(other, NDArray):
             if self.shape != other.shape and self.shape != other.reshape(self.shape).shape:
                 raise ValueError("operation needs two equal-sized arrays, where a/b:{A1}/{A2}".format(A1=self.shape, A2=other.shape))
-            self.device.ewise_eq(self._handle, other._handle, out._handle, self._offset, other._offset)
+            if self._handle == other._handle and self._offset == other._offset:
+                return np.full(tuple(self.shape), True, dtype=bool)
+            judge_ops_gpu().ewise_eq(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_eq(self._handle, other, out._handle, self._offset)
+            judge_ops_gpu().scalar_eq(self._handle, other, out._handle, self._offset)
         return out.numpy()
     
     
@@ -436,64 +540,89 @@ class NDArray:
         self.device.wait(self._handle)
         if isinstance(other, NDArray):
             assert self.shape == other.shape, "operation needs two equal-sized arrays"
-            self.device.ewise_ne(self._handle, other._handle, out._handle, self._offset, other._offset)
+            judge_ops_gpu().ewise_ne(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
-            self.device.scalar_ne(self._handle, other, out._handle, self._offset)
+            judge_ops_gpu().scalar_ne(self._handle, other, out._handle, self._offset)
         return out.numpy()
     
     def __neg__(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_neg(self._handle, out._handle, self._offset)
+        judge_ops_gpu().ewise_neg(self._handle, out._handle, self._offset)
         return out
 
     def sin(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_sin(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_sin(self._handle, out._handle, self._offset)
         return out
 
     def cos(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_cos(self._handle, out._handle, self._offset)
-        return out
-    
-    def loge(self):
-        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_loge(self._handle, out._handle, self._offset)
-        return out
-    
-    def log10(self):
-        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_log10(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_cos(self._handle, out._handle, self._offset)
         return out
     
     def log2(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_log2(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_log2(self._handle, out._handle, self._offset)
         return out
     
-    def tab(self):
+    def loge(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_tan(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_loge(self._handle, out._handle, self._offset)
+        return out
+    
+    def log10(self):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
+        basic_ops_gpu().ewise_log10(self._handle, out._handle, self._offset)
+        return out
+    
+    def logf2(self):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
+        basic_ops_gpu().ewise_logf2(self._handle, out._handle, self._offset)
+        return out
+    
+    def logfe(self):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
+        basic_ops_gpu().ewise_logfe(self._handle, out._handle, self._offset)
+        return out
+    
+    def logf10(self):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
+        basic_ops_gpu().ewise_logf10(self._handle, out._handle, self._offset)
+        return out
+    
+    def tan(self):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
+        basic_ops_gpu().ewise_tan(self._handle, out._handle, self._offset)
         return out
     
     def sqrt(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_sqrt(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_sqrt(self._handle, out._handle, self._offset)
+        return out
+    
+    def sqrtf(self):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
+        basic_ops_gpu().ewise_sqrtf(self._handle, out._handle, self._offset)
         return out
     
     def arcsin(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_arcsin(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_arcsin(self._handle, out._handle, self._offset)
         return out
 
     def arccos(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_arccos(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_arccos(self._handle, out._handle, self._offset)
         return out
     
     def arctan(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_arctan(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_arctan(self._handle, out._handle, self._offset)
+        return out
+    
+    def reciprocal(self):
+        out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
+        basic_ops_gpu().ewise_reciprocal(self._handle, out._handle, self._offset)
         return out
     
     def substract(self, other, dim_0=0, dim_1=0):
@@ -505,7 +634,7 @@ class NDArray:
             pre_dim_a, post_dim_a = 1, prob(self._shape)
 
         if not isinstance(other, NDArray):
-            other = NDArray(other)
+            other = NDArray(other, dtype=self.dtype)
             
         assert abs(dim_1) < len(other._shape) or (dim_1 < 0 and -dim_1 <= len(other._shape)), "input dim should smaller than array shape"
         if dim_1 != 0:
@@ -532,53 +661,52 @@ class NDArray:
     
     def abs(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_abs(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_abs(self._handle, out._handle, self._offset)
         return out
 
     def exp(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_exp(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_exp(self._handle, out._handle, self._offset)
         return out
 
     def ceil(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_ceil(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_ceil(self._handle, out._handle, self._offset)
         return out
 
     def floor(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_floor(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_floor(self._handle, out._handle, self._offset)
         return out
 
     def sign(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.ewise_sign(self._handle, out._handle, self._offset)
+        basic_ops_gpu().ewise_sign(self._handle, out._handle, self._offset)
         return out
 
     def sum(self, dim=0):
-        return self._ops_dim_1(dim, self.device.ewise_sum)
+        return self._ops_dim_1(dim, broadcast_ops_gpu().ewise_sum)
     
     def min(self, dim):
-        return self._ops_dim_1(dim, self.device.ewise_min)
+        return self._ops_dim_1(dim, broadcast_ops_gpu().ewise_min)
 
     def max(self, dim):
-        return self._ops_dim_1(dim, self.device.ewise_max)
+        return self._ops_dim_1(dim, broadcast_ops_gpu().ewise_max)
 
     def mean(self, dim):
-        return self._ops_dim_1(dim, self.device.ewise_mean, dtype=float_type(self._dtype))
+        return self._ops_dim_1(dim, broadcast_ops_gpu().ewise_mean, dtype=float_type(self._dtype))
 
     def argmax(self, dim):
-        return self._ops_dim_1(dim, self.device.ewise_argmax, dtype=_int32)
+        return self._ops_dim_1(dim, broadcast_ops_gpu().ewise_argmax, dtype=_int32)
 
     def argmin(self, dim):
-        return self._ops_dim_1(dim, self.device.ewise_argmin, dtype=_int32)
+        return self._ops_dim_1(dim, broadcast_ops_gpu().ewise_argmin, dtype=_int32)
 
     def std(self, dim):
-        return self._ops_dim_1(dim, self.device.ewise_std, dtype=float_type(self._dtype))
+        return self._ops_dim_1(dim, broadcast_ops_gpu().ewise_std, dtype=float_type(self._dtype))
 
     def var(self, dim):
-        return self._ops_dim_1(dim, self.device.ewise_var, dtype=float_type(self._dtype))
-    
+        return self._ops_dim_1(dim, broadcast_ops_gpu().ewise_var, dtype=float_type(self._dtype))
 
     #[ ]TODO: cumsum、cumprob implement
     def cumsum(self, dim):
@@ -596,7 +724,7 @@ class NDArray:
     
     def copy(self):
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=self._dtype)
-        self.device.compact(
+        broadcast_ops_gpu().compact(
             self._handle, out._handle, self.shape, self._stride, self._offset
         )
         self.wait()
@@ -607,14 +735,12 @@ class NDArray:
         return out
 
     def wait(self):
-        self.device.wait(self._handle)
+        basic_ops_gpu().wait(self._handle)
         out = NDArray.make(self.shape, self._handle.dev_id, self._stride, self.device, self._handle, self._offset, dtype=self._dtype)
         return out
-
     
     def __str__(self):
         return self.numpy().__str__()
-    
     
     def _completion(self, new_shape, begin_posi, new_stride=None):
         while(len(new_shape) > 0 and new_shape[-1] == 1):
@@ -664,13 +790,13 @@ class NDArray:
         else:
             out = NDArray.make(self._shape[:-2] + tuple([self._shape[-1], self._shape[-2]]), self._handle.dev_id, device=self.device, dtype=float_type(self._dtype))
         
-        self.device.matrix_T(self._handle, out._handle, pre_dim_a, self._shape[-1], post_dim_a, self._offset)
+        broadcast_ops_gpu().matrix_T(self._handle, out._handle, pre_dim_a, self._shape[-1], post_dim_a, self._offset)
         return out
 
     def dot(self, other, dim_0 = 0, dim_1 = 0):
         
         if not isinstance(other, NDArray):
-            other = NDArray(other)
+            other = NDArray(other, dtype=self.dtype)
 
         if dim_0 != 0:
             pre_dim_a, post_dim_a = prob(self._shape[:dim_0]), prob(self._shape[dim_0:])
@@ -693,7 +819,7 @@ class NDArray:
 
         out = NDArray.make(self._shape[:-1] if len(self._shape) > 1 else tuple(1) + other._shape[-1:], self._handle.dev_id, device=self.device, dtype=float_type(_out_dtype(self._dtype, other._dtype)))
         
-        self.device.matrix_dot(self._handle, other._handle, out._handle, pre_dim_a, self._shape[-1], other._shape[-1], post_dim_a, post_dim_b, self._offset, other._offset)
+        broadcast_ops_gpu().matrix_dot(self._handle, other._handle, out._handle, pre_dim_a, self._shape[-1], other._shape[-1], post_dim_a, post_dim_b, self._offset, other._offset)
         return out
 
     #[ ] TODO: The matrix should be transpose first since the cublas is column-major
@@ -705,7 +831,7 @@ class NDArray:
         infos = NDArray.make(tuple(pre_dim_a), self._handle.dev_id, device=self.device, dtype=float_type(self._dtype))
         
         a_copy = self.copy()
-        self.device.matrix_inv(a_copy._handle, out._handle, pre_dim_a, self._shape[-1], post_dim_a, self._offset, infos)
+        broadcast_ops_gpu().matrix_inv(a_copy._handle, out._handle, pre_dim_a, self._shape[-1], post_dim_a, self._offset, infos)
         #[ ]TODO: warning for the not succeed matrix
         return out
     
@@ -718,7 +844,7 @@ class NDArray:
         infos = NDArray.make(tuple(pre_dim_a), self._handle.dev_id, device=self.device, dtype=float_type(self._dtype))
 
         a_copy = self.copy()
-        self.device.matrix_det(a_copy._handle, out._handle, pre_dim_a, self._shape[-1], post_dim_a, self._offset, infos)
+        broadcast_ops_gpu().matrix_det(a_copy._handle, out._handle, pre_dim_a, self._shape[-1], post_dim_a, self._offset, infos)
         return out
     
     def diagonal_sum(self):
@@ -727,14 +853,14 @@ class NDArray:
         pre_dim_a, post_dim_a = prob(self._shape[:-2]), prob(self._shape[-2:])
         out = NDArray.make(self._shape[:-2], self._handle.dev_id, device=self.device, dtype=float_type(self._dtype))
 
-        self.device.matrix_diagonal_sum(self._handle, out._handle, pre_dim_a, self._shape[-1], self._offset)
+        broadcast_ops_gpu().matrix_diagonal_sum(self._handle, out._handle, pre_dim_a, self._shape[-1], self._offset)
         return out
 
 #[ ] TODO: Change to the boolean type(and NDArray should support for float32 int32 int64 type) 
 def _all(array:NDArray):
     out = NDArray.make((1, ), array._handle.dev_id, device=array.device, dtype=_float64)
     post_dim = prob(array._shape)
-    array.device.ewise_sum(array._handle, out._handle, 1, post_dim, array._offset)
+    broadcast_ops_gpu().ewise_sum(array._handle, out._handle, 1, post_dim, array._offset)
     if out.numpy() == post_dim:
         return True
     else:
@@ -744,7 +870,7 @@ def _all(array:NDArray):
 def _any(array:NDArray):
     out = NDArray.make((1, ), array._handle.dev_id, device=array.device, dtype=_float64)
     post_dim = prob(array._shape)
-    array.device.ewise_sum(array._handle, out._handle, 1, post_dim, array._offset)
+    broadcast_ops_gpu().ewise_sum(array._handle, out._handle, 1, post_dim, array._offset)
     if out.numpy() > 0:
         return True
     else:
@@ -753,20 +879,20 @@ def _any(array:NDArray):
 def _where(bool_array, a_array, b_array):
     assert bool_array._shape == a_array._shape == b_array._shape, "The input arrays should keep the same shape: {BoA}/{AA}/{BA}".format(BoA=bool_array._shape, AA=a_array._shape, BA=b_array._shape)
     if not isinstance(bool_array, NDArray):
-        bool_array = NDArray(bool_array)
+        bool_array = NDArray(bool_array, dtype=_bool)
     if not isinstance(a_array, NDArray):
-        a_array = NDArray(a_array)
+        a_array = NDArray(a_array, dtype=None) if isinstance(a_array, np.ndarray) else NDArray(a_array, dtype=_float64)
     if not isinstance(b_array, NDArray):
-        b_array = NDArray(b_array)
+        b_array = NDArray(b_array, dtype=None) if isinstance(b_array, np.ndarray) else NDArray(b_array, dtype=_float64)
     out = NDArray.make(bool_array._shape, bool_array._handle.dev_id)
-    default_device().where(bool_array._handle, a_array._handle, b_array._handle, out._handle,
+    backend_libs.where(bool_array._handle, a_array._handle, b_array._handle, out._handle,
                            bool_array._offset, a_array._offset, b_array._offset)
     return out
 
 
 def _zeros(shape, dtype, device_id=__default_devid__):
     out = NDArray.make(shape, device_id, dtype=dtype)
-    out.device.ewise_assign(out._handle, 0, prob(shape), 0)
+    basic_ops_gpu().ewise_assign(out._handle, 0, prob(shape), 0)
     return out
 
 def _empty(shape, dtype, device_id=__default_devid__):
@@ -775,7 +901,7 @@ def _empty(shape, dtype, device_id=__default_devid__):
 
 def _ones(shape, dtype, device_id=__default_devid__):
     out = NDArray.make(shape, device_id, dtype=dtype)
-    out.device.ewise_assign(out._handle, 1, prob(shape), 0)
+    basic_ops_gpu().ewise_assign(out._handle, 1, prob(shape), 0)
     return out
 
 #[ ] TODO: Support auto type
@@ -791,29 +917,31 @@ def _full(shape, fill_value, dtype, device_id=__default_devid__):
             out = NDArray.make(shape, device_id, dtype=_supported_builtin_dtype(type(fill_value)))
     else:
         out = NDArray.make(shape, device_id, dtype=dtype)
-    out.device.ewise_assign(out._handle, fill_value, prob(shape), 0)
+    basic_ops_gpu().ewise_assign(out._handle, fill_value, prob(shape), 0)
     return out
 
 
 def _uniform(low, high, shape, dtype, device_id=__default_devid__):
-    raise NotImplementedError("it is not implemented now.")
-    assert dtype in datatype_mapping, "The dtype '{D}' is not supported in current version".format(D=dtype)
-    if dtype == None:
-        out = NDArray.make(shape, device_id, dtype=_float64)
-    else:
-        out = NDArray.make(shape, device_id, dtype=dtype)
-    if low < high: 
-        out.device.ewise_uniform(out._handle, low, high, prob(shape))
-    else:
-        out.device.ewise_uniform(out._handle, high, low, prob(shape))
+    out = NDArray(np.random.uniform(low, high, size=shape), dtype=dtype, device_id=device_id)
     return out
+    # raise NotImplementedError("it is not implemented now.")
+    # assert dtype in datatype_mapping, "The dtype '{D}' is not supported in current version".format(D=dtype)
+    # if dtype == None:
+    #     out = NDArray.make(shape, device_id, dtype=_float64)
+    # else:
+    #     out = NDArray.make(shape, device_id, dtype=dtype)
+    # if low < high: 
+    #     out.device.ewise_uniform(out._handle, low, high, prob(shape))
+    # else:
+    #     out.device.ewise_uniform(out._handle, high, low, prob(shape))
+    # return out
 
 """Image operations"""
 def _filter(a_array, ROI, mask, channel, filter_kernel, anchor=None):
     #[ ] TODO: the datatype should be uint32 or uint64
     
     if not isinstance(a_array, NDArray):
-        a_array = NDArray(a_array)
+        a_array = NDArray(a_array, dtype=_float64)
     if channel == 1:
         pre_dim, post_dim = prob(a_array.shape[:-2]), prob(a_array.shape[-2:])
         nstep = a_array.shape[-1]
@@ -835,19 +963,19 @@ def _filter(a_array, ROI, mask, channel, filter_kernel, anchor=None):
     return out
 
 # def gaussian_filter(a_array, ROI, mask, channel):
-#     return _filter(a_array, ROI, mask, channel, a_array.device.gaussian_filter)
+#     return _filter(a_array, ROI, mask, channel, nn_ops_gpu().gaussian_filter)
 
 def laplacian_filter(a_array, ROI, mask, channel):
-    return _filter(a_array, ROI, mask, channel, a_array.device.laplacian_filter)
+    return _filter(a_array, ROI, mask, channel, nn_ops_gpu().laplacian_filter)
 
 # def sobel_filter(a_array, ROI, horiz, channel):
-#     return _filter(a_array, ROI, horiz, channel, a_array.device.sobel_filter)
+#     return _filter(a_array, ROI, horiz, channel, nn_ops_gpu().sobel_filter)
 
 # def box_filter(a_array, ROI, mask, anchor, channel):
-#     return _filter(a_array, ROI, mask, channel, a_array.device.box_filter, anchor)
+#     return _filter(a_array, ROI, mask, channel, nn_ops_gpu().box_filter, anchor)
     
 def median_filter(a_array, ROI, mask, anchor, channel):
-    return _filter(a_array, ROI, mask, channel, a_array.device.median_filter, anchor)
+    return _filter(a_array, ROI, mask, channel, nn_ops_gpu().median_filter, anchor)
 
 def convolution(a_array, kernel, in_channel, padding=None, dilation=0, stride=1, constant=0):
     if padding is None:
@@ -857,9 +985,9 @@ def convolution(a_array, kernel, in_channel, padding=None, dilation=0, stride=1,
     else:
         assert len(padding) == 2, "The padding should be a size-2 tuple"
     if not isinstance(a_array, NDArray):
-        a_array = NDArray(a_array)
+        a_array = NDArray(a_array, dtype=_float64)
     if not isinstance(kernel, NDArray):
-        kernel = NDArray(kernel)
+        kernel = NDArray(kernel, dtype=_float64)
     
     if in_channel > 1:
         assert in_channel == a_array.shape[-1], "The in_channel should keep same with input array dim, where in_channel='{A}' not equal to '{B}' in input array".format(A=in_channel, B=a_array.shape[-1])
@@ -872,7 +1000,7 @@ def convolution(a_array, kernel, in_channel, padding=None, dilation=0, stride=1,
         pre_dim, post_dim = prob(a_array.shape[:-2]), prob(a_array.shape[-2:])
         out = NDArray.make(shape=a_array.shape[:-2] + (int((padding[0] * 2 + a_array.shape[-2] - (kernel.shape[-2] * (dilation + 1) - 1)) / stride + 1), int((padding[1] * 2 + a_array.shape[-1] - (kernel.shape[-1] * (dilation + 1) - 1)) / stride + 1)),
                             device_id=a_array._handle.dev_id, device=a_array.device, dtype=a_array.dtype)
-        a_array.device.conv(a_array._handle, a_array.shape[-2], pre_dim, post_dim, out._handle, kernel._handle, kernel.shape[-2:], padding, stride, dilation, constant, a_array._offset, kernel._offset)
+        nn_ops_gpu().conv(a_array._handle, a_array.shape[-2], pre_dim, post_dim, out._handle, kernel._handle, kernel.shape[-2:], padding, stride, dilation, constant, a_array._offset, kernel._offset)
 
     return out
 
@@ -928,7 +1056,7 @@ def conv_2D(a_array, ROI, kernel, anchor, padding=None, ndivisor=1):
     else:
         assert len(padding) == 2, "The padding should be a size-2 tuple"
     if not isinstance(a_array, NDArray):
-        a_array = NDArray(a_array)
+        a_array = NDArray(a_array, dtype=_float64)
     
     # if channel == 1:
     #     pre_dim = prob(a_array.shape[:-2])
@@ -940,7 +1068,7 @@ def conv_2D(a_array, ROI, kernel, anchor, padding=None, ndivisor=1):
                         device_id=a_array._handle.dev_id, device=a_array.device, dtype=a_array.dtype)
 
     assert len(anchor) == 2 and all(anchor < kernel.shape[-2:]), "The anchor should be a size-2 tuple and the x-y posi should smaller than filter_kernel."
-    a_array.device.convolution(a_array._handle, a_array.shape[-2], out._handle, out.shape[-2], ROI, kernel._handle, kernel.shape[-2:], anchor, padding, ndivisor, a_array.shape[-1])
+    nn_ops_gpu().convolution(a_array._handle, a_array.shape[-2], out._handle, out.shape[-2], ROI, kernel._handle, kernel.shape[-2:], anchor, padding, ndivisor, a_array.shape[-1])
 
     return out
 

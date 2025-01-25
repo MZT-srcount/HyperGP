@@ -1,15 +1,23 @@
+#ifndef PARAS_H
+#define PARAS_H
 #include <cuda_runtime.h>
 #include "cuda.h"
 #include <cublas_v2.h>
 #include <unordered_map>
+#include <iostream>
+#include <vector>
 
 
 #define STREAM_NUM_NDARRAY 6
+#define STREAM_NUM_EXEC 3
 #define DEAULT_ELEMENT_SIZE 1 // the default create num each time
 #define MAX_ELEMENT_SIZE 4   // max remain size when free(each elem size)
 #define OVERLAP_IMG_TIME 10
-std::unordered_map<int, cudaStream_t*> streams;
+// extern std::unordered_map<int, cudaStream_t*> streams;
 
+std::unordered_map<int, cudaStream_t*> streams = {
+    {0, new cudaStream_t[STREAM_NUM_NDARRAY]}
+};
 
 #define CHECK(call)                                                            \
 {                                                                              \
@@ -20,6 +28,15 @@ std::unordered_map<int, cudaStream_t*> streams;
         fprintf(stderr, "code: %d, reason: %s\n", error,                       \
                 cudaGetErrorString(error));                                    \
     }                                                                          \
+}
+
+
+
+void check_sync(){
+    
+    cudaDeviceSynchronize();
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
 }
 
 size_t cuda_mem_available(int device_id){
@@ -76,3 +93,33 @@ bool is_available(int device_id) {
  
     return true;
 }
+void streams_create(const std::vector<int>& devices, int stream_num){
+    for(int i = 0; i < devices.size(); ++i){
+        if(streams.find(devices[i]) == streams.end()){
+            if (is_available(devices[i])){
+                CHECK(cudaSetDevice(devices[i]));
+                streams[devices[i]] = new cudaStream_t[stream_num];
+                for(int k = 0; k < stream_num; ++k){
+                    cudaStreamCreate(&streams[devices[i]][k]);
+                }
+            }
+        }
+    }
+}
+
+struct GlobalStreams{
+    // GlobalStreams(std::unordered_map<int, cudaStream_t*>& streams){
+    //     this->streams = streams;
+    // }
+    void init(std::unordered_map<int, cudaStream_t*>& streams){
+        this->streams = streams;
+    }
+
+    std::unordered_map<int, cudaStream_t*> streams;
+};
+// extern "C" std::unordered_map<int, cudaStream_t*>& get_streams() {
+//     return streams;
+// }
+
+#endif
+

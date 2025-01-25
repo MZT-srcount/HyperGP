@@ -13,7 +13,8 @@ class Func:
                 setattr(self, key, value)
 
     def __call__(self, *args, **kwargs):
-        assert hasattr(self, 'func'), 'Func object is not callable'
+        if not hasattr(self, 'func'):
+            raise ValueError('Func object is not callable')
         # print('here......self.kwargs: ', self.kwargs)
         return self.func(*args, **self.kwargs, **kwargs)
 
@@ -95,7 +96,6 @@ class BasePrimitiveSet:
             filter
 
         """
-        self.mod = True
         self.prefix = prefix
         self.used_primitive_set, self.func_count = {}, 0
         self.used_terminal_set, self.terminal_count = {}, 0
@@ -111,31 +111,19 @@ class BasePrimitiveSet:
 
     def __registerPrimitive(self, primitive_set, **kwargs):
         for primitive in primitive_set:
-            if not hasattr(primitive[1], "idx"):##not isinstance(primitive[1], TensorOp) or 
-                self.mod = False
-                break
-        for primitive in primitive_set:
-            if self.mod:
-                states = States(idx=primitive[1].idx, func=primitive[1])
-            else:
-                states = States(idx=self.func_count, func=primitive[1])
+            states = States(idx=self.func_count, func=primitive[1])
             if len(primitive) >= 4 and isinstance(primitive[3], States):
                 states.update(primitive[3])
             else:
                 assert len(primitive) < 4, "The param '4' in the input should be states, {PARAM} is find".format(PARAM=primitive[3])
+            if primitive[0] in self.used_primitive_set:
+                raise ValueError("Each primitive name should be unique, {NAME} has already existed.".format(NAME=primitive[0]))
             
-            if self.mod:
-                self.used_primitive_set[primitive[0]] = \
-                    Func(name=primitive[0], arity=primitive[2], states=states, **kwargs)
-            else:
-                self.used_primitive_set[primitive[0]] = \
+            self.used_primitive_set[primitive[0]] = \
                     Func(name=primitive[0], arity=primitive[2], states=states, **kwargs)
             self.__primitive_set.append(primitive[0])
             self.context[primitive[0]] = primitive[1]
             self.func_count += 1
-        if self.mod:
-            self.func_count = max([primitive[1].idx for primitive in primitive_set] + [self.func_count]) + 1
-
     def registerPrimitive(self, name, func, arity, states:States=None, **kwargs):
         """
         We can also register function after the ``PrimitiveSet`` module has been initialized.
@@ -166,22 +154,15 @@ class BasePrimitiveSet:
         """
         # self.used_func_set.append(Func(idx=self.func_count, name=primitive[0], arity=primitive[2], **kwargs))
         
-        if self.mod and hasattr(func, "idx"):#isinstance(func, TensorOp) and 
-            states_basic = States(idx=func.idx, func=func)
-        else:
-            states_basic = States(idx=self.func_count, func=func)
+        states_basic = States(idx=self.func_count, func=func)
 
         if states is not None:
             states.update(states_basic)
         else:
             states = states_basic
-        if self.mod and hasattr(func, "idx"):#isinstance(func, TensorOp) and 
-            self.used_primitive_set[name] = Func(name=name, arity=arity, states=states, **kwargs)
-            self.func_count = max(func.idx + 1, self.func_count)
-        else:
-            self.used_primitive_set[name] = Func(name=name, arity=arity, states=states, **kwargs)
-            self.mod = False
-            self.func_count += 1
+
+        self.used_primitive_set[name] = Func(name=name, arity=arity, states=states, **kwargs)
+        self.func_count += 1
         self.__primitive_set.append(name)
         self.context[name] = func
 

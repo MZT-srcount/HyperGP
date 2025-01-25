@@ -204,15 +204,17 @@ class GpOptimizer(BaseStruct, __Mods):
                                 result[k].append(res[k])
 
                         if isinstance(key, str):
-                            # print('key', len(result[k]), len(rets), [len(res) for res in rets])
                             if len(result[k]) > 1:
                                 if self.workflowstates[key] is not None:
                                     self.workflowstates[key].extend(result[k])
                                 else:
                                     self.workflowstates[key] = result[k]
                             else:
-                                if self.workflowstates[key] is not None:
+                                if self.workflowstates[key] is not None and isinstance(self.workflowstates[key], list):
+                                    print(func, key, self.workflowstates[key])
                                     self.workflowstates[key].extend(result[k][0])
+                                elif self.workflowstates[key] is not None:
+                                    self.workflowstates[key] = [self.workflowstates[key]] + [result[k][0]]
                                 else:
                                     self.workflowstates[key] = result[k][0]
                         else:
@@ -235,7 +237,7 @@ class GpOptimizer(BaseStruct, __Mods):
                     track_object = self.workflowstates[monitor[1]]
                     monitor_ret = monitor[0](track_object, save_path=monitor[2])
                 if isinstance(monitor[1], list):
-                    track_object = [self.workflowstates[key] for key in monitor[1]]
+                    track_object = [self.workflowstates[key] if isinstance(key, str) else key for key in monitor[1]]
                     monitor_ret = monitor[0](*track_object, save_path=monitor[2])
                 if monitor_ret is not None and isinstance(monitor_ret, str):
                     tqdm.write(monitor_ret)

@@ -6,6 +6,7 @@ from HyperGP.operators.execution.tree_exec.compiler_v1 import compile_v1
 import numpy as np
 from HyperGP.mods.cash_manager import CashManager
 from HyperGP import Tensor
+import HyperGP
 
 
 class ExecMethod:
@@ -24,13 +25,27 @@ class Executor(ExecMethod):
         '''pre-conversion'''
         exec_list, states = ExecutableGen()(progs, pset, cashset)
 
+        f_avec = [pset.genFunc(f_str) for f_str in pset.primitiveSet]
+        
+        compile_1 = [True]
+        def ret_false():
+            compile_1[0] = False
+            return -1
+        func_list = [f.func.idx if hasattr(f, "func") and hasattr(f.func, "idx") else ret_false() for f in f_avec]
+
         '''compile and run'''
-        if pset.mod and len(input.shape) == 2 and (isinstance(input, Tensor) or isinstance(input, np.ndarray) or isinstance(input, list)):
-            expr = compile_v1(exec_list, pset, states)
-            # print("here????")
+        if compile_1[0] and len(input.shape) == 2 and (isinstance(input, Tensor) or isinstance(input, np.ndarray) or isinstance(input, list)):
+            
+            expr = compile_v1(exec_list, pset, states, func_list)
             output, records = expr(input)
+
             # expr2 = compile_v2(exec_list, pset, states)
             # output2, _ = expr2(input)
+            
+            # if not (output == output2).numpy().all():
+            #     print(output.numpy()[(output != output2).numpy()])
+            #     print(output2.numpy()[(output != output2).numpy()])
+            #     assert 0==1
             # # print(output)
             # # print(output2)
             # # print(input)

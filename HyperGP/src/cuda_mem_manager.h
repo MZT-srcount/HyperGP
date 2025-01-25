@@ -217,13 +217,25 @@ private:
     std::mutex m_mtx; 
 };
 
-auto &cuda_mem_pool = CudaMemoryPool::instance();
+// auto &cuda_mem_pool = CudaMemoryPool::instance();
 
-bool mem_pool_alloc(size_t elementSize, void*&element, int device, EventState& event){
-    return cuda_mem_pool.alloc(elementSize, element, device, event);
+// bool mem_pool_alloc(size_t elementSize, void*&element, int device, EventState& event){
+//     return cuda_mem_pool.alloc(elementSize, element, device, event);
+// }
+
+// bool mem_pool_alloc(size_t elementSize, void*&element, int device, int stream_id){
+//     EventState old_event;
+//     return cuda_mem_pool.alloc(elementSize, element, device, old_event, stream_id);
+// }
+
+
+bool mem_pool_alloc_async(size_t elementSize, void**element, int device, int stream_id){
+    // cudaError_t err = cudaMallocAsync((void**)&element, elementSize, streams[device][stream_id]);
+    cudaError_t err = cudaMallocAsync(element, elementSize, streams[device][stream_id]);
+    return err == cudaSuccess ? true:false;
 }
 
-bool mem_pool_alloc(size_t elementSize, void*&element, int device, int stream_id){
-    EventState old_event;
-    return cuda_mem_pool.alloc(elementSize, element, device, old_event, stream_id);
+bool mem_pool_free_async(void*element, int device, int stream_id){
+    cudaError_t err = cudaFreeAsync((void*)element, streams[device][stream_id]);
+    return err == cudaSuccess ? true:false;
 }

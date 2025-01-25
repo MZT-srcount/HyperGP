@@ -1,12 +1,14 @@
 
 from ._src._tensor_ops import *
+from ._src._tensor_ops import _pow
 from ._src.basic import *
+from ._src.basic import _static_check, _ITEM_STATIC
 from ..src.ndarray import _dtype_strmap
 
 
 
 class Tensor(Value):
-    def __init__(self, array, device=None, dtype=None, device_id=0):
+    def __init__(self, array, device=None, dtype=None, device_id=0, **kwargs):
         if isinstance(array, Tensor):
             if device == None:
                 device = array.device
@@ -17,6 +19,8 @@ class Tensor(Value):
         else:
             cached_data = array_api._array(array, dtype=dtype, device=device, device_id=device_id)
         self._init(None, [], cached_data)
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def __int__(self):
         return int(self.cached_data.numpy())
@@ -94,7 +98,13 @@ class Tensor(Value):
     
     def __add__(self, other):
         
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(self, other)
+            strs_list.append("add")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data + other.cached_data)
             elif isinstance(other, float) or isinstance(other, int):
@@ -107,14 +117,46 @@ class Tensor(Value):
             else:
                 tensor = Tensor.make_from_op(ScalarAdd(), [self, other])
         
-            if MOD == "Async":
+            if MOD[0] == "Async":
+                tensor.realize_cached_data
+
+        return tensor
+    
+    def __radd__(self, other):
+        
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(other, self)
+            strs_list.append("add")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
+            if isinstance(other, Tensor):
+                tensor = Tensor(other.cached_data + self.cached_data)
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(other + self.cached_data)
+            else:
+                tensor = Tensor(array_api._array(other) + self.cached_data)
+        else:
+            if isinstance(other, Tensor):
+                tensor = Tensor.make_from_op(EWiseAdd(), [other + self])
+            else:
+                tensor = Tensor.make_from_op(ScalarAdd(), [other + self])
+        
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
 
         return tensor
 
     def __pow__(self, other):
         
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(self, other)
+            strs_list.append("pow")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data.pow(other.cached_data))
             elif isinstance(other, float) or isinstance(other, int):
@@ -127,14 +169,42 @@ class Tensor(Value):
             else:
                 tensor = Tensor.make_from_op(ScalarPow(), [self, other])
         
-            if MOD == "Async":
+            if MOD[0] == "Async":
+                tensor.realize_cached_data
+
+        return tensor
+    
+    def __rpow__(self, other):
+        
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(other, self)
+            strs_list.append("pow")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
+            if isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(_pow(other, self.cached_data))
+            else:
+                tensor = Tensor(_pow(array_api._array(other), self.cached_data))
+        else:
+            other = Tensor(array_api._array(other))
+            tensor = Tensor.make_from_op(EWiseRPow(), [other, self])
+        
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
 
         return tensor
     
     def __sub__(self, other):
         
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(self, other)
+            strs_list.append("sub")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data - other.cached_data)
             elif isinstance(other, float) or isinstance(other, int):
@@ -146,14 +216,42 @@ class Tensor(Value):
                 tensor = Tensor.make_from_op(EWiseSub(), [self, other])
             else:
                 tensor = Tensor.make_from_op(ScalarSub(), [self, other])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
 
+    def __rsub__(self, other):
+        
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(other, self)
+            strs_list.append("sub")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
+            if isinstance(other, Tensor):
+                tensor = Tensor(other.cached_data - self.cached_data)
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(other - self.cached_data)
+            else:
+                tensor = Tensor(array_api._array(other) - self.cached_data)
+        else:
+            if isinstance(other, Tensor):
+                tensor = Tensor.make_from_op(EWiseSub(), [other, self])
+            else:
+                tensor = Tensor.make_from_op(ScalarSub(), [other, self])
+            if MOD[0] == "Async":
+                tensor.realize_cached_data
+        return tensor
 
     def __mul__(self, other):
-        
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(self, other)
+            strs_list.append("mul")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data * other.cached_data)
             elif isinstance(other, float) or isinstance(other, int):
@@ -165,14 +263,43 @@ class Tensor(Value):
                 tensor = Tensor.make_from_op(EWiseMul(), [self, other])
             else:
                 tensor = Tensor.make_from_op(ScalarMul(), [self, other])
-            if MOD == "Async":
+            if MOD[0] == "Async":
+                tensor.realize_cached_data
+        return tensor
+
+    def __rmul__(self, other):
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(other, self)
+            strs_list.append("mul")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
+            if isinstance(other, Tensor):
+                tensor = Tensor(other.cached_data * self.cached_data)
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(other * self.cached_data)
+            else:
+                tensor = Tensor(array_api._array(other) * self.cached_data)
+        else:
+            if isinstance(other, Tensor):
+                tensor = Tensor.make_from_op(EWiseMul(), [other, self])
+            else:
+                tensor = Tensor.make_from_op(ScalarMul(), [other, self])
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
 
 
     def __truediv__(self, other):
         
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(self, other)
+            strs_list.append("div")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data / other.cached_data)
             elif isinstance(other, float) or isinstance(other, int):
@@ -184,23 +311,60 @@ class Tensor(Value):
                 tensor = Tensor.make_from_op(EWiseDiv(), [self, other])
             else:
                 tensor = Tensor.make_from_op(ScalarDiv(), [self, other])
-            if MOD == "Async":
+            if MOD[0] == "Async":
+                tensor.realize_cached_data
+        return tensor
+
+    def __rtruediv__(self, other):
+        
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(other, self)
+            strs_list.append("div")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
+            if isinstance(other, Tensor):
+                tensor = Tensor(other.cached_data / self.cached_data)
+            elif isinstance(other, float) or isinstance(other, int):
+                tensor = Tensor(other / self.cached_data)
+            else:
+                tensor = Tensor(array_api._array(other) / self.cached_data)
+        else:
+            if isinstance(other, Tensor):
+                tensor = Tensor.make_from_op(EWiseDiv(), [other, self])
+            else:
+                tensor = Tensor.make_from_op(ScalarDiv(), [other, self])
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
 
 
+
     def T(self, dim_0):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            param_list.extend([dim_0])
+            strs_list.append("T")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.T(dim_0))
         else:
             tensor = Tensor.make_from_op(EWiseTDim(), [self, dim_0])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def dot(self, other, dim_0 = 0, dim_1 = 0):
         
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            if not isinstance(other, Tensor):
+                other = Tensor(other)
+            strs_list, param_list = _static_check(self, other)
+            param_list.extend([dim_0, dim_1])
+            strs_list.append("dot")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 tensor = Tensor(self.cached_data.dot(other.cached_data, dim_0, dim_1))
             else:
@@ -210,117 +374,154 @@ class Tensor(Value):
                 tensor = Tensor.make_from_op(EWiseDotDim(), [self, other, dim_0, dim_1])
             else:
                 tensor = Tensor.make_from_op(EWiseDotDim(), [self, Tensor(other), dim_0, dim_1])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
 
     def sin(self):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            strs_list.append("sin")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.sin())
         else:
             tensor = Tensor.make_from_op(EWiseSin(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
 
     def cos(self):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            strs_list.append("cos")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.cos())
         else:
             tensor = Tensor.make_from_op(EWiseCos(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
 
     def tan(self):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            strs_list.append("tan")
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.tan())
         else:
             tensor = Tensor.make_from_op(EWiseTan(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
 
     def sum(self, dim=0):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            strs_list.append("sum")
+            param_list.extend([dim])
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.sum(dim))
         else:
             tensor = Tensor.make_from_op(EWiseSum(), [self, dim])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     # def substract(self, other, dim=0):
     #     tensor = EwiseSubDim().make(self, other, dim)
-    #     if MOD == "Async":
+    #     if MOD[0] == "Async":
     #         tensor.realize_cached_data
     #     return tensor
     
     def min(self, dim=0):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            strs_list.append("min")
+            param_list.extend([dim])
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.min(dim))
         else:
             tensor = Tensor.make_from_op(EWiseMin(), [self, dim])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def max(self, dim=0):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            strs_list.append("max")
+            param_list.extend([dim])
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.max(dim))
         else:
             tensor = Tensor.make_from_op(EWiseMax(), [self, dim])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def mean(self, dim=0):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            strs_list.append("mean")
+            param_list.extend([dim])
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.mean(dim))
         else:
             tensor = Tensor.make_from_op(EWiseMean(), [self, dim])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def argmax(self, dim=0):
-        if MOD == "IMM":
+        if MOD[0] == "STATIC":
+            strs_list, param_list = _static_check(self)
+            strs_list.append("argmax")
+            param_list.extend([dim])
+            return Tensor([], **{"item_static":_ITEM_STATIC(strs_list, param_list)})
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.argmax(dim))
         else:
             tensor = Tensor.make_from_op(EWiseArgmax(), [self, dim])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def argmin(self, dim=0):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.argmin(dim))
         else:
             tensor = Tensor.make_from_op(EWiseArgmin(), [self, dim])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def std(self, dim=0):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.std(dim))
         else:
             tensor = Tensor.make_from_op(EWiseStd(), [self, dim])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def var(self, dim=0):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.var(dim))
         else:
             tensor = Tensor.make_from_op(EWiseVar(), [self, dim])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def __lt__(self, other):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data < other.cached_data)
             else:
@@ -334,7 +535,7 @@ class Tensor(Value):
         return res
     
     def __le__(self, other):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data <= other.cached_data)
             else:
@@ -348,7 +549,7 @@ class Tensor(Value):
         return res
     
     def __gt__(self, other):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data > other.cached_data)
             else:
@@ -362,7 +563,7 @@ class Tensor(Value):
         return res
     
     def __ge__(self, other):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data >= other.cached_data)
             else:
@@ -376,7 +577,7 @@ class Tensor(Value):
         return res
     
     def __eq__(self, other):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data == other.cached_data)
             else:
@@ -390,7 +591,7 @@ class Tensor(Value):
         return res
     
     def __ne__(self, other):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             if isinstance(other, Tensor):
                 res = Tensor(self.cached_data != other.cached_data)
             else:
@@ -414,83 +615,83 @@ class Tensor(Value):
     
     def arcsin(self):
         
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.arcsin())
         else:
             tensor = Tensor.make_from_op(EWiseArcSin(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def arccos(self):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.arccos())
         else:
             tensor = Tensor.make_from_op(EWiseArcCos(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def arctan(self):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.arctan())
         else:
             tensor = Tensor.make_from_op(EWiseArcTan(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def sign(self):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.sign())
         else:
             tensor = Tensor.make_from_op(EWiseSign(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def sqrt(self):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.sqrt())
         else:
             tensor = Tensor.make_from_op(EWiseSqrt(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def abs(self):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.abs())
         else:
             tensor = Tensor.make_from_op(EWiseAbs(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def exp(self):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.exp())
         else:
             tensor = Tensor.make_from_op(EWiseExp(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def ceil(self):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.ceil())
         else:
             tensor = Tensor.make_from_op(EWiseCeil(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     
     def floor(self):
-        if MOD == "IMM":
+        if MOD[0] == "IMM":
             tensor = Tensor(self.cached_data.floor())
         else:
             tensor = Tensor.make_from_op(EWiseFloor(), [self])
-            if MOD == "Async":
+            if MOD[0] == "Async":
                 tensor.realize_cached_data
         return tensor
     

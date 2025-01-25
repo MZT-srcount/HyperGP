@@ -1,5 +1,6 @@
 import random
 import numpy as np
+from ... import tensor
 
 class SltMethod:
     def __call__(self, *args, **kwargs):
@@ -20,6 +21,20 @@ class TourNoRep(SltMethod):
         return winner
 
 
+def tournament(p1, p2, f1, f2, tour_size=4, len_limit=100, best_keep=True):
+    p_list, f_list = p1 + p2,  tensor.concatenate((f1, f2))
+    legal_list = [z for z, prog in enumerate(p_list) if len(prog) < len_limit]
+    if best_keep:
+        sample_list = [list(random.sample(legal_list, tour_size)) for i in range(len(p1) - 1)]
+        tour_list = [legal_list[int(tensor.argmin(f_list[legal_list]))]] + [x[int(tensor.argmin(f_list[x]))] for x in sample_list]
+    else:
+        sample_list = [list(random.sample(legal_list, tour_size)) for i in range(len(p1))]
+        tour_list = [x[int(tensor.argmin(f_list[x]))] for x in sample_list]
+    p_new, f_new = [p_list[sample] for sample in tour_list], f_list[tour_list]
+    if np.isnan(f_new[0].numpy()):
+        print(f_list[legal_list])
+        assert 0==1
+    return p_new, [ind.copy() for ind in p_new], f_new, f_new.copy()
 
 
 

@@ -4,6 +4,7 @@ from functools import reduce
 import operator, psutil
 import HyperGP, math, time, itertools
 from .... import Tensor
+from ....src import executor
 
 class ExecutableExpr:
     def __init__(self, exec_list, pset, states):
@@ -13,6 +14,12 @@ class ExecutableExpr:
         self.exec_list = exec_list
         self.pset = pset
         self.states = states
+        def assign(x):
+            return x
+        self.f_avec = [self.pset.genFunc(f_str) for f_str in self.pset.primitiveSet]
+        self.f_avec.append(assign)
+        self.func_list = [f.func.exec_number if hasattr(f, "func") and hasattr(f.func, "exec_number") else -1 for f in self.f_avec]
+
 
     def __call__(self, input, device="cuda"):
 
@@ -22,16 +29,7 @@ class ExecutableExpr:
         if not isinstance(cash_array, np.ndarray):
             assert input.shape[1] == cash_array.shape[1], "{0}, {1}; {2}, {3}".format(input.shape, cash_array.shape, len(input), len(cash_array))
         
-        output = [[] for i in range(prog_size)]
-        records = [[] for i in range(len(records_posi))]
-        f_avec = [self.pset.genFunc(f_str) for f_str in self.pset.primitiveSet]
-        
-        def assign(x):
-            return x
-
         # It will be called if a terminal node as a tree.    
-        f_avec.append(assign)
-
         dtype_size = input.dtype.itemsize if not isinstance(input, Tensor) else HyperGP.sizeof(input.dtype)
 
 
@@ -43,7 +41,7 @@ class ExecutableExpr:
 
         if device.startswith("cuda"):
             cur_free_m = HyperGP.src.ndarray.gpu().cuda_mem_available(0) - 128 - input.shape[1] * dtype_size * prog_size
-            assert cur_free_m > 0, "no enough cuda memory,  {A} GiB is needed.".format(-(cur_free_m / (1024. ** 3)))
+            assert cur_free_m > 0, "no enough cuda memory,  {A} GiB is needed.".format(A=-(cur_free_m / (1024. ** 3)))
         else:
             cur_free_m = psutil.virtual_memory().free - 1 - sizeof * prog_size
 
@@ -52,56 +50,76 @@ class ExecutableExpr:
             batch_num = math.ceil((sizeof * x_len + input_len) / (cur_free_m))
         mid_output = {}
         output_segs = [[] for i in range(prog_size)]
-
-        mid_output.update({-(i + 1): constants[i] for i in range(len(constants))})
+        record_segs = [[] for i in records_posi]
+        mid_output = {-(i + 1): float(constants[i]) for i in range(len(constants))}
         
-
-        records = np.empty(shape=(len(records_posi), data_size))
+        execs_size = len(self.exec_list)
         
         batch_init, batch_last = 0, input.shape[1]
         batch_size = int(input.shape[1] / batch_num)
         st = time.time()
+        params = [[] * int(execs_size / self.exec_unit_len)] # No need for now
         for z in range(batch_num - 1, -1, -1):
-            mid_output = {-(i + 1): constants[i] for i in range(len(constants))}
             batch_range = slice(batch_init + batch_size * z, batch_last)
-            # print("batch: ", z,  batch_num, HyperGP.src.ndarray.gpu().cuda_mem_available(0) / (1024. ** 3), batch_range.stop - batch_range.start)
+            cur_batch_size = batch_range.stop - batch_range.start
+            
+            mem_space = HyperGP.tensor.empty(shape=(x_len, cur_batch_size), dtype=input.dtype)
             if not isinstance(cash_array, np.ndarray):
                 for i in range(len(cash_array)):
-                    mid_output[i + len(input) + prog_size] = cash_array[i][batch_range]
+                    # mid_output[i + len(input) + prog_size] = cash_array[i][batch_range]
+                    mem_space[i + len(input) + prog_size, :] = cash_array[i][batch_range]
+            
             for i in range(len(input)):
-                mid_output[i] = Tensor(input[i][batch_range])
+                mem_space[i] = Tensor(input[i][batch_range])
+                # mid_output[i] = Tensor(input[i][batch_range])
             
             idx = 0
-            execs_size = len(self.exec_list)
             # print('2---------------------------------------------------', execs_size / self.exec_unit_len, batch_num, time.time() - st)
             # new_output = HyperGP.tensor.empty(shape=input.shape)
 
+            # HyperGP.MOD_SET("STATIC")
+            # print("HyperGP.tensor.MOD: ", HyperGP.tensor.MOD)
+            last_exec = 0
             while idx < execs_size:
                 arity = self.exec_list[idx + 1]
                 # print(self.exec_list[idx], arity, self.exec_list[idx + 2: idx+2+arity])
-                # print('11111', f_avec[self.exec_list[idx]])
-                mid_output[0].device.cc()
+                # mid_output[0].device.cc()
                 # mid_output[0].device.ewise_add(mid_output[0].cached_data._handle, mid_output[0].cached_data._handle, new_output.cached_data._handle, mid_output[0].cached_data._offset, mid_output[0].cached_data._offset)
-                # mid_output[self.exec_list[idx + arity + 2]] = f_avec[self.exec_list[idx]](*[mid_output[i] for i in self.exec_list[idx+2:idx+2+arity]])
+                if self.func_list[self.exec_list[idx]] == -1 or len(self.f_avec[self.exec_list[idx]].kwargs) > 0:# [ ] TODO: can not process the function with default parameters
+                    if idx - last_exec > 0:
+                        mem_space.wait()
+                        executor.exec_partial(
+                            mem_space.realize_cached_data._handle,
+                            self.exec_list[last_exec:idx], 
+                            constants, params, self.func_list, 
+                            self.exec_unit_len, cur_batch_size)
+                    mem_space[int(self.exec_list[idx + arity + 2])] = self.f_avec[self.exec_list[idx]](*[mem_space[int(i)] if i >= 0 else mid_output[int(i)] for i in self.exec_list[idx+2:idx+2+arity]])
+                    
+                    last_exec = idx + self.exec_unit_len
+                # mid_output[self.exec_list[idx + arity + 2]] = self.f_avec[self.exec_list[idx]](*[mid_output[i] for i in self.exec_list[idx+2:idx+2+arity]])
+                
                 idx += self.exec_unit_len
-
+            if last_exec < execs_size:
+                executor.exec_partial(
+                    mem_space.realize_cached_data._handle,
+                    self.exec_list[last_exec:], 
+                    constants, params, self.func_list, 
+                    self.exec_unit_len, cur_batch_size)
             # print('1---------------------------------------------------', batch_num, time.time() - st)
-            output_shape = None
-            none_equal_list = []
-            for i in range(prog_size):
-                prob_shape = prob(mid_output[0].shape)
-                if (prob_shape == 0 or prob_shape == 1):
-                    none_equal_list.append(i)
-                else:
-                    output_shape = mid_output[0].shape
-                output_segs[i].append(mid_output[0])
-            for i in none_equal_list:
-                output_segs[i] = [HyperGP.full(shape=output_shape, fill_value=float(output_segs[i][num])) for num, tensor in enumerate(output_segs[i])]
+            
+            if batch_num > 1:
+                for i in range(prog_size):
+                    output_segs[i].append(mem_space[len(input) + i])
+                    record_segs[i].append(mem_space[list(records_posi)])
+            else:
+                output = mem_space[len(input):len(input) + prog_size]
+                records = mem_space[list(records_posi)]
+
             batch_last = batch_init + batch_size * z
-        # print('0---------------------------------------------------', batch_num, time.time() - st)
-        # output = [HyperGP.concatenate(tuple(output)) for out in output_segs]
-        output = HyperGP.concatenate(tuple(itertools.chain.from_iterable(output_segs))).reshape((prog_size, -1))
-        # print('---------------------------------------------------', time.time() - st)
+        if batch_num > 1:
+            output = HyperGP.concatenate(tuple(itertools.chain.from_iterable(output_segs))).reshape((prog_size, -1))
+            records = HyperGP.concatenate(tuple(itertools.chain.from_iterable(record_segs))).reshape((len(records_posi), -1))
+
         return output, records
 
     def __str__(self):

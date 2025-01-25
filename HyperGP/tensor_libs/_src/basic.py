@@ -3,7 +3,54 @@ from typing import Optional, List
 from ...src.tensor_backend_selection import array_api, NDArray
 
 
-MOD = "IMM"
+MOD = ["IMM"]
+
+SUPPORTED_MOD = ["IMM", "STATIC", "Async"]
+
+def MOD_SET(new_mods):
+    global MOD
+    if new_mods in SUPPORTED_MOD:
+        MOD[0]=new_mods
+    else:
+        raise ValueError("Unsupported MOD, the supported mods are:[{GMOD}], but {mod} is given".format(GMOD=SUPPORTED_MOD, mod=new_mods))
+
+from functools import wraps
+def _login_exec(id):
+    def wrapper(func):
+        func.exec_number = id
+        return func
+    return wrapper
+
+  
+def _login_static(id):
+    def wrapper(func):
+        func.idx = id
+        return func
+    return wrapper
+
+class _ITEM_STATIC:
+	def __init__(self, strs_list, param_list):
+		self.strs_list = strs_list
+		self.param_list = param_list
+
+def _static_check(*args):
+	if hasattr(args[0], "item_static"):
+		strs_list = args[0].item_static.strs_list
+		param_list = args[0].item_static.param_list
+	else:
+		strs_list = []
+		param_list = [args[0].cached_data]
+	for i in range(1, len(args)):
+		x = args[i]
+		if hasattr(x, "item_static"):
+			if len(strs_list) == 0:
+				strs_list = x.item_static.strs_list
+			else:
+				strs_list.extend(x.item_static.strs_list)
+			param_list.extend(x.item_static.param_list)
+		else:
+			param_list.append(x.cached_data)
+	return strs_list, param_list
 
 class _mask(int):
     def __init__(self, id):

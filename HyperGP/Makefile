@@ -10,5 +10,5 @@ lib:
 
 compile:
 	@mkdir -p build
-	@cd build; cmake -S ../cmake_compile -B .
+	@cd build; cmake -S ../
 	@cd build; ${MAKE}

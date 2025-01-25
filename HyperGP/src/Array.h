@@ -25,18 +25,8 @@ struct Array{
         this->size = size;
         this->device_id = device_id;
         if(size > 0){
-            void* tmp_ptr = (void*) this->ptr;
-            EventState old_event;
-            bool suc = cuda_mem_pool.alloc(size * sizeof(scalar_t), tmp_ptr, this->device_id, old_event);
-            if (old_event.event_sign){
-                cudaEventDestroy(this->event_sign);
-                this->event_sign = old_event.event;
-            }
-            this->ptr = reinterpret_cast<scalar_t*>(tmp_ptr);
-            if (suc == 0) throw std::runtime_error("Can not alloc cuda memory\n");
+            cuda_memalloc(size);
         }
-        // cudaError_t err = cudaMalloc(&(this->ptr), size * ELEM_SIZE);
-        // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
         this->size = size;
         this->device_id = device_id;
     }
@@ -49,26 +39,20 @@ struct Array{
         this->size = size;
         this->device_id = device_id;
         if(size > 0){
-            void* tmp_ptr = (void*) this->ptr;
-            
-            EventState old_event;
-            bool suc = cuda_mem_pool.alloc(size * sizeof(scalar_t), tmp_ptr, this->device_id, old_event);
-            if (old_event.event_sign){
-                cudaEventDestroy(this->event_sign);
-                this->event_sign = old_event.event;
-            }
-            this->ptr = reinterpret_cast<scalar_t*>(tmp_ptr);
-            if (suc == 0) throw std::runtime_error("Can not alloc cuda memory\n");
+            cuda_memalloc(size);
         }
-        // cudaError_t err = cudaMalloc(&(this->ptr), size * ELEM_SIZE);
-        // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
     }
     ~Array(){
         //[ ] TODO: time to destroy event
         // cudaEventDestroy(this->event_sign);
-        cuda_mem_pool.free(this->size * sizeof(scalar_t), (void*)this->ptr, this->device_id, this->event_sign);
+
+        // cuda_mem_pool.free(this->size * sizeof(scalar_t), (void*)this->ptr, this->device_id, this->event_sign);
         // cudaError_t err = cudaFree(this->ptr);
         // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+        cudaEventDestroy(this->event_sign);
+        if (this->size > 0){
+            cudaFreeAsync(this->ptr, streams[this->device_id][this->stream_id]);
+        }
     }
     Array<scalar_t>& operator =(const Array<scalar_t>& other){
         // printf("here????\n");
@@ -78,20 +62,27 @@ struct Array{
         this->size = other.size;
         
         if(this->size > 0){
-            void* tmp_ptr = (void*) this->ptr;
-            EventState old_event;
-            bool suc = cuda_mem_pool.alloc(size * sizeof(scalar_t), tmp_ptr, this->device_id, old_event);
-            if (old_event.event_sign){
-                cudaEventDestroy(this->event_sign);
-                this->event_sign = old_event.event;
-            }
-            this->ptr = reinterpret_cast<scalar_t*>(tmp_ptr);
-            if (suc == 0) throw std::runtime_error("Can not alloc cuda memory\n");
         }
         return *this;
     }
     /*[ ] TODO warning: This stream should be kept until all compute work be done, pay attention to the ~Array function to automatic deallocate the stream*/
-    
+    void cuda_memalloc(int size){
+        
+        // void* tmp_ptr = (void*) this->ptr;
+        // EventState old_event;
+        // bool suc = cuda_mem_pool.alloc(size * sizeof(scalar_t), tmp_ptr, this->device_id, old_event);
+        // if (old_event.event_sign){
+        //     cudaEventDestroy(this->event_sign);
+        //     this->event_sign = old_event.event;
+        // }
+        // this->ptr = reinterpret_cast<scalar_t*>(tmp_ptr);
+        // if (suc == 0) throw std::runtime_error("Can not alloc cuda memory\n");
+
+        if (this->stream_id == -1){
+            this->stream_id = rand() % STREAM_NUM_NDARRAY;
+        }
+        CHECK(cudaMallocAsync((void**)&this->ptr, size * sizeof(scalar_t), streams[this->device_id][this->stream_id]));
+    }
     int stream_id = -1;
     int device_id;
     cudaEvent_t event_sign;

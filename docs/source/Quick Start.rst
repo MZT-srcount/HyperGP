@@ -30,7 +30,7 @@ Here, We introduce the basic usage of HyperGP
    :linenos:
 
    # Generate training set
-   input_array = HyperGP.Tensor(np.random.uniform(0, 100, size=(2, input_size)))
+   input_array = HyperGP.tensor.uniform(0, 100, size=(2, input_size))
    target = (input_array[0] + input_array[0] * input_array[1] * input_array[1]) * (input_array[0]) / (input_array[1] + input_array[0])
 
 3. **build the primitive set**: To run the program, we will need  the ``PrimitiveSet`` module to define the used primitives and terminals
@@ -49,8 +49,8 @@ Here, We introduce the basic usage of HyperGP
     # Init population
    pop = HyperGP.Population()
    pop.initPop(pop_size=pop_size, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 6], len_limit=100000))
-   output, records = HyperGP.executor(pop.states['progs'].indivs, input=input_array, pset=pset)
-   pop.states['progs'].fitness = evaluation(output, target)
+   output, _ = HyperGP.executor(pop.states['progs'].indivs, input=input_array, pset=pset)
+   pop.states['progs'].fitness = HyperGP.ops.rmse(output, target)
 
 
 5. **initialize** ``GpOptimizer`` **workflow module**: To run a workflow, we should first initialize it and set the states we use to the GpOptimizer.
@@ -65,27 +65,9 @@ Here, We introduce the basic usage of HyperGP
       input=input_array,pset=pset,output=None,
       fit_list = pop.states['progs'].fitness,
       pp_list=[ind.copy() for ind in pop.states['progs'].indivs],  pfit_list=pop.states['progs'].fitness.copy(),
-   )
+    )
 
-6. **build the self-defined evaluation and selection function**
-
-.. code-block:: python
-   :linenos:
-
-   def evaluation(output, target):
-      r1 = HyperGP.tensor.sub(output, target, dim_0=1)
-      return (r1 ** 2).sum(dim=1).sqrt()
-   
-   def selection(p1, p2, f1, f2):
-      p_list, f_list = p1 + p2,  HyperGP.tensor.concatenate((f1, f2))
-      legal_list = [z for z, prog in enumerate(p_list) if len(prog) < 100]
-      sample_list = [list(random.sample(legal_list, 3)) for i in range(len(p1) - 1)]
-      tour_list = [legal_list[int(HyperGP.argmin(f_list[legal_list]))]] + [x[int(HyperGP.argmin(f_list[x]))] for x in sample_list]
-      p_new, f_new = [p_list[sample] for sample in tour_list], f_list[tour_list]
-      return p_new, [ind.copy() for ind in p_new], f_new, f_new.copy()
-
-
-7. **add the component user want to iteratively run**
+6. **add the component user want to iteratively run**
 
 .. code-block:: python
    :linenos:
@@ -97,8 +79,8 @@ Here, We introduce the basic usage of HyperGP
                     mask=[lambda x=pop_size:random.sample(range(pop_size), x), 1, 1]),
         ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None],
                     mask=[1, 1, 1]),
-        ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"]),
-        ParaStates(func=selection, source=["p_list", "pp_list", "fit_list", "pfit_list"], to=["p_list", "pp_list", "fit_list", "pfit_list"],
+        ParaStates(func=HyperGP.ops.rmse, source=["output", "target"], to=["fit_list"]),
+        ParaStates(func=HyperGP.ops.tournament, source=["p_list", "pp_list", "fit_list", "pfit_list"], to=["p_list", "pp_list", "fit_list", "pfit_list"],
                     mask=[1, 1, 1, 1])
     )
 
@@ -107,6 +89,6 @@ Here, We introduce the basic usage of HyperGP
 .. code-block:: python
    :linenos:
 
-   optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list", save_path=None)
-   optimizer.run(500, stop_criteria=lambda: HyperGP.tensor.min(optimizer.workflowstates.fit_list) < 1e-9, tqdm_diable=False)
-   # print('final res: ', HyperGP.tensor.min(optimizer.workflowstates.pfit_list))
+   optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list")
+   optimizer.run(50, stop_criteria=lambda: HyperGP.tensor.min(optimizer.workflowstates.fit_list) < 1e-9, tqdm_diable=False)
+   

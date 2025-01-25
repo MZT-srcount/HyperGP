@@ -42,7 +42,6 @@ Documentation is available online: https://hypergp.readthedocs.io/en/latest/Quic
 ## Prerequisites
 
 - python_requires=">=3.9, <=3.13"
-- [NVIDIA CUDA support](https://developer.nvidia.com/cuda-downloads), with a runtime version >= 10.1.105
 - Supported Operation Systems: ``Linux``
 
 ## Binaries
@@ -60,7 +59,7 @@ Supported Operation Systems: ``Linux``
 If you are installing from source, you will need:
 
 - A compiler that fully supports C++11, such as gcc (gcc 8.5.0 or newer is required, on Linux)
-- [NVIDIA CUDA support](https://developer.nvidia.com/cuda-downloads), with a runtime version >= 10.1.105
+- [NVIDIA CUDA support](https://developer.nvidia.com/cuda-downloads), with a runtime version >= 11.4.2 to support asynchronize stream computation
 
 An example of environment setup in Linux is shown below:
 
@@ -107,55 +106,57 @@ python ./examples/workflow_test.py
 
 ```python
     # Generate training set
-    input_array = HyperGP.Tensor(np.random.uniform(0, 100, size=(2, input_size)))
+    input_array = HyperGP.tensor.uniform(0, 100, size=(2, input_size))
     target = (input_array[0] + input_array[0] * input_array[1] * input_array[1]) * (input_array[0]) / (input_array[1] + input_array[0])
+
 ```
 3. **Initialize the basic elements**: To run the program, a ``PrimitiveSet`` module is needed to define the used primitives and terminals, ``Population`` module is used to initialize the population, ``GPOptimizer`` is a workflow used to manage the evolution process.
 
 ```python
     # Generate primitive set
-    pset = HyperGP.PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2)])
+    pset = HyperGP.PrimitiveSet(input_arity=2,  primitive_set=[('add', HyperGP.tensor.add, 2),('sub', HyperGP.tensor.sub, 2),('mul', HyperGP.tensor.mul, 2),('div', HyperGP.tensor.div, 2),('sin', HyperGP.tensor.sin, 1),('cos', HyperGP.tensor.cos, 1)])
     # Init population
     pop = HyperGP.Population()
-    pop.initPop(pop_size=100, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000))
+    pop.initPop(pop_size=pop_size, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 6], len_limit=100000))
+    output, _ = HyperGP.executor(pop.states['progs'].indivs, input=input_array, pset=pset)
+    pop.states['progs'].fitness = HyperGP.ops.rmse(output, target)
     # Init workflow
     optimizer = HyperGP.GpOptimizer()
     # Register relevant states
     optimizer.status_init(
         p_list=pop.states['progs'].indivs, target=target,
         input=input_array,pset=pset,output=None,
-        fit_list = pop.states['progs'].fitness)
+        fit_list = pop.states['progs'].fitness,
+        pp_list=[ind.copy() for ind in pop.states['progs'].indivs],  pfit_list=pop.states['progs'].fitness.copy(),
+    )
 ```
 
 
-4. **Build the self-define evaluation function**: Here we use rmse as an example.
-
-```python
-    def evaluation(output, target):
-        r1 = HyperGP.tensor.sub(output, target, dim_0=1)
-        return (r1 ** 2).sum(dim=1).sqrt()
-```
-
-5. **Add the component user want to iteratively run**
+4. **Add the component user want to iteratively run**
 
 ```python
     # Add components
+    
     optimizer.iter_component(
         ParaStates(func=HyperGP.ops.RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
-                    mask=[lambda x=50:random.sample(range(100), x), lambda x=50:random.sample(range(100), x)]),
-        ParaStates(func=HyperGP.ops.RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), True], to=["p_list"],
-                    mask=[lambda x=100:random.sample(range(100), x), 1, 1]),
+                    mask=[lambda x=int(pop_size / 2):random.sample(range(pop_size), x), lambda x=int(pop_size / 2):random.sample(range(pop_size), x)]),
+        ParaStates(func=HyperGP.ops.RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=pop_size), True], to=["p_list"],
+                    mask=[lambda x=pop_size:random.sample(range(pop_size), x), 1, 1]),
         ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None],
                     mask=[1, 1, 1]),
-        ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"],
-                    mask=[1, 1])
+        ParaStates(func=HyperGP.ops.rmse, source=["output", "target"], to=["fit_list"]),
+        ParaStates(func=HyperGP.ops.tournament, source=["p_list", "pp_list", "fit_list", "pfit_list"], to=["p_list", "pp_list", "fit_list", "pfit_list"],
+                    mask=[1, 1, 1, 1])
     )
+
 ```
 6. **Run the optimizer**
 
 ```python
     # Iteratively run
-    optimizer.run(100)
+    optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list")
+    optimizer.run(50, stop_criteria=lambda: HyperGP.tensor.min(optimizer.workflowstates.fit_list) < 1e-9, tqdm_diable=False)
+
 ```
 
 # More User-cases and Applications

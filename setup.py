@@ -23,7 +23,7 @@ def get_cuda_path():
 # else:
 #     platform_tag = sys.platform
     
-SUPPORTED_CUDA_VERSIONS = ["10.2.89"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
+SUPPORTED_CUDA_VERSIONS = ["11.4.2"]#["10.1", "11.1", "11.4", "11.7","11.8", "12.0"]
 
 # 定义 CMake 配置
 # def get_cmake_args(cuda_version):
@@ -44,7 +44,7 @@ SUPPORTED_CUDA_VERSIONS = ["10.2.89"]#["10.1", "11.1", "11.4", "11.7","11.8", "1
 def get_cmake_args(cuda_version):
     cuda_path = os.getenv("CUDA_HOME", None)
     if cuda_path is None:
-        cuda_path = "/usr/local/cuda"  # 默认 CUDA 路径
+        cuda_path = "/home/mazt/cuda-11.4.2"  # 默认 CUDA 路径
 
     cmake_args = [
         f"-DPython_ROOT_DIR={os.path.dirname(sys.executable)}",

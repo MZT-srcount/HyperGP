@@ -1,4 +1,4 @@
-from ...src.ops_dim import substract as _sub, add as _add, multiply as _mul, divide as _div, pows as _pow, concatenate as concat
+from ...src.ops_dim import substract as _sub, add as _add, multiply as _mul, divide as _div, pdivide as _pdiv, pows as _pow, concatenate as concat
 from ...src.ndarray import _where, _all, _any, _zeros, _ones, _full, _empty, _uniform
 from ...src.ndarray import *
 from ...src import float64
@@ -41,6 +41,13 @@ class EWisePow(TensorOp):
             return a.pow(b)
         else:
             return _pow(a, b, dim_0, dim_1)
+    
+class EWiseRPow(TensorOp):
+    op = 'pow'
+    idx = 0
+    def compute(self, a, b, dim_0=0, dim_1=0):
+        return _pow(a, b, dim_0, dim_1)
+        
 class EWiseAdd(TensorOp):
     op = 'add'
     idx = 0
@@ -76,6 +83,14 @@ class EWiseDiv(TensorOp):
             return a / b
         else:
             return _div(a, b, dim_0, dim_1)
+
+class EWisePDiv(TensorOp):
+    op = 'div'
+    idx = 3
+    def compute(self, a, b, dim_0=0, dim_1=0):
+        return _pdiv(a, b, dim_0, dim_1)
+
+
 
 class EWiseAssign_R2L(TensorOp):
     op = 'assigin_r2l'
@@ -140,7 +155,11 @@ class EWiseTan(TensorOp):
     idx = 6
     def compute(self, a):
         return a.tan()
-
+    
+class EWiseReciprocal(TensorOp):
+    def compute(self, a):
+        return a.reciprocal()
+    
 class EWiseSqrt(TensorOp):
     idx = 7
     def compute(self, a):
@@ -150,16 +169,27 @@ class EWiseLoge(TensorOp):
     idx = 7
     def compute(self, a):
         return a.loge()
-
-
+    
 class EWiseLog10(TensorOp):
     def compute(self, a):
         return a.log10()
 
-
 class EWiseLog2(TensorOp):
     def compute(self, a):
         return a.log2()
+
+
+class EWiseLogfe(TensorOp):
+    def compute(self, a):
+        return a.logfe()
+
+class EWiseLogf2(TensorOp):
+    def compute(self, a):
+        return a.logf2()
+    
+class EWiseLogf10(TensorOp):
+    def compute(self, a):
+        return a.logf10()
 
 class EWiseArcSin(TensorOp):
     idx = 8
@@ -305,6 +335,10 @@ class ScalarPow(TensorOp):
     def compute(self, a, b):
         return a.pow(b)
 
+class ScalarPow(TensorOp):
+    def compute(self, a, b):
+        return a.pow(b)
+    
 class ScalarMul(TensorOp):
     op = 'mul'
     def compute(self, a, b):
