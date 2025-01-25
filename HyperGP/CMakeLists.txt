@@ -30,6 +30,9 @@ list(APPEND LINKER_LIBS ${pybind11_LIBRARIES})
 ### CPU BACKEND
 ############################################################################
 
+string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_C_FLAGS}")
+string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}")
+
 ### tree2graph_transformer
 
 add_library(pygp_utils MODULE src/utils_backend.cc)
@@ -41,6 +44,7 @@ set_target_properties(pygp_utils
     PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
     CXX_VISIBILITY_PRESET "hidden"
+    LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
 )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -48,6 +52,10 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 ### cash_backend
+
+string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_C_FLAGS}")
+string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}")
+
 add_library(pygp_cash MODULE src/cash_backend.cc)
 target_link_libraries(pygp_cash ${LINKER_LIBS})
 pybind11_extension(pygp_cash)
@@ -57,6 +65,7 @@ set_target_properties(pygp_cash
     PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
     CXX_VISIBILITY_PRESET "hidden"    
+    LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
 )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -73,12 +82,14 @@ set(CUDA_NVCC_FLAGS
         --default-stream per-thread
         -O3
 )
+# set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -Wall -s")
+# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -Wall -s")
 
 ### tensor backend
-find_package(CUDA)
+find_package(CUDA REQUIRED)
 if(CUDA_FOUND)
     include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} "src")
-    list(APPEND LINKER_LIBS ${CUDA_CUDART_LIBRARY} ${CUDA_cublas_LIBRARY})#${CUDA_npp_LIBRARY}
+    list(APPEND LINKER_LIBS ${CUDA_CUDART_LIBRARY})#${CUDA_npp_LIBRARY},  ${CUDA_cublas_LIBRARY}
     set(MODULE_NAMES broadcast_ops basic_tensor_ops judge_ops nn_ops device_info)
 
     
@@ -95,6 +106,24 @@ if(CUDA_FOUND)
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
+        LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
+        # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
+    )
+
+    ###  matrix_ops_gpu.cu
+    CUDA_ADD_LIBRARY(matrix_ops_gpu MODULE src/paras.cu OPTIONS ${ARCH_FLAGS})
+    # pybind11_add_module(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu)
+    target_link_libraries(matrix_ops_gpu ${CUDA_CUDART_LIBRARY} ${CUDA_cublas_LIBRARY})#paras
+    # add_library(matrix_ops_gpu MODULE src/paras.cu)
+
+    pybind11_extension(matrix_ops_gpu)
+    pybind11_strip(matrix_ops_gpu)
+    set_target_properties(matrix_ops_gpu
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+        CXX_VISIBILITY_PRESET "hidden"
+        CUDA_VISIBILITY_PRESET "hidden"
+        LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
         # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
     )
     # install(TARGETS paras DESTINATION  ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -112,12 +141,13 @@ if(CUDA_FOUND)
             LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
             CXX_VISIBILITY_PRESET "hidden"
             CUDA_VISIBILITY_PRESET "hidden"
+            LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
             # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
         )
         
-        install(TARGETS ${MODULE_NAME}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
-        )
+        # install(TARGETS ${MODULE_NAME}
+        # LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
+        # )
     endforeach()
 endif()
 
@@ -142,6 +172,7 @@ if(CUDA_FOUND)
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
+        LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
     )
 else()
     message(STATUS "Can not found CUDA")

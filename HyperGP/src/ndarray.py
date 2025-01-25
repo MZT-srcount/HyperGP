@@ -17,6 +17,8 @@ __default_devid__ = 0
 
 __global_mods__ = {}
 
+from .basic_tensor_ops import 
+
 
 def prob(x):
     return reduce(operator.mul, x, 1)
