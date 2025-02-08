@@ -31,6 +31,9 @@ class Tensor(Value):
     def __bool__(self):
         return bool(self.cached_data.numpy())
     
+    def __list__(self):
+        return self.cached_data.numpy()
+        
     @property
     def realize_cached_data(self):
         if self.cached_data is not None:

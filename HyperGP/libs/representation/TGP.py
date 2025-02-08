@@ -1,5 +1,6 @@
 import copy
 import random
+import numpy as np
 
 from HyperGP.base.prog_basic import Program
 from ..states import ProgBuildStates
@@ -13,7 +14,7 @@ class TGPIndv(Program):
         The encode list is a collection of pset elements without deep copy.
 
     """
-    def __init__(self, states=None, encode=None, **kwargs):
+    def __init__(self, states=None, encode=None, module_states=None, **kwargs):
         """
         Initialize the program
 
@@ -38,16 +39,17 @@ class TGPIndv(Program):
             xxxxx
 
         """
-        if states is not None:
-            if 'module_states' not in states and 'states' not in states:
-                super().__init__(state=states, **kwargs)
-            else:
-                super().__init__(**states, **kwargs)
-        else:
-            super().__init__(state=None, module_states=None, **kwargs)
+        super().__init__(state=states, module_states=module_states, encode=encode, **kwargs)
+        # if states is not None:
+        #     if 'module_states' not in states and 'states' not in states:
+        #         super().__init__(state=states, **kwargs)
+        #     else:
+        #         super().__init__(**states, **kwargs)
+        # else:
+        #     super().__init__(state=None, module_states=None, **kwargs)
 
-        if encode is not None:
-            self.encode = encode
+        # if encode is not None:
+        #     self._encode = encode
 
     """"""
     def buildProgram(self, cond: ProgBuildStates, method=HalfAndHalf(), node_states=None):
@@ -73,11 +75,19 @@ class TGPIndv(Program):
         """
          
         encode = method(cond, node_states)
+        replace_array = np.array([elem for node in encode for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)])
+
+        self._pset_map = {(node.idx if node.arity > 0 else -(node.idx + 1)):node for node in encode if node.idx != -1 and (node.idx if node.arity > 0 else -(node.idx + 1)) not in self._pset_map}
+        self._encode_array = replace_array
         # self.stateRegister(encode=root)
-        self.encode = encode
+        self._encode = encode
 
     def __len__(self):
-        return len(self.encode)
+        return int(self._encode_array.shape[0] / 3)
+
+    # def list(self, parent=False, childs=False):
+    #     if not parent and not childs:
+    #         return list(range(len(self._encode)))
 
     def list(self, parent=False, childs=False):
          
@@ -103,112 +113,83 @@ class TGPIndv(Program):
         """
 
         if not parent and not childs:
-            return self.encode
+            return self[:]
         pc_list = []
         if parent:
-            p_list = [[] for z in range(len(self.encode))]
-            cur_arity = [[0, self.encode[0].arity]]
-            for i, node in enumerate(self.encode[1:]):
-                i = i + 1
+            p_list = [[] for z in range(int(self._encode_array.shape[0] / 3))]
+            cur_arity = [[0, self._encode_array[1]]]
+            for i in range(0, len(self._encode_array[1:]), 3):
+                i = int(i / 3 + 1)
+                arity = self._encode_array[1 + i * 3]
                 idx, _ = cur_arity[-1]
                 cur_arity[-1][1] -= 1
                 p_list[i].append(idx)
                 if cur_arity[-1][1] == 0:
                     cur_arity.pop()
-                if node.arity > 0:
-                    cur_arity.append([i, node.arity])
+                if arity > 0:
+                    cur_arity.append([i, arity])
             pc_list.append(p_list)
         if childs:
-            c_list = [[] for z in range(len(self.encode))]
-            cur_arity = [[0, self.encode[0].arity]]
-            for i, node in enumerate(self.encode[1:]):
-                i = i + 1
+            c_list = [[] for z in range(int(self._encode_array.shape[0] / 3))]
+            cur_arity = [[0, self._encode_array[1].arity]]
+            for i in range(0, len(self._encode_array[1:]), 3):
+                i = int(i / 3 + 1)
+                arity = self._encode_array[1 + i * 3]
                 idx, _ = cur_arity[-1]
                 cur_arity[-1][1] -= 1
                 c_list[idx].append(i)
                 if cur_arity[-1][1] == 0:
                     cur_arity.pop()
-                if node.arity > 0:
-                    cur_arity.append([i, node.arity])
+                if arity > 0:
+                    cur_arity.append([i, arity])
             pc_list.append(c_list)
-            assert len(cur_arity) == 0
+            if len(cur_arity) != 0:
+                raise ValueError("Something wrong when search childs in list()")
             # print(len(c_list), len(c_list[0]), len(c_list[1]), c_list[0], c_list[1])
         return pc_list
 
+    # def __getitem__(self, item):
+    #     # return [ for i in self.encode[item]]
+    #     return self.encode[item]
 
+    # def __setitem__(self, key, value):
 
-    def slice(self, begin=None, end=None):
-         
-        """
-        Generate a slice object that defines the range of a subtree with the element of the 'begin' index as its root.
-        If the 'begin' is None, then return the slice object with begin = 0
-
-        Args:
-            begin(int): determine the subtree slice range with which element as a root.
-        
-        Returns:
-            Return a slice object representing the range of a subtree with given element of 'begin' index as root 
-
-        Examples:
-            >>> print(ind.slice(0))
-            xxxxxx
-            >>> print(ind.slice(2))
-            xxxxxx
-            
-        """
-
-        if begin is None:
-            begin = 0
-        end = begin + 1
-        total = self[begin].arity
-        while total > 0:
-            total += self[end].arity - 1
-            end += 1
-        return slice(begin, end)
-
-    def __getitem__(self, item):
-        # return [ for i in self.encode[item]]
-        return self.encode[item]
-
-    def __setitem__(self, key, value):
-
-        if isinstance(key, slice):
-            if key.start >= len(self):
-                raise IndexError("Invalid slice object (try to assign a %s"
-                                 " in a tree of size %d). Even if this is allowed by the"
-                                 " list object slice setter, this should not be done in"
-                                 " the PrimitiveTree context, as this may lead to an"
-                                 " unpredictable behavior for searchSubtree or evaluate."
-                                 % (key, len(self)))
-            total = value[0].arity
-            for node in value[1:]:
-                total += node.arity - 1
-            if total != 0:
-                raise ValueError("Invalid slice assignation : insertion of"
-                                 " an incomplete subtree is not allowed in PrimitiveTree."
-                                 " A tree is defined as incomplete when some nodes cannot"
-                                 " be mapped to any position in the tree, considering the"
-                                 " primitives' arity. For instance, the tree [sub, 4, 5,"
-                                 " 6] is incomplete if the arity of sub is 2, because it"
-                                 " would produce an orphan node (the 6).")
-        elif value.arity != self[key].arity:
-            raise ValueError("Invalid node replacement with a node of a"
-                             " different arity.")
-        self.encode.__setitem__(key, value)
+    #     if isinstance(key, slice):
+    #         if key.start >= len(self):
+    #             raise IndexError("Invalid slice object (try to assign a %s"
+    #                              " in a tree of size %d). Even if this is allowed by the"
+    #                              " list object slice setter, this should not be done in"
+    #                              " the PrimitiveTree context, as this may lead to an"
+    #                              " unpredictable behavior for searchSubtree or evaluate."
+    #                              % (key, len(self)))
+    #         total = value[0].arity
+    #         for node in value[1:]:
+    #             total += node.arity - 1
+    #         if total != 0:
+    #             raise ValueError("Invalid slice assignation : insertion of"
+    #                              " an incomplete subtree is not allowed in PrimitiveTree."
+    #                              " A tree is defined as incomplete when some nodes cannot"
+    #                              " be mapped to any position in the tree, considering the"
+    #                              " primitives' arity. For instance, the tree [sub, 4, 5,"
+    #                              " 6] is incomplete if the arity of sub is 2, because it"
+    #                              " would produce an orphan node (the 6).")
+    #     elif value.arity != self[key].arity:
+    #         raise ValueError("Invalid node replacement with a node of a"
+    #                          " different arity.")
+    #     self.encode.__setitem__(key, value)
 
     def __deepcopy__(self, memo):
         new_ind = TGPIndv()
-        return new_ind.make(self.encode, self.states, memo)
+        return new_ind.make(self._encode_array, self.states, self._pset_map, memo)
     
     def copy(self):
-
         """
         Returns a new ``TGPIndv`` with the same encode list and states.
         """
-
-        new_ind = TGPIndv()
-        return new_ind.make(self.encode, self.states, {})
-
+        new_ind = TGPIndv(states=self.states.copy(), module_states=self.module_states.copy() if len(self.module_states) > 0 else None)
+        new_ind.update(self)
+        # new_ind._encode_array, new_ind._pset_map = self._encode_array.copy(), self._pset_map
+        return new_ind
 
     def __str__(self):
         def format(node, *args):

@@ -834,7 +834,7 @@ __global__ void execution_GPU(int* exec_units, size_t exec_unit_len, size_t* lay
                     break;
 
                 default:
-                    printf("operator id out of range..input_id: %d\\n", int(exec_unit[0]));
+                    printf("operator id out of range..input_id: %d\n", int(exec_unit[0]));
                     break;
             }
             remain_execs -= execnum_periter;

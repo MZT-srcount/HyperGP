@@ -24,8 +24,7 @@ class PrimitiveSet(BasePrimitiveSet):
             div, <class 'HyperGP.base.func_basic.Func'>
 
         """
-        primitive_set = self.primitiveSet + self.terminalSet
-        choice = random.randint(0, len(primitive_set) - 1)
+        choice = random.randint(0, len(self.primitiveSet) + len(self.terminalSet) - 1)
         if choice < len(self.used_primitive_set):
             return self.genFunc(self.primitiveSet[choice])
         else:

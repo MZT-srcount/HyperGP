@@ -15,7 +15,7 @@ class ExecutableExpr:
         self.exec_list = exec_list
         if func_list is None:
             f_avec = [self.pset.genFunc(f_str) for f_str in self.pset.primitiveSet]
-            self.func_list = [f.func.exec_number if hasattr(f, "func") and hasattr(f.func, "exec_number") else -1 for f in f_avec]
+            self.func_list = [None] * (pset.func_count - len(f_avec)) + [f.func.exec_number if hasattr(f, "func") and hasattr(f.func, "exec_number") else -2 for f in f_avec] + [-1]
         else:
             self.func_list = func_list
         

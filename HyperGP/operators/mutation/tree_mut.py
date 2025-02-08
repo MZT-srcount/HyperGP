@@ -18,10 +18,11 @@ class RandTrMut(MutMethod):
        is selected to be donated to the parent.
 
     """
-    def __call__(self, prog, cond: ProgBuildStates, node_states=None, method=HalfAndHalf, **kwargs):
-        subtr_1 = prog.slice(random.randint(0, len(prog) - 1))
-        subtr_2 = method()(cond, node_states)
-        prog[subtr_1] = subtr_2
+    def __call__(self, prog, cond: ProgBuildStates, prob=1, node_states=None, method=HalfAndHalf, **kwargs):
+        if random.uniform(0, 1) < prob:
+            subtr_1 = prog.slice(random.randint(0, len(prog) - 1))
+            subtr_2 = method()(cond, node_states)
+            prog[subtr_1] = subtr_2
         return prog
 
 

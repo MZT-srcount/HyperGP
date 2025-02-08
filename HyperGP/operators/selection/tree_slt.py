@@ -21,20 +21,21 @@ class TourNoRep(SltMethod):
         return winner
 
 
-def tournament(p1, p2, f1, f2, tour_size=4, len_limit=100, best_keep=True):
+def tournament(p1, p2, f1, f2, tour_size=3, len_limit=100, best_keep=True):
     p_list, f_list = p1 + p2,  tensor.concatenate((f1, f2))
     legal_list = [z for z, prog in enumerate(p_list) if len(prog) < len_limit]
     if best_keep:
-        sample_list = [list(random.sample(legal_list, tour_size)) for i in range(len(p1) - 1)]
-        tour_list = [legal_list[int(tensor.argmin(f_list[legal_list]))]] + [x[int(tensor.argmin(f_list[x]))] for x in sample_list]
+        sample_list = np.array(legal_list)[np.random.randint(0, len(legal_list), size=(len(p1) - 1, tour_size))]
+        # sample_list = np.array([(random.sample(legal_list, tour_size)) for i in range(len(p1) - 1)]).flatten()
+        tour_list = tensor.argmin(f_list[sample_list.tolist()], dim=1)
+        tour_list = [legal_list[int(tensor.argmin(f_list[legal_list]))]] + np.take_along_axis(sample_list, tour_list.numpy().reshape((-1, 1)), axis=1).reshape(-1).tolist()
+        
     else:
-        sample_list = [list(random.sample(legal_list, tour_size)) for i in range(len(p1))]
-        tour_list = [x[int(tensor.argmin(f_list[x]))] for x in sample_list]
+        sample_list = np.array(legal_list)[np.random.randint(0, len(legal_list), size=(len(p1), tour_size))].tolist()
+        tour_list = np.take_along_axis(sample_list, tensor.argmin(f_list[sample_list], dim=1).numpy().reshape((-1, 1)), axis=1).reshape(-1).tolist()
     p_new, f_new = [p_list[sample] for sample in tour_list], f_list[tour_list]
-    if np.isnan(f_new[0].numpy()):
-        print(f_list[legal_list])
-        assert 0==1
-    return p_new, [ind.copy() for ind in p_new], f_new, f_new.copy()
+    # print('------------', np.mean([len(ind) for ind in p_new]), np.mean([len(p_list[idx]) for idx in legal_list]))
+    return [ind.copy() for ind in p_new], p_new, f_new, f_new.copy()
 
 
 

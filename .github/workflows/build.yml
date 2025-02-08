@@ -134,27 +134,27 @@ jobs:
           # conda activate base  # 激活 base 环境
           python ./setup.py bdist_wheel #sdist
           python ./.github/workflows/version_set.py
-      #     mv dist wheelhouse
+          mv dist wheelhouse
           
-      # # 5. 使用 auditwheel 修复 wheel 文件
-      # - name: Repair wheel with auditwheel
-      #   run: |
-      #     # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
-      #     # conda activate base  # 激活 base 环境
-      #     mkdir -p dist
-      #     for whl in wheelhouse/*.whl; do
-      #       auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_36_x86_64
-      #     done
+      # 5. 使用 auditwheel 修复 wheel 文件
+      - name: Repair wheel with auditwheel
+        run: |
+          # source $HOME/miniconda/etc/profile.d/conda.sh  # 加载 Conda
+          # conda activate base  # 激活 base 环境
+          mkdir -p dist
+          for whl in wheelhouse/*.whl; do
+            auditwheel repair "$whl" --wheel-dir dist/ --plat manylinux_2_31_x86_64
+          done
 
-      #     # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
-      #     # for gz in wheelhouse/*.tar.gz; do
-      #     #   new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
-      #     #   mv "$gz" "$new_name"
-      #     # done
+          # python_version=$(python -c "import sys; print(f'py{sys.version_info.major}{sys.version_info.minor}')")
+          # for gz in wheelhouse/*.tar.gz; do
+          #   new_name=$(echo "$gz" | sed "s/.tar.gz/-${python_version}.tar.gz/")
+          #   mv "$gz" "$new_name"
+          # done
           
-      #     # for gz in wheelhouse/*.tar.gz; do
-      #     #   mv "$gz" dist/
-      #     # done
+          # for gz in wheelhouse/*.tar.gz; do
+          #   mv "$gz" dist/
+          # done
 
   #     - name: Upload artifacts
   #       uses: actions/upload-artifact@v4

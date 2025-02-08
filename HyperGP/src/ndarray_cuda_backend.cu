@@ -17,15 +17,13 @@
 
 using namespace gpu;
 using namespace pygp_tensor;
+using namespace pygp_img;
 
 namespace py = pybind11;
 
 
 template<typename scalar_t, typename sscalar_t>
 void TEMPLATE_BIND_IMGSPROC(py::module& m){
-    
-    using namespace gpu;
-    using namespace pygp_img;
     
     /*image operations*/
     // m.def("gaussian_filter", [](Array<scalar_t>& a, int nstep_a, Array<scalar_t>& out, int nstep_out, const std::tuple<int, int>& ROI, int mask, uint8_t type, int pre_dim, int post_dim){
@@ -147,8 +145,7 @@ template<typename scalar_t>
 void TEMPLATE_BIND_ARRAY(py::module& m){
     
 
-    using namespace gpu;
-    using namespace pygp_tensor;
+    
     // printf("%s\n",("Array_" + std::string(typeid(scalar_t).name())).c_str());
     py::class_<Array<scalar_t>>(m, ("Array_" + std::string(typeid(scalar_t).name())).c_str())
         .def(py::init<>(), py::return_value_policy::take_ownership)
@@ -195,8 +192,7 @@ void TEMPLATE_BIND_ARRAY(py::module& m){
 template<typename scalar_t, typename sscalar_t, typename tscalar_t>
 void TEMPLATE_BIND_BROADCAST_DIM_2(py::module& m){
     
-    using namespace gpu;
-    using namespace pygp_tensor;
+    
 
     m.def("ewise_sub_dim", [](const Array<scalar_t>& a, const Array<sscalar_t>& b, Array<tscalar_t>&out, int pre_dim_a=0, int post_dim_a, int pre_dim_b, int post_dim_b, int offset_a, int offset_b){ 
         operator_dim<scalar_t, sscalar_t, tscalar_t>(a, b, out, pre_dim_a, post_dim_a, pre_dim_b, post_dim_b, offset_a, offset_b, 1);
@@ -222,8 +218,7 @@ void TEMPLATE_BIND_BROADCAST_DIM_2(py::module& m){
 template<typename scalar_t>
 void TEMPLATE_BIND_MATRIX_DIM_1(py::module& m){
 
-    using namespace gpu;
-    using namespace pygp_tensor;
+    
     handle_create();
     
     m.def("matrix_T", [](const Array<scalar_t>& a, Array<scalar_t>& out, int pre_dim, int col_num, int post_dim, int offset){
@@ -246,8 +241,7 @@ void TEMPLATE_BIND_MATRIX_DIM_1(py::module& m){
 template<typename scalar_t, typename sscalar_t>
 void TEMPLATE_BIND_BROADCAST_DIM_1(py::module& m){
 
-    using namespace gpu;
-    using namespace pygp_tensor;
+    
     m.def("ewise_sum", [](const Array<scalar_t>& a, Array<sscalar_t>& out, int pre_dim=1, int post_dim, int32_t offset_a){
         oper_dim_1<scalar_t, sscalar_t>(a, out, pre_dim, post_dim, offset_a, 0);
     });
@@ -289,8 +283,7 @@ void TEMPLATE_BIND_BROADCAST_DIM_1(py::module& m){
 template<typename scalar_t, typename sscalar_t>
 void TEMPLATE_BIND_FUNCS_DIM1(py::module& m){
     
-    using namespace gpu;
-    using namespace pygp_tensor;
+    
     m.def("ewise_sin", [](const Array<scalar_t>& a, Array<sscalar_t>& out, int32_t offset_a){
         ewise_compute_1op<scalar_t, sscalar_t>(a, out, offset_a, 0);
     });
@@ -386,15 +379,21 @@ void TEMPLATE_BIND_FUNCS_DIM1(py::module& m){
         if (type == 0){
             transfer_get<scalar_t><<<block_num, thread_num, unit_sizes.size() * sizeof(int32_t), streams[out.device_id][out.stream_id]>>>(out.ptr, in_ptr, idxs_gpu, sizes_gpu, unit_len, in_offset, out_offset, unit_sizes.size());
         }
-        else{
+        else if(type == 1){
             transfer_set<scalar_t><<<block_num, thread_num, unit_sizes.size() * sizeof(int32_t), streams[out.device_id][out.stream_id]>>>(out.ptr, in_ptr, idxs_gpu, sizes_gpu, unit_len, in_offset, out_offset, unit_sizes.size());
+        }
+        else if(type == 2){
+            transfer_list<scalar_t><<<block_num, thread_num, 0, streams[out.device_id][out.stream_id]>>>(out.ptr, in_ptr, idxs_gpu, unit_len, in_offset, out_offset, unit_idxs.size());
+        }
+        else{
+            throw std::runtime_error(std::string("Wrong transfer type, only allow for 0, 1, 2, but ") + std::to_string(type) + "is given.\n");
+            exit(-1);
         }
         cudaEventRecord(out.event_sign, streams[out.device_id][out.stream_id]);
         mem_pool_free_async((void*)idxs_gpu, out.device_id, out.stream_id);
         mem_pool_free_async((void*)sizes_gpu, out.device_id, out.stream_id);
         
     });
-
     
     m.def("get_properties", &get_properties);
 
@@ -406,8 +405,7 @@ void TEMPLATE_BIND_FUNCS_DIM1(py::module& m){
 template<typename scalar_t, typename sscalar_t>
 void TEMPLATE_BIND_JUDGE(py::module& m){
     
-    using namespace gpu;
-    using namespace pygp_tensor;
+    
     m.def("ewise_le", [](const Array<scalar_t>& a, const Array<sscalar_t>& b, Array<bool>& out, int32_t offset_a, int32_t offset_b){
         ewise_compute_2op<scalar_t, sscalar_t, bool>(a, b, out, offset_a, offset_b, 5);
         cudaStreamSynchronize(streams[out.device_id][out.stream_id]);
@@ -464,8 +462,7 @@ template<typename scalar_t, typename sscalar_t, typename tscalar_t>
 void TEMPLATE_BIND_FUNCS(py::module& m){
     
 
-    using namespace gpu;
-    using namespace pygp_tensor;
+    
     m.def("wait", [](Array<scalar_t>& out){
         if (out.stream_id != -1){
             cudaStreamWaitEvent(streams[out.device_id][out.stream_id], out.event_sign, 0);
@@ -529,7 +526,8 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
 
 }
 
-PYBIND11_MODULE(broadcast_ops, m){
+void broadcast_ops(py::module& m){
+
     // register_combinations_3([&m](auto type1, auto type2, auto type3){
     //     TEMPLATE_BIND_BROADCAST_DIM_2<decltype(type1), decltype(type2), decltype(type3)>(m);
     // }, SupportedTypes_1{}, SupportedTypes_1{}, SupportedTypes_1{});
@@ -537,9 +535,7 @@ PYBIND11_MODULE(broadcast_ops, m){
     // register_combinations_2([&m](auto type1, auto type2){
     //     TEMPLATE_BIND_BROADCAST_DIM_1<decltype(type1), decltype(type2)>(m);
     // }, SupportedTypes_1{}, SupportedTypes_1{})
-    m.def("set_gstreams", [](const GlobalStreams& gstreams){
-        streams = gstreams.streams;
-    });
+    
     // std::unordered_map<int, cudaStream_t*> streams = get_streams();
     TEMPLATE_BIND_BROADCAST_DIM_2<bool, bool, bool>(m);
     TEMPLATE_BIND_BROADCAST_DIM_2<uint8_t, uint8_t, uint8_t>(m);
@@ -611,11 +607,9 @@ PYBIND11_MODULE(broadcast_ops, m){
 
 }
 
-PYBIND11_MODULE(basic_tensor_ops, m){
+void basic_tensor_ops(py::module& m){
 
-    m.def("set_gstreams", [](const GlobalStreams& gstreams){
-        streams = gstreams.streams;
-    });
+    
     // streams_create(std::vector<int>(1, 0), STREAM_NUM_NDARRAY);
     // register_combinations_3([&m](auto type1, auto type2, auto type3){
     //     TEMPLATE_BIND_FUNCS<decltype(type1), decltype(type2), decltype(type3)>(m);
@@ -686,11 +680,9 @@ PYBIND11_MODULE(basic_tensor_ops, m){
 
 }
 
-PYBIND11_MODULE(judge_ops, m){
+void judge_ops(py::module& m){
     
-    m.def("set_gstreams", [](const GlobalStreams& gstreams){
-        streams = gstreams.streams;
-    });
+    
     // register_combinations_2([&m](auto type1, auto type2){
     //     TEMPLATE_BIND_JUDGE<decltype(type1), decltype(type2)>(m);
     // }, SupportedTypes_1{}, SupportedTypes_1{});
@@ -731,12 +723,9 @@ PYBIND11_MODULE(judge_ops, m){
     TEMPLATE_BIND_JUDGE<double, double>(m);
 }
 
-
-PYBIND11_MODULE(nn_ops, m){
+void nn_ops(py::module& m){
     
-    m.def("set_gstreams", [](const GlobalStreams& gstreams){
-        streams = gstreams.streams;
-    });
+    
     // std::unordered_map<int, cudaStream_t*> streams = get_streams();
     // register_combinations_2([&m](auto type1, auto type2){
     //     TEMPLATE_BIND_IMGSPROC<decltype(type1), decltype(type2)>(m);
@@ -778,11 +767,8 @@ PYBIND11_MODULE(nn_ops, m){
     TEMPLATE_BIND_IMGSPROC<float, double>(m);
     TEMPLATE_BIND_IMGSPROC<double, double>(m);
 }
-PYBIND11_MODULE(device_info, m){
+void device_info(py::module& m){
     
-    m.def("set_gstreams", [](const GlobalStreams& gstreams){
-        streams = gstreams.streams;
-    });
     // std::unordered_map<int, cudaStream_t*> streams = get_streams();
     // streams_create(std::vector<int>(1, 0), STREAM_NUM_NDARRAY);
     m.def("set_device", &streams_create);
@@ -797,11 +783,9 @@ PYBIND11_MODULE(device_info, m){
     });
 
 }
-PYBIND11_MODULE(matrix_ops_gpu, m){
+
+void matrix_ops_gpu(py::module& m){
     
-    m.def("set_gstreams", [](const GlobalStreams& gstreams){
-        streams = gstreams.streams;
-    });
     // std::unordered_map<int, cudaStream_t*> streams = get_streams();
     TEMPLATE_BIND_MATRIX_DIM_1<uint8_t>(m);
     TEMPLATE_BIND_MATRIX_DIM_1<uint16_t>(m);
@@ -814,4 +798,51 @@ PYBIND11_MODULE(matrix_ops_gpu, m){
     TEMPLATE_BIND_MATRIX_DIM_1<float>(m);
     TEMPLATE_BIND_MATRIX_DIM_1<double>(m);
 
+}
+
+void initialize_global_streams() {
+    // std::cout << "initialize_global_streams " << std::endl;
+    for(int k = 0; k < STREAM_NUM_NDARRAY; ++k){
+        cudaStreamCreate(&streams[0][k]);
+    }
+}
+
+GlobalStreams gstreams;
+
+
+PYBIND11_MODULE(ndarray_cuda_backend, m){
+    py::class_<GlobalStreams>(m, std::string("GlobalStreams").c_str());
+    initialize_global_streams();
+    gstreams.init(streams);
+    m.def("get_gstreams", [](){ 
+        return gstreams;
+    });
+
+    m.def("set_gstreams", [](const GlobalStreams& gstreams){
+        streams = gstreams.streams;
+    });
+    
+    // 初始化模块1
+    py::module m1 = m.def_submodule("matrix_ops_gpu", "matrix ops gpu");
+    matrix_ops_gpu(m1);
+
+    // 初始化模块2
+    py::module m2 = m.def_submodule("device_info", "device info");
+    device_info(m2);
+    
+    // 初始化模块3
+    py::module m3 = m.def_submodule("nn_ops", "nn ops");
+    nn_ops(m3);
+    
+    // 初始化模块4
+    py::module m4 = m.def_submodule("judge_ops", "judge ops");
+    judge_ops(m4);
+    
+    // 初始化模块5
+    py::module m5 = m.def_submodule("basic_tensor_ops", "basic tensor ops");
+    basic_tensor_ops(m5);
+    
+    // 初始化模块6
+    py::module m6 = m.def_submodule("broadcast_ops", "broadcast ops");
+    broadcast_ops(m6);
 }

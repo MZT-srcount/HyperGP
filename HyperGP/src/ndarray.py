@@ -10,14 +10,12 @@ from .data_type import _bool, _int32, _int64, _int8, _float32, _float64, _uint16
 from .data_type import *
 from collections.abc import Iterable
 import math
-from . import device_info
+# from . import device_info
 
 
 __default_devid__ = 0
 
 __global_mods__ = {}
-
-from .basic_tensor_ops import 
 
 
 def prob(x):
@@ -35,7 +33,7 @@ def _array(data, dtype=float, device=None, device_id=__default_devid__):
 #     if dtype="float32":
 
 def global_streams_info():
-    from . import global_streams
+    from .ndarray_cuda_backend import global_streams
     return BackendDevice("global_streams", global_streams)
 
 def cpu_numpy():
@@ -49,46 +47,46 @@ def gpu():
     return BackendDevice("gpu", ndarray_cuda_backend)
 
 def basic_ops_gpu():
-    from . import basic_tensor_ops
     if "basic_ops" not in __global_mods__:
+        from .ndarray_cuda_backend import basic_tensor_ops
         __global_mods__["basic_ops"] = BackendDevice("basic_ops", basic_tensor_ops)
-        __global_mods__["basic_ops"].set_gstreams(global_streams_info().get_gstreams())
+        # __global_mods__["basic_ops"].set_gstreams(global_streams_info().get_gstreams())
     return __global_mods__["basic_ops"]
 
 def nn_ops_gpu():
-    from . import nn_ops
     if "nn_ops" not in __global_mods__:
+        from .ndarray_cuda_backend import nn_ops
         __global_mods__["nn_ops"] = BackendDevice("nn_ops", nn_ops)
-        __global_mods__["nn_ops"].set_gstreams(global_streams_info().get_gstreams())
+        # __global_mods__["nn_ops"].set_gstreams(global_streams_info().get_gstreams())
     return __global_mods__["nn_ops"]
 
 def broadcast_ops_gpu():
-    from . import broadcast_ops
     if "broadcast_ops" not in __global_mods__:
+        from .ndarray_cuda_backend import broadcast_ops
         __global_mods__["broadcast_ops"] = BackendDevice("broadcast_ops", broadcast_ops)
-        __global_mods__["broadcast_ops"].set_gstreams(global_streams_info().get_gstreams())
+        # __global_mods__["broadcast_ops"].set_gstreams(global_streams_info().get_gstreams())
     return __global_mods__["broadcast_ops"]
 
 def device_info_gpu():
-    from . import device_info
     if "device_info" not in __global_mods__:
+        from .ndarray_cuda_backend import device_info
         __global_mods__["device_info"] = BackendDevice("device_info", device_info)
-        __global_mods__["device_info"].set_gstreams(global_streams_info().get_gstreams())
+        # __global_mods__["device_info"].set_gstreams(global_streams_info().get_gstreams())
     return __global_mods__["device_info"]
 
 
 def judge_ops_gpu():
-    from . import judge_ops
     if "judge_ops" not in __global_mods__:
+        from .ndarray_cuda_backend import judge_ops
         __global_mods__["judge_ops"] = BackendDevice("judge_ops", judge_ops)
-        __global_mods__["judge_ops"].set_gstreams(global_streams_info().get_gstreams())
+        # __global_mods__["judge_ops"].set_gstreams(global_streams_info().get_gstreams())
     return __global_mods__["judge_ops"]
 
-device_info_gpu().set_gstreams(global_streams_info().get_gstreams())
-basic_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
-broadcast_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
-judge_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
-nn_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
+# device_info_gpu().set_gstreams(global_streams_info().get_gstreams())
+# basic_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
+# broadcast_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
+# judge_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
+# nn_ops_gpu().set_gstreams(global_streams_info().get_gstreams())
 
 backend_libs_name = [device_info_gpu, basic_ops_gpu, broadcast_ops_gpu, judge_ops_gpu, nn_ops_gpu]  
 # backend_libs = (lib() for lib in backend_libs_name)
@@ -254,6 +252,14 @@ class NDArray:
                     return new_array
                 elif len(idxs[0]) == 0:
                     return None
+                else:
+                    idxs_array = np.array(idxs[0])
+                    new_shape = tuple(idxs_array.shape)
+                    if self._stride[0] > 1:
+                        new_shape += (self._stride[0], )
+                    new_array = NDArray.make(new_shape, self._handle.dev_id, device=self.device, dtype=self.dtype)
+                    basic_ops_gpu().transfer(new_array._handle, self._handle, idxs_array.flatten().tolist(), [idxs_array.shape[-1]], self._stride[0], self._offset, 0, 2)
+                    return new_array
             elif isinstance(idxs[0], slice) and idxs[0].step == 1:
                 new_array = NDArray.make(tuple(new_shape), self._handle.dev_id, handle=self._handle, offset=idxs[0].start * self._stride[0] + self._offset, device=self.device, dtype=self.dtype)
                 return new_array
@@ -358,14 +364,16 @@ class NDArray:
         if isinstance(shape, int):
             shape = (shape, )
         s_num = [i for i, s in enumerate(shape) if s == -1]#np.where(shape == -1)[0]
-        assert len(s_num) <= 1, "the number of -1 in new_shape should smaller than 1"
+        if len(s_num) > 1:
+            raise ValueError("the number of -1 in new_shape should smaller than 1")
         new_prob = prob(shape)
         origin_prob = prob(self._shape)
         if len(s_num) > 0:
             shape = shape[:s_num[0]] + (int(-origin_prob / new_prob), ) + (shape[s_num[0] + 1:] if s_num[0] + 1 < len(shape) else ())
             new_prob = prob(shape)
 
-        assert origin_prob == new_prob, "the size of the new shape should keep the same with the origin shape, origin-new:{A}-{B}".format(A=origin_prob, B=new_prob)
+        if origin_prob != new_prob:
+            raise ValueError("the size of the new shape should keep the same with the origin shape, origin-new:{A}-{B}".format(A=origin_prob, B=new_prob))
         return NDArray.make(shape, self._handle.dev_id, NDArray.compact_strides(shape), self._device, self._handle, self._offset, dtype=self._dtype)
 
     def to(self, device):
@@ -541,7 +549,8 @@ class NDArray:
         out = NDArray.make(self.shape, self._handle.dev_id, device=self.device, dtype=_bool)
         self.device.wait(self._handle)
         if isinstance(other, NDArray):
-            assert self.shape == other.shape, "operation needs two equal-sized arrays"
+            if self.shape != other.shape:
+                raise ValueError("operation needs two equal-sized arrays")
             judge_ops_gpu().ewise_ne(self._handle, other._handle, out._handle, self._offset, other._offset)
         else:
             judge_ops_gpu().scalar_ne(self._handle, other, out._handle, self._offset)
@@ -651,7 +660,8 @@ class NDArray:
         return out
 
     def _ops_dim_1(self, dim, ops, dtype=None):
-        assert abs(dim) < len(self._shape) or (dim < 0 and -dim <= len(self._shape)), "input dim should smaller than array shape, dim/shape: {D}/{S}".format(D=dim, S=self._shape)
+        if not(abs(dim) < len(self._shape) or (dim < 0 and -dim <= len(self._shape))):
+            raise ValueError("input dim should smaller than array shape, dim/shape: {D}/{S}".format(D=dim, S=self._shape))
         if dim != 0:
             out = NDArray.make(tuple(self._shape[:dim]), self._handle.dev_id, device=self.device, dtype=self._dtype if dtype is None else dtype)
             pre_dim, post_dim = prob(self._shape[:dim]), prob(self._shape[dim:])
@@ -770,8 +780,10 @@ class NDArray:
         if step is None:
             step = 1
         
-        assert stop > start, "Start must be less than stop"
-        assert step > 0, "No support for  negative increments"
+        if stop <= start:
+            raise ValueError("Start must be less than stop")
+        if step <= 0:
+            raise ValueError("No support for  negative increments")
         return slice(start, stop, step)
     
     """ Matrix operation"""
@@ -879,7 +891,8 @@ def _any(array:NDArray):
         return False
 
 def _where(bool_array, a_array, b_array):
-    assert bool_array._shape == a_array._shape == b_array._shape, "The input arrays should keep the same shape: {BoA}/{AA}/{BA}".format(BoA=bool_array._shape, AA=a_array._shape, BA=b_array._shape)
+    if not(bool_array._shape == a_array._shape == b_array._shape):
+        raise ValueError("The input arrays should keep the same shape: {BoA}/{AA}/{BA}".format(BoA=bool_array._shape, AA=a_array._shape, BA=b_array._shape))
     if not isinstance(bool_array, NDArray):
         bool_array = NDArray(bool_array, dtype=_bool)
     if not isinstance(a_array, NDArray):

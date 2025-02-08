@@ -1,10 +1,11 @@
 
 #include "cuda.h"
 #include <cublas_v2.h>
-#include<Array.h>
+#include"Array.h"
 #include <cuda_runtime.h>
 
 extern std::unordered_map<int, cudaStream_t*> streams;
+
 
 // using SupportedTypes_1 = std::tuple<bool, uint8_t, uint16_t, uint32_t, uint64_t, int8_t, int16_t, int32_t, int64_t, float, double>;
 
@@ -1208,8 +1209,8 @@ __global__ void ewise_argmax(const scalar_t* a_handle, sscalar_t* o, size_t len,
     int tn = blockDim.x;
     int init_posi = bid * len;
     extern __shared__ int internal_idx[];
-    internal_idx[tid] = 0;
-    internal_idx[tid + tn] = 0;
+    internal_idx[tid] = init_posi;
+    internal_idx[tid + tn] = init_posi;
     for(int i = tid; i < len; i += tn){
         if ((a[internal_idx[i % (tn * 2)]] < a[init_posi + i] && !__isnan(a[init_posi + i])) || __isnan(a[internal_idx[i % (tn * 2)]])){
             internal_idx[i % (tn * 2)] = init_posi + i;
@@ -1225,7 +1226,7 @@ __global__ void ewise_argmax(const scalar_t* a_handle, sscalar_t* o, size_t len,
         __syncthreads();
     }
     if (threadIdx.x == 0){
-        o[bid] = internal_idx[0];
+        o[bid] = internal_idx[0] - init_posi;
     }
 }
 ///////////////////////////////////////////////////////////////////////
@@ -1239,8 +1240,8 @@ __global__ void ewise_argmin(const scalar_t* a_handle, sscalar_t* o, size_t len,
     int tn = blockDim.x;
     int init_posi = bid * len;
     extern __shared__ int internal_idx[];
-    internal_idx[tid] = 0;
-    internal_idx[tid + tn] = 0;
+    internal_idx[tid] = init_posi;
+    internal_idx[tid + tn] = init_posi;
     for(int i = tid; i < len; i += tn){
         if (__isnan(double(a[internal_idx[i % (tn * 2)]])) || (a[internal_idx[i % (tn * 2)]] > a[init_posi + i] && !__isnan(double(a[init_posi + i])))){
             internal_idx[i % (tn * 2)] = init_posi + i;
@@ -1257,7 +1258,7 @@ __global__ void ewise_argmin(const scalar_t* a_handle, sscalar_t* o, size_t len,
     }
     __syncthreads();
     if (threadIdx.x == 0){
-        o[bid] = internal_idx[0];
+        o[bid] = internal_idx[0] - init_posi;
     }
 }
 ///////////////////////////////////////////////////////////////////////
@@ -1653,6 +1654,20 @@ __global__ void transfer_get(scalar_t* out, scalar_t* in, int32_t* unit_idxs, in
     }
 }
 
+
+template<typename scalar_t>
+__global__ void transfer_list(scalar_t* out, scalar_t* in, int32_t* unit_idxs, int32_t unit_len, int in_offset, int out_offset, int dim){
+    //for the transfer with list-like index
+    in = (scalar_t*)(in + in_offset);
+    out = (scalar_t*)(out + out_offset);
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int tn = blockDim.x * gridDim.x;
+    for(int i = tid; i < dim * unit_len; i += tn){
+        int unit_id = floor(double(i / unit_len));
+        int unit_offset = i % unit_len;
+        out[i] = in[unit_len * unit_idxs[unit_id] + unit_offset];
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////
 // bind the computation with corresponding stream

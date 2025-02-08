@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(PyGP_Tensor_backend)
+project(PyGP_Tensor_backend CXX CUDA)
 
 execute_process(COMMAND python3-config --prefix
     OUTPUT_VARIABLE Python_ROOT_DIR)
@@ -35,17 +35,17 @@ string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE
 
 ### tree2graph_transformer
 
-add_library(pygp_utils MODULE src/utils_backend.cc)
-target_link_libraries(pygp_utils ${LINKER_LIBS})
-pybind11_extension(pygp_utils)
-pybind11_strip(pygp_utils)
+# add_library(pygp_utils MODULE src/utils_backend.cc)
+# target_link_libraries(pygp_utils ${LINKER_LIBS})
+# pybind11_extension(pygp_utils)
+# pybind11_strip(pygp_utils)
 
-set_target_properties(pygp_utils
-    PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
-    CXX_VISIBILITY_PRESET "hidden"
-    LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
-)
+# set_target_properties(pygp_utils
+#     PROPERTIES
+#     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+#     CXX_VISIBILITY_PRESET "hidden"
+#     LINK_FLAGS "-Wl,-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections"
+# )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set_property(TARGET tree2graph_transformer PROPERTY LINK_OPTIONS -undefined dynamic_lookup)
@@ -53,8 +53,8 @@ endif()
 
 ### cash_backend
 
-string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_C_FLAGS}")
-string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}")
+# string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_C_FLAGS}")
+# string(REGEX REPLACE "-rdynamic" "" CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS}")
 
 add_library(pygp_cash MODULE src/cash_backend.cc)
 target_link_libraries(pygp_cash ${LINKER_LIBS})
@@ -65,7 +65,7 @@ set_target_properties(pygp_cash
     PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
     CXX_VISIBILITY_PRESET "hidden"    
-    LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
+    LINK_FLAGS "-Wl,-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections"
 )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -82,88 +82,132 @@ set(CUDA_NVCC_FLAGS
         --default-stream per-thread
         -O3
 )
-# set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -Wall -s")
-# set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -Wall -s")
-
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -Wall -s")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wall -s")
+set(CUBLAS_STATIC_LIB /home/mazt/cuda-11.4.2/lib64/libcublas_static.a)
+set(CUBLAS_STATIC_PREFIX /home/mazt/cuda-11.4.2/lib64)
 ### tensor backend
+find_package(CUDAToolkit REQUIRED)
 find_package(CUDA REQUIRED)
-if(CUDA_FOUND)
-    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} "src")
-    list(APPEND LINKER_LIBS ${CUDA_CUDART_LIBRARY})#${CUDA_npp_LIBRARY},  ${CUDA_cublas_LIBRARY}
-    set(MODULE_NAMES broadcast_ops basic_tensor_ops judge_ops nn_ops device_info)
+if(CUDAToolkit_FOUND)
+    # 全局 CUDA 编译选项
+    # include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDA_CUBLAS_DIRS} "src")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 --compiler-options -Wall")
+    # 全局 CUDA 链接选项
+    set(CMAKE_CUDA_LINK_FLAGS "${CMAKE_CUDA_LINK_FLAGS} -Wl,--gc-sections")
+    
+    list(APPEND LINKER_LIBS CUDA::cudart)#${CUDA_CUDART_LIBRARY} ${CUDA_npp_LIBRARY},  ${CUDA_cublas_LIBRARY}
+    
+    # include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} "src")
+    # set(MODULE_NAMES broadcast_ops basic_tensor_ops judge_ops nn_ops device_info)
+    
+    # ###  paras.h
+    # CUDA_ADD_LIBRARY(global_streams MODULE src/paras.cu OPTIONS ${ARCH_FLAGS})
+    # # pybind11_add_module(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu)
+    # target_link_libraries(global_streams ${CUDA_CUDART_LIBRARY})#paras
+    # # add_library(global_streams MODULE src/paras.cu)
+
+    # pybind11_extension(global_streams)
+    # pybind11_strip(global_streams)
+    # set_target_properties(global_streams
+    #     PROPERTIES
+    #     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+    #     CXX_VISIBILITY_PRESET "hidden"
+    #     CUDA_VISIBILITY_PRESET "hidden"
+    #     LINK_FLAGS "-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections"
+    #     # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
+    # )
 
     
-    ###  paras.h
-    CUDA_ADD_LIBRARY(global_streams MODULE src/paras.cu OPTIONS ${ARCH_FLAGS})
-    # pybind11_add_module(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu)
-    target_link_libraries(global_streams ${CUDA_CUDART_LIBRARY})#paras
-    # add_library(global_streams MODULE src/paras.cu)
-
-    pybind11_extension(global_streams)
-    pybind11_strip(global_streams)
-    set_target_properties(global_streams
-        PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
-        CXX_VISIBILITY_PRESET "hidden"
-        CUDA_VISIBILITY_PRESET "hidden"
-        LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
-        # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
-    )
-
-    ###  matrix_ops_gpu.cu
-    CUDA_ADD_LIBRARY(matrix_ops_gpu MODULE src/paras.cu OPTIONS ${ARCH_FLAGS})
-    # pybind11_add_module(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu)
-    target_link_libraries(matrix_ops_gpu ${CUDA_CUDART_LIBRARY} ${CUDA_cublas_LIBRARY})#paras
-    # add_library(matrix_ops_gpu MODULE src/paras.cu)
-
-    pybind11_extension(matrix_ops_gpu)
-    pybind11_strip(matrix_ops_gpu)
-    set_target_properties(matrix_ops_gpu
-        PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
-        CXX_VISIBILITY_PRESET "hidden"
-        CUDA_VISIBILITY_PRESET "hidden"
-        LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
-        # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
-    )
     # install(TARGETS paras DESTINATION  ${CMAKE_CURRENT_SOURCE_DIR}/src)
     # install(FILES paras.h DESTINATION  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-    foreach(MODULE_NAME ${MODULE_NAMES})
-        message("Current item: ${item}")
-        CUDA_ADD_LIBRARY(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu OPTIONS ${ARCH_FLAGS})
-        # pybind11_add_module(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu)
-        target_link_libraries(${MODULE_NAME} ${LINKER_LIBS})#paras
-        pybind11_extension(${MODULE_NAME})
-        pybind11_strip(${MODULE_NAME})
-        set_target_properties(${MODULE_NAME}
-            PROPERTIES
-            LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
-            CXX_VISIBILITY_PRESET "hidden"
-            CUDA_VISIBILITY_PRESET "hidden"
-            LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
-            # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
-        )
+    # foreach(MODULE_NAME ${MODULE_NAMES})
+    #     message("Current item: ${item}")
+    #     CUDA_ADD_LIBRARY(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu OPTIONS ${ARCH_FLAGS})
+    #     # pybind11_add_module(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu)
+    #     target_link_libraries(${MODULE_NAME} ${LINKER_LIBS})#paras
+    #     pybind11_extension(${MODULE_NAME})
+    #     pybind11_strip(${MODULE_NAME})
+    #     set_target_properties(${MODULE_NAME}
+    #         PROPERTIES
+    #         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+    #         CXX_VISIBILITY_PRESET "hidden"
+    #         CUDA_VISIBILITY_PRESET "hidden"
+    #         LINK_FLAGS "-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections"
+    #         # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
+    #     )
         
-        # install(TARGETS ${MODULE_NAME}
-        # LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
-        # )
-    endforeach()
+    #     # install(TARGETS ${MODULE_NAME}
+    #     # LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
+    #     # )
+    # endforeach()
+
+    
+    add_library(ndarray_cuda_backend MODULE ${CMAKE_CURRENT_SOURCE_DIR}/src/ndarray_cuda_backend.cu)
+    target_link_libraries(ndarray_cuda_backend ${LINKER_LIBS} 
+        ${CUBLAS_STATIC_LIB}
+        ${CUBLAS_STATIC_PREFIX}/libculibos.a
+        ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
+        ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)#paras ${CUDA_cublas_LIBRARY}
+    set_target_properties(ndarray_cuda_backend
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+        CXX_VISIBILITY_PRESET "hidden"
+        CUDA_VISIBILITY_PRESET "hidden"
+        LINK_FLAGS "-Wl,-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections,--as-needed"
+        # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
+        LINKER_LANGUAGE CUDA
+    )
+    # target_link_options(ndarray_cuda_backend PRIVATE -gc-sections,-exclude-libs=ALL,-ffunction-sections,-fdata-sections)
+    # 针对特定目标的编译选项
+    # target_compile_options(ndarray_cuda_backend PRIVATE --compiler-options -Wextra)
+    # target_link_options(ndarray_cuda_backend PRIVATE -Wl,--gc-sections,-exclude-libs=ALL)
+    # pybind11_add_module(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu)
+    pybind11_extension(ndarray_cuda_backend)
+    pybind11_strip(ndarray_cuda_backend)
+    
+    add_library(pygp_utils MODULE src/utils_backend.cu)
+    target_link_libraries(pygp_utils ${LINKER_LIBS} 
+        ${CUBLAS_STATIC_LIB}
+        ${CUBLAS_STATIC_PREFIX}/libculibos.a
+        ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
+        ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)#paras ${CUDA_cublas_LIBRARY}
+        
+    set_target_properties(pygp_utils
+        PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+        CXX_VISIBILITY_PRESET "hidden"
+        CUDA_VISIBILITY_PRESET "hidden"
+        LINK_FLAGS "-Wl,-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections,--as-needed"
+        # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
+        LINKER_LANGUAGE CUDA
+    )
+    pybind11_extension(pygp_utils)
+    pybind11_strip(pygp_utils)
+
+    
+
 endif()
 
 ### executor backend
 
-if(CUDA_FOUND)
+if(CUDAToolkit_FOUND)
     message(STATUS "Found cuda, building cuda backend")
-    include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} "src")
-    list(APPEND LINKER_LIBS ${CUDA_CUDART_LIBRARY})
+    message(STATUS ${CMAKE_CURRENT_SOURCE_DIR})
+    # include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDA_CUBLAS_DIRS} "src")
+    list(APPEND LINKER_LIBS CUDA::cudart)#${CUDA_CUDART_LIBRARY}
 
     execute_process(COMMAND "nvidia-smi" ERROR_QUIET RESULT_VARIABLE NV_RET)
     # CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS 7.5)
 
-    CUDA_ADD_LIBRARY(executor MODULE src/exec_cuda_backend.cu OPTIONS ${ARCH_FLAGS})
+    add_library(executor MODULE ${CMAKE_CURRENT_SOURCE_DIR}/src/exec_cuda_backend.cu)
 
-    target_link_libraries(executor ${LINKER_LIBS} ${CUDA_cublas_LIBRARY})
+    target_link_libraries(executor ${LINKER_LIBS} 
+        ${CUBLAS_STATIC_LIB}
+        ${CUBLAS_STATIC_PREFIX}/libculibos.a
+        ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
+        ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)# CUDA::cublas 
     pybind11_extension(executor)
     pybind11_strip(executor)
 
@@ -172,8 +216,12 @@ if(CUDA_FOUND)
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
-        LINK_FLAGS "-Wl,-exclude-libs=ALL,-gc-sections"
+        LINK_FLAGS "-Wl,-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections,--as-needed"
+        LINKER_LANGUAGE CUDA
     )
+    # target_link_options(executor PRIVATE -gc-sections,-exclude-libs=ALL,-ffunction-sections,-fdata-sections)
+    # target_compile_options(executor PRIVATE --compiler-options -Wextra)
+    # target_link_options(executor PRIVATE -Wl,--gc-sections,-exclude-libs=ALL)
 else()
     message(STATUS "Can not found CUDA")
 endif()
@@ -190,8 +238,15 @@ install(TARGETS pygp_cash
         )
 
 # Install CUDA modules（if exists）
-if(CUDA_FOUND)
+if(CUDAToolkit_FOUND)
     install(TARGETS executor
             LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/HyperGP/src
             )
 endif()
+
+add_custom_command(TARGET ndarray_cuda_backend POST_BUILD
+    COMMAND strip $<TARGET_FILE:ndarray_cuda_backend>
+)
+add_custom_command(TARGET executor POST_BUILD
+    COMMAND strip $<TARGET_FILE:executor>
+)

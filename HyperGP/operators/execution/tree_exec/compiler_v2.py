@@ -18,7 +18,7 @@ class ExecutableExpr:
             return x
         self.f_avec = [self.pset.genFunc(f_str) for f_str in self.pset.primitiveSet]
         self.f_avec.append(assign)
-        self.func_list = [f.func.exec_number if hasattr(f, "func") and hasattr(f.func, "exec_number") else -1 for f in self.f_avec]
+        self.func_list = [None] * (pset.func_count - len(f_avec)) + [f.func.exec_number if hasattr(f, "func") and hasattr(f.func, "exec_number") else -2 for f in self.f_avec] + [-1]
 
 
     def __call__(self, input, device="cuda"):
@@ -85,7 +85,7 @@ class ExecutableExpr:
                 # print(self.exec_list[idx], arity, self.exec_list[idx + 2: idx+2+arity])
                 # mid_output[0].device.cc()
                 # mid_output[0].device.ewise_add(mid_output[0].cached_data._handle, mid_output[0].cached_data._handle, new_output.cached_data._handle, mid_output[0].cached_data._offset, mid_output[0].cached_data._offset)
-                if self.func_list[self.exec_list[idx]] == -1 or len(self.f_avec[self.exec_list[idx]].kwargs) > 0:# [ ] TODO: can not process the function with default parameters
+                if self.func_list[self.exec_list[idx]] == -2 or len(self.f_avec[self.exec_list[idx]].kwargs) > 0:# [ ] TODO: can not process the function with default parameters
                     if idx - last_exec > 0:
                         mem_space.wait()
                         executor.exec_partial(

@@ -19,36 +19,43 @@ class BaseStruct:
     gmodule_states, gstates = States(), States()   #保护静态属性, 静态属性
     def __init__(self, states:dict=None, module_states:dict=None, **kwargs):
         '''initialize the states'''
-        self.module_states = {}
-        self.states = {}
+        self.states, self.module_states = {}, {}
 
         '''initialize states set'''
         if states is not None:
+            if not isinstance(states, dict):
+                raise ValueError('The value of states should be dict type')
             for key, value in states.items():
                 if callable(value):
                     self.states[key] = value()
                     # setattr(self.states, key, value())
+                else:
+                    self.states[key] = value
 
         '''initialize module states set'''
         if module_states is not None:
+            if not isinstance(module_states, dict):
+                raise ValueError('The value of states should be dict type')
             for key, value in module_states.items():
                 if callable(value):
                     self.module_states[key] = value()
                     # setattr(self.module_states, key, value())
+                else:
+                    self.module_states[key] = value
 
-        '''initialize'''
-        if states is not None:
-            if not isinstance(states, dict):
-                raise ValueError('The value of states should be dict type')
-            for key_s, value_s in states.items():
-                self.states[key_s] = value_s
-                # setattr(self.states, key_s, value_s)
-        if module_states is not None:
-            if not isinstance(module_states, dict):
-                raise ValueError('The value of states should be dict type')
-            for key_s, value_s in module_states.items():
-                self.module_states[key_s] = value_s
-                # setattr(self.module_states, key_s, value_s)
+        # '''initialize'''
+        # if states is not None:
+        #     if not isinstance(states, dict):
+        #         raise ValueError('The value of states should be dict type')
+        #     for key_s, value_s in states.items():
+        #         self.states[key_s] = value_s
+        #         # setattr(self.states, key_s, value_s)
+        # if module_states is not None:
+        #     if not isinstance(module_states, dict):
+        #         raise ValueError('The value of states should be dict type')
+        #     for key_s, value_s in module_states.items():
+        #         self.module_states[key_s] = value_s
+        #         # setattr(self.module_states, key_s, value_s)
         for key, value in kwargs.items():
             setattr(self, key, value)
 

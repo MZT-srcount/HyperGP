@@ -24,14 +24,13 @@ class Executor(ExecMethod):
         # print("prog mean len: ", np.mean([len(prog.list()) for prog in progs]))
         '''pre-conversion'''
         exec_list, states = ExecutableGen()(progs, pset, cashset)
-
         f_avec = [pset.genFunc(f_str) for f_str in pset.primitiveSet]
         
         compile_1 = [True]
         def ret_false():
             compile_1[0] = False
-            return -1
-        func_list = [f.func.idx if hasattr(f, "func") and hasattr(f.func, "idx") else ret_false() for f in f_avec]
+            return -2
+        func_list = [None] * (pset.func_count - len(f_avec)) + [f.func.idx if hasattr(f, "func") and hasattr(f.func, "idx") else ret_false() for f in f_avec] + [-1]
 
         '''compile and run'''
         if compile_1[0] and len(input.shape) == 2 and (isinstance(input, Tensor) or isinstance(input, np.ndarray) or isinstance(input, list)):

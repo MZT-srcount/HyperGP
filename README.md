@@ -104,9 +104,11 @@ python ./examples/workflow_test.py
 2. **Generate the training data**: We can use ``Tensor`` module to generate the array, or use to encapsulate the ``numpy.ndarray`` or the ``list``
 
 ```python
+    pop_size = 1000
+    input_size = 10000
     # Generate training set
-    input_array = HyperGP.tensor.uniform(0, 100, size=(2, input_size))
-    target = (input_array[0] + input_array[0] * input_array[1] * input_array[1]) * (input_array[0]) / (input_array[1] + input_array[0])
+    input_array = HyperGP.tensor.uniform(0, 10, size=(2, input_size))
+    target = (input_array[0] * 3 + input_array[0] * input_array[1] * 2) * (input_array[0])
 
 ```
 3. **Initialize the basic elements**: To run the program, a ``PrimitiveSet`` module is needed to define the used primitives and terminals, ``Population`` module is used to initialize the population, ``GPOptimizer`` is a workflow used to manage the evolution process.
@@ -137,15 +139,12 @@ python ./examples/workflow_test.py
     # Add components
     
     optimizer.iter_component(
-        ParaStates(func=HyperGP.ops.RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
-                    mask=[lambda x=int(pop_size / 2):random.sample(range(pop_size), x), lambda x=int(pop_size / 2):random.sample(range(pop_size), x)]),
-        ParaStates(func=HyperGP.ops.RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=pop_size), True], to=["p_list"],
-                    mask=[lambda x=pop_size:random.sample(range(pop_size), x), 1, 1]),
-        ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None],
-                    mask=[1, 1, 1]),
+        ParaStates(func=HyperGP.ops.RandTrCrv(), source=["p_list", "p_list", 0.9], to=["p_list", "p_list"],
+                    mask=[lambda x=int(pop_size / 2):random.sample(range(pop_size), x), lambda x=int(pop_size / 2):random.sample(range(pop_size), x), 1]),
+        ParaStates(func=HyperGP.ops.RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[1, 3], len_limit=pop_size), 0.1, True], to=["p_list"], mask=[lambda x=pop_size:random.sample(range(pop_size), x), 1, 1, 1]),
+        ParaStates(func=HyperGP.executor, source=["p_list", "input", "pset"], to=["output", None], mask=[1, 1, 1]),
         ParaStates(func=HyperGP.ops.rmse, source=["output", "target"], to=["fit_list"]),
-        ParaStates(func=HyperGP.ops.tournament, source=["p_list", "pp_list", "fit_list", "pfit_list"], to=["p_list", "pp_list", "fit_list", "pfit_list"],
-                    mask=[1, 1, 1, 1])
+        ParaStates(func=HyperGP.ops.tournament, source=["p_list", "pp_list", "fit_list", "pfit_list"], to=["p_list", "pp_list", "fit_list", "pfit_list"], mask=[1, 1, 1, 1]),
     )
 
 ```
@@ -154,7 +153,7 @@ python ./examples/workflow_test.py
 ```python
     # Iteratively run
     optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list")
-    optimizer.run(50, stop_criteria=lambda: HyperGP.tensor.min(optimizer.workflowstates.fit_list) < 1e-9, tqdm_diable=False)
+    optimizer.run(100, stop_criteria=lambda: HyperGP.tensor.min(optimizer.workflowstates.fit_list) < 1e-15, tqdm_diable=False)
 
 ```
 

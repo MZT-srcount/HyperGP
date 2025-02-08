@@ -172,7 +172,7 @@ class GpOptimizer(BaseStruct, __Mods):
             for j, (func, from_l_pre, to_l, mask_l) in enumerate(zip(self.components['func_list'], self.components['from_list'], self.components['to_list'], mask_list)):
                 from_l = [[] for l in range(len(from_l_pre))]
                 for k in range(len(from_l_pre)):
-                    if isinstance(from_l_pre[k], str):
+                    if isinstance(from_l_pre[k], str) and from_l_pre[k] in self.workflowstates:
                         from_l[k] = self.workflowstates[from_l_pre[k]]
                     else:
                         from_l[k] = from_l_pre[k]
@@ -233,6 +233,7 @@ class GpOptimizer(BaseStruct, __Mods):
             
             for monitor in self.monitors:
                 track_object = monitor[1]
+                setattr(monitor[0], 'iter', i)
                 if isinstance(monitor[1], str):
                     track_object = self.workflowstates[monitor[1]]
                     monitor_ret = monitor[0](track_object, save_path=monitor[2])
