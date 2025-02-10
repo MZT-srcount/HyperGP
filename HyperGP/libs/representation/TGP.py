@@ -75,7 +75,7 @@ class TGPIndv(Program):
         """
          
         encode = method(cond, node_states)
-        replace_array = np.array([elem for node in encode for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)])
+        replace_array = np.array([elem for node in encode for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)], dtype=np.float32)
 
         self._pset_map = {(node.idx if node.arity > 0 else -(node.idx + 1)):node for node in encode if node.idx != -1 and (node.idx if node.arity > 0 else -(node.idx + 1)) not in self._pset_map}
         self._encode_array = replace_array

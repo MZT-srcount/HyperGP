@@ -15,7 +15,7 @@ class Program(BaseStruct):
             self._encode = None
             self._encode_array = None
         else:
-            replace_array = np.array([elem for node in encode for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)])
+            replace_array = np.array([elem for node in encode for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)], dtype=np.float32)
             self._pset_map = {(node.idx if node.arity > 0 else -(node.idx + 1)):node for node in encode if node.idx != -1 and (node.idx if node.arity > 0 else -(node.idx + 1)) not in self._pset_map}
             self._encode_array = replace_array
             # self.stateRegister(encode=root)
@@ -39,7 +39,7 @@ class Program(BaseStruct):
     def buildProgram(self, cond, method, node_states=None, **kwargs):
         
         encode = method(cond, node_states)
-        replace_array = np.array([elem for node in encode for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)])
+        replace_array = np.array([elem for node in encode for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)], dtype=np.float32)
 
         self._pset_map = {(node.idx if node.arity > 0 else -(node.idx + 1)):node for node in encode if node.idx != -1 and (node.idx if node.arity > 0 else -(node.idx + 1)) not in self._pset_map}
         self._encode_array = replace_array
@@ -118,7 +118,7 @@ class Program(BaseStruct):
             key_slice = key if isinstance(key, slice) else slice((key, key + 1))
             elems = []
             replace_array = value[0]
-            self._encode_array = np.concatenate((self._encode_array[:key_slice.start * 3], replace_array, self._encode_array[key_slice.stop * 3:]))
+            self._encode_array = np.concatenate((self._encode_array[:key_slice.start * 3], replace_array, self._encode_array[key_slice.stop * 3:]), dtype=np.float32)
             self._pset_map.update(value[1])
         else:
             replace_array = value[0]
@@ -147,11 +147,11 @@ class Program(BaseStruct):
         if self._encode_array is not None:
             key_slice = key if isinstance(key, slice) else slice((key, key + 1))
             elems = []
-            replace_array = np.array([elem for node in value for elem in self.gen_array(node)])
-            self._encode_array = np.concatenate((self._encode_array[:key_slice.start * 3], replace_array, self._encode_array[key_slice.stop * 3:]))
+            replace_array = np.array([elem for node in value for elem in self.gen_array(node)], dtype=np.float32)
+            self._encode_array = np.concatenate((self._encode_array[:key_slice.start * 3], replace_array, self._encode_array[key_slice.stop * 3:]), dtype=np.float32)
             # self._pset_map.update({int((replace_array[index] if replace_array[index + 1] > 0 else -(replace_array[index] + 1))):value[int(index / 3)] for index in range(0, len(replace_array), 3) if replace_array[index + 2] != 2 and int(replace_array[index] if replace_array[index + 1] > 0 else -(replace_array[index] + 1)) not in self._pset_map})
         else:
-            replace_array = np.array([elem for node in value for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)])
+            replace_array = np.array([elem for node in value for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)], dtype=np.float32)
             self._encode_array = replace_array
             self._pset_map = {int((replace_array[index] if replace_array[index + 1] > 0 else -(replace_array[index] + 1)) * replace_array[index]):value[int(index / 3)] for index in range(0, len(replace_array), 3) if replace_array[index + 2] != 2 and int(replace_array[index] if replace_array[index + 1] > 0 else -(replace_array[index] + 1)) not in self._pset_map}
             

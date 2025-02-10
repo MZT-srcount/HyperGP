@@ -71,8 +71,8 @@ namespace pygp_utils{
     std::mutex mtx, mtx_constval;
 
     template<typename scalar_t>
-    void transformer(const std::tuple<std::vector<std::string>, std::vector<int>, int>& f_attrs, 
-                     const std::vector<std::vector<size_t>>& ind_after_cashes, const std::vector<std::vector<size_t>>& idxs, size_t sym_set_ptr,
+    void transformer(const std::tuple<std::vector<std::string>, std::vector<int>, int>* f_attrs, 
+                     const std::vector<size_t>* ind_after_cashes, const std::vector<size_t>* idxs, size_t sym_set_ptr,
                      std::vector<std::vector<int>>* cash_list, const std::vector<std::vector<int>>& records, std::vector<float>* constants,
                      const std::vector<int>& paras, int* id_allocator, const std::tuple<int, int, int>& basic_info, std::vector<std::vector<std::vector<int>>>* exp_set,
                      std::vector<int>* record_posi, std::vector<std::string>* record_strs, int* const_idx){
@@ -83,7 +83,7 @@ namespace pygp_utils{
         std::unordered_map<std::string, std::array<int, 2>> output;
         int node_size = 0;
         for(int i = cur_ind; i < compute_unit + cur_ind; ++i){
-            node_size += idxs[i][1];
+            node_size += (*idxs)[i * 2 + 1];
         }
 
         (*exp_set).reserve(node_size * exec_len_max);
@@ -99,9 +99,9 @@ namespace pygp_utils{
         
         register size_t idxs_size = compute_unit + cur_ind;
         
-        std::vector<std::string> f_name = std::get<0>(f_attrs);
-        std::vector<int> f_arity;// = std::get<1>(f_attrs);
-        int func_len = std::get<2>(f_attrs);
+        std::vector<std::string> f_name = std::get<0>((*f_attrs));
+        std::vector<int> f_arity;// = std::get<1>((*f_attrs));
+        int func_len = std::get<2>((*f_attrs));
         int cur_expset_size = 0;
         int init_origin_posi = cur_posi;
         register int max_layer, child_size, idx, layer;
@@ -110,8 +110,8 @@ namespace pygp_utils{
         size_t ind_cashes_size;
         std::string sym_child;
         for(int k = cur_ind; k < idxs_size; ++k){
-            float* idxs_ptr = (float*)(idxs[k][0]);
-            int idxs_ksize = idxs[k][1];
+            float* idxs_ptr = (float*)((*idxs)[k * 2]);
+            int idxs_ksize = (*idxs)[k * 2 + 1];
             std::vector<std::vector<int>> node_childs(idxs_ksize);
             
             if((*cash_list).size() > 0){
@@ -126,11 +126,11 @@ namespace pygp_utils{
             }
             getChilds(idxs_ptr, f_arity, idxs_ksize, node_childs, func_len);
             
-            ind_cashes_size = ind_after_cashes[k][1];
+            ind_cashes_size = (*ind_after_cashes)[k * 2 + 1];
             // if(ind_cashes_size == 1 && ind_after_cashes[k][0] != 0){
             //     ind_cashes_size = ind_after_cashes[k][0];
             // }
-            int* preorder_offset = (int*)(ind_after_cashes[k][0]);
+            int* preorder_offset = (int*)((*ind_after_cashes)[k * 2]);
             for(int ii = ind_cashes_size - 1; ii>=0; --ii){
                 int i = preorder_offset[ii], iter_i = i + init_origin_posi;
                 idx = int(idxs_ptr[i * 3]);
@@ -478,24 +478,28 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
         return std::tuple<py::array_t<int>, py::array_t<float>>(exprs, consts);
     });
     m.def("tree2graph", [](std::tuple<std::vector<std::string>, std::vector<int>, int> f_attrs, 
-                     std::vector<py::array_t<int>> ind_after_cashes, std::vector<py::array_t<float>> idxs, size_t sym_set_ptr,
-                     std::vector<std::vector<int>> cash_list, std::vector<std::vector<int>> records, std::vector<int> paras){
+                     pybind11::list& ind_after_cashes, pybind11::list& idxs, size_t sym_set_ptr,
+                     std::vector<std::vector<int>>& cash_list, std::vector<std::vector<int>>& records, std::vector<int>& paras){
         // printf("idxs: %d\n", idxs.size());
-        long max_thread_num = 8;//sysconf(_SC_NPROCESSORS_ONLN) / 10;
-        if (idxs.size() < max_thread_num){
+        long max_thread_num = 10;//sysconf(_SC_NPROCESSORS_ONLN) / 10;
+        int idxs_len = py::len(idxs);
+        if (idxs_len < max_thread_num){
             max_thread_num = 1;
         }
-        int ind_num = idxs.size(), compute_unit = ceil(float(ind_num) / max_thread_num);
+        int ind_num = idxs_len, compute_unit = ceil(float(ind_num) / max_thread_num);
         int batch = ceil(ind_num / compute_unit), cur_posi = 0, cur_ind = 0;
         if (max_thread_num > batch){
             max_thread_num = batch;
         }
         
-        std::vector<std::vector<size_t>> idxs_buf(ind_num);
-        std::vector<std::vector<size_t>> buf_ind_after_cashes(ind_num);
+        std::vector<size_t> idxs_buf(ind_num * 2);
+        std::vector<size_t> buf_ind_after_cashes(ind_num * 2);
+        py::buffer_info idxs_buf_tmp, buf_ind_after_cashes_tmp;
         for(int k = 0; k < ind_num; ++k){
-            idxs_buf[k] = {size_t(idxs[k].request().ptr), size_t(idxs[k].request().shape[0] / 3)};
-            buf_ind_after_cashes[k] = {size_t(ind_after_cashes[k].request().ptr), size_t(ind_after_cashes[k].request().shape[0])};
+            idxs_buf_tmp = py::reinterpret_borrow<py::array_t<float>>(idxs[k]).request();
+            buf_ind_after_cashes_tmp = py::reinterpret_borrow<py::array_t<int>>(ind_after_cashes[k]).request();
+            idxs_buf[k * 2] = size_t(idxs_buf_tmp.ptr), idxs_buf[k * 2 + 1] = size_t(idxs_buf_tmp.shape[0] / 3);
+            buf_ind_after_cashes[k * 2] = size_t(buf_ind_after_cashes_tmp.ptr), buf_ind_after_cashes[k * 2 + 1] = size_t(buf_ind_after_cashes_tmp.shape[0]);
         }
 
         std::thread* t_list = new std::thread[max_thread_num];
@@ -518,18 +522,18 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
                 t_list[k % max_thread_num].join();
             }
             std::tuple<int, int, int> basic_info = std::tuple<int, int, int>(cur_ind, cur_posi, compute_unit);
-            t_list[k % max_thread_num] = std::thread(transformer<scalar_t>, f_attrs, buf_ind_after_cashes, idxs_buf, sym_set_ptr, &cash_list, records, &constants, paras, &id_allocator, basic_info, &(exp_set[k]), &(record_posi[k]), &(record_strs[k]), &const_idx);
+            t_list[k % max_thread_num] = std::thread(transformer<scalar_t>, &f_attrs, &buf_ind_after_cashes, &idxs_buf, sym_set_ptr, &cash_list, records, &constants, paras, &id_allocator, basic_info, &(exp_set[k]), &(record_posi[k]), &(record_strs[k]), &const_idx);
             // transformer(f_attrs, ind_after_cashes, idxs, sym_set_ptr, cash_list, records, constants, paras, id_allocator, cur_ind, cur_posi, compute_unit, exp_set[k]);
             // if(k < batch - 1){
                 for(int i = 0; i < compute_unit; ++i){
-                    cur_posi += idxs_buf[k * compute_unit + i][1];
+                    cur_posi += idxs_buf[(k * compute_unit + i) * 2 + 1];
                 }
             // }
             cur_ind += compute_unit;
         }
         compute_unit = ind_num - (batch - 1) * compute_unit;
         std::tuple<int, int, int> basic_info = std::tuple<int, int, int>(cur_ind, cur_posi, compute_unit);
-        transformer<scalar_t>(f_attrs, buf_ind_after_cashes, idxs_buf, sym_set_ptr, &cash_list, records, &constants, paras, &id_allocator, basic_info, &(exp_set[batch - 1]), &(record_posi[batch - 1]), &(record_strs[batch - 1]), &const_idx);
+        transformer<scalar_t>(&f_attrs, &buf_ind_after_cashes, &idxs_buf, sym_set_ptr, &cash_list, records, &constants, paras, &id_allocator, basic_info, &(exp_set[batch - 1]), &(record_posi[batch - 1]), &(record_strs[batch - 1]), &const_idx);
         // for(int k = 0; k < max_thread_num; ++k){
         //     if(t_list[k].joinable()){
         //         t_list[k].join();
@@ -538,7 +542,7 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
         // clock_t et = std::clock();
         // printf("t2g time 00 et - st: %f\n", (double)(et - st) / CLOCKS_PER_SEC);
         std::vector<int> layer_info_final;
-        layer_info_final.reserve(idxs_buf[0][1]);
+        layer_info_final.reserve(idxs_buf[1]);
         int exec_len[batch] = {0}, exec_final_len = 0;
         for(int k = 0; k < batch - 1; ++k){
             if(t_list[k % max_thread_num].joinable()){
