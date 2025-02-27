@@ -19,6 +19,19 @@ class RandTrMut(MutMethod):
 
     """
     def __call__(self, prog, cond: ProgBuildStates, prob=1, node_states=None, method=HalfAndHalf, **kwargs):
+    
+        """
+        Call RandTrMut method.
+
+        Args:
+            prog: The individual
+            cond: The 'cond' will be pass to the 'method' to generate the random subtree
+            prob: The probability to perform the subtree mutation.
+            method: The method called to generate subtree, in which the fixed parameter types:(cond, node_states) will be passed to in this call.
+
+        Returns:
+            A new prog
+        """
         if random.uniform(0, 1) < prob:
             subtr_1 = prog.slice(random.randint(0, len(prog) - 1))
             subtr_2 = method()(cond, node_states)
@@ -27,33 +40,63 @@ class RandTrMut(MutMethod):
 
 
 class RandHoistMut(MutMethod):
-    def __call__(self, prog, cond: ProgBuildStates):
+    
+    """Perform the hoist mutation operation on the program.
 
-        rd_1 = random.randint(0, len(prog) - 1)
-        subtr_1 = prog.slice(rd_1)
-        subtr_2 = prog.slice(random.randint(rd_1, rd_1 + subtr_1 - 1))
-        prog[subtr_1] = prog[subtr_2]
+       Hoist mutation selects a random subtree from the embedded program, replacing it by a random subtree of the selected mutation subtree.
+
+    """
+
+    def __call__(self, prog, prob=1):
+        """
+        Call RandHoistMut method.
+
+        Args:
+            prog: The individual
+            prob: The probability to perform the subtree mutation.
+            
+        Returns:
+            A new prog
+        """
+        if random.uniform(0, 1) < prob:
+            rd_1 = random.randint(0, len(prog) - 1)
+            subtr_1 = prog.slice(rd_1)
+            subtr_2 = prog.slice(random.randint(rd_1, rd_1 + subtr_1 - 1))
+            prog[subtr_1] = prog[subtr_2]
 
         return prog
 
 
 class RandPointMut(MutMethod):
-    def __call__(self, prog, cond: ProgBuildStates, node_states=None):
-        rd_1 = random.randint(0, len(prog) - 1)
-        rd_node = prog[rd_1]
-        arity = rd_node.arity
-        cdds = []
-        if arity == 0:
-            cdd = cond.pset.selectTerminal(random)
-        else:
-            func_set = cond.pset.primitiveSet
-            for i in range(len(func_set)):
-                if func_set[i].arity == arity:
-                    cdds.append(i)
-            cdd = cdds[random.randint(0, len(cdds) - 1)]
-            cdd = cond.pset.selectFunc(cdd)
-        new_node = TreeNode(cdd, node_states)
-        prog[rd_1] = new_node
+    
+    """Perform the point mutation operation on the program.
+
+       Point mutation selects a random node from the embedded program, replacing it by a random node from pset with the same arity.
+
+    """
+    def __call__(self, prog, cond: ProgBuildStates, prob=1):
+        """
+        Call RandHoistMut method.
+
+        Args:
+            prog: The individual
+            cond: Used to generate new node to make point mutation. The `primitiveSet` module should be in it.
+            prob: The probability to perform the subtree mutation.
+            
+        Returns:
+            A new prog
+        """
+
+        if random.uniform(0, 1) < prob:
+            pset = cond.pset
+            rd_posi = random.randint(0, len(prog) - 1)
+            arity = prog.get_encode(rd_posi)[1]
+            if arity == 0:
+                prog[rd_posi] = cond.pset.selectTerminal()
+            else:
+                func_set = pset.primitiveSet
+                cdds = [func for func in func_set if pset.genFunc(func).arity == arity]
+                prog[rd_posi] = pset.genFunc(cdds[random.randint(0, len(cdds) - 1)])
         return prog
 
 

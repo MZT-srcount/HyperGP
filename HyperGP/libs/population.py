@@ -21,10 +21,51 @@ def build(prog_para, prog_states, node_state, method=None, indiv_type=TGPIndv):
     return indiv
 
 class Population(PopBase):
-    def __init__(self, parallel=False, GPU=False, states=None, module_states=None, **kwargs):
-        super().__init__(parallel, GPU, states, module_states, **kwargs)
+    """
+    `Population` Module is used to initialize the population with given methods and states.
+    """
+
+    def __init__(self, states=None, module_states=None, **kwargs):#, parallel=False, GPU=False
+        
+        """
+        Initialize the `population` and register the needed states.
+        
+        Args:
+            states(PyGP.States):
+            module_states(PyGP.States):
+            kwargs:
+        
+        Returns:
+            a new ``Population`` module
+        
+        Examples:
+            >>> optimizer = Population()
+        """
+
+        super().__init__(False, True, states, module_states, **kwargs)
 
     def initPop(self, pop_size, prog_paras: ProgBuildStates or [ProgBuildStates], prog_states: dict or list = None, node_states=None, methods:ProgBuildMethod or list=None, indivs_type=TGPIndv, **kwargs):
+        
+        """
+        Initialize a population using the 'methods', with a given population size.
+        The population can be initialize with a single method and state or with a list of them.
+
+        Args:
+            pop_size(int): The population size
+            prog_paras: The paras to the 'methods' to initialize the individuals. If the 'methods' is a list-like object, the 'prog_paras' should be a list-like object too and its length should be equal to the pop_size.
+            prog_states: The states to register to the inidividuals. Also, if the 'methods' is a list-like object, the 'prog_paras' should be a list-like object and its length should be equal to the pop_size.
+            methods: The methods used to initialize the individuals. If it is a list-like object, each individual will be initialize with the corresponding different methods.
+            indivs_type: The type of individuals to create.
+        
+        Returns:
+            The individuals initialized will be store in the 'self.states['progs'].indivs'.
+        
+        Examples:
+            >>> optimizer = Population()
+            >>> pop.initPop(pop_size=pop_size, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 6], len_limit=1000))
+
+        """
+        
         prog = []
         fitness = []
 
