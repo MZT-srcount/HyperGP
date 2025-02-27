@@ -51,5 +51,9 @@ HyperGP assumes that you already understand the basic concepts of Genetic Progra
    :maxdepth: 2
    :caption: User Library:
 
+<<<<<<< HEAD
    User Library/Operators/index
    User Library/Algorithms/index
+=======
+   User Library/Operators/index
+>>>>>>> dev_docs
