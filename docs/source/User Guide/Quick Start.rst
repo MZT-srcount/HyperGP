@@ -86,7 +86,7 @@ Here, We introduce the basic usage of HyperGP
                     mask=[1, 1, 1, 1]),
     )
 
-9. **Run the optimizer and monitor the states wanted to print**
+7. **Run the optimizer and monitor the states wanted to print**
 
 .. code-block:: python
    :linenos:
