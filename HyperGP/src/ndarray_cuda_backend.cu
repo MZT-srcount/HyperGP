@@ -155,7 +155,7 @@ void TEMPLATE_BIND_ARRAY(py::module& m){
         .def_readonly("dev_id", &Array<scalar_t>::device_id)
         .def("ptr", &Array<scalar_t>::ptr_as_int);
     
-    m.def("to_numpy", [](Array<scalar_t>& a, std::vector<size_t> shape, std::vector<size_t> strides, size_t offset){
+    m.def("to_numpy", [](Array<scalar_t>& a, std::vector<size_t> shape, std::vector<size_t> strides, size_t offset, bool async){
         /* [ ] TODO: The following three rows should be replaced after using async alloc
                         by: Scalar_t* Array<scalar_t> = a_ptr;
         */
@@ -170,7 +170,9 @@ void TEMPLATE_BIND_ARRAY(py::module& m){
         const size_t ELEM_SIZE = sizeof(scalar_t);
         scalar_t* array = new scalar_t[shape_size];
         cudaMemcpyAsync(array, a.ptr + offset, shape_size * ELEM_SIZE, cudaMemcpyDeviceToHost, streams[a.device_id][a.stream_id]);
-        cudaStreamSynchronize(streams[a.device_id][a.stream_id]);
+        if(!async){
+            cudaStreamSynchronize(streams[a.device_id][a.stream_id]);
+        }
         std::vector<size_t> numpy_strides = strides;
         std::transform(numpy_strides.begin(), numpy_strides.end(), numpy_strides.begin(), [](size_t& c){return c * ELEM_SIZE;} );
         

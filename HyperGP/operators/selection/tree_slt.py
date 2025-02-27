@@ -2,26 +2,41 @@ import random
 import numpy as np
 from ... import tensor
 
-class SltMethod:
-    def __call__(self, *args, **kwargs):
-        raise NotImplementedError("No find '__call__' implement")
+# class SltMethod:
+#     def __call__(self, *args, **kwargs):
+#         raise NotImplementedError("No find '__call__' implement")
 
-class TourWithRep(SltMethod):
-    def __call__(self, fits, rd_state=random):
-        return np.argmin(fits)
+# class TourWithRep(SltMethod):
+#     def __call__(self, fits, rd_state=random):
+#         return np.argmin(fits)
 
-class TourNoRep(SltMethod):
-    def __call__(self, fits, slt_num, cdd_size=2, rd_state=random):
-        fit_list = list(range(len(fits)))
-        winner = []
-        for i in range(slt_num):
-            cdds_idx = random.sample(fit_list, cdd_size)
-            cdds_fit = list(map(lambda idx: fits[idx], cdds_idx))
-            winner.append(cdds_idx[np.argmin(cdds_fit)])
-        return winner
+# class TourNoRep(SltMethod):
+#     def __call__(self, fits, slt_num, cdd_size=2, rd_state=random):
+#         fit_list = list(range(len(fits)))
+#         winner = []
+#         for i in range(slt_num):
+#             cdds_idx = random.sample(fit_list, cdd_size)
+#             cdds_fit = list(map(lambda idx: fits[idx], cdds_idx))
+#             winner.append(cdds_idx[np.argmin(cdds_fit)])
+#         return winner
 
 
 def tournament(p1, p2, f1, f2, tour_size=3, len_limit=100, best_keep=True):
+    """
+    Selects from (p1 + p2, f1 + f2) to generate a new population.
+
+    Args:
+        p1(list-like object): Population_1
+        p2(list-like object): Population_2
+        f1(like-like object or Hyper.tensor): The fitness corresponding to the p1
+        f2(like-like object or Hyper.tensor): The fitness corresponding to the p2
+        tour_size(int): 
+        len_limit: The length limit to each individual, the individual with len > len_limit will be directly given up.
+        best_keep(bool): Whether keep the best individual.
+    
+    Returns:
+        A list-like object: [population, population(copy), fitness, fitness(copy)]
+    """
     p_list, f_list = p1 + p2,  tensor.concatenate((f1, f2))
     legal_list = [z for z, prog in enumerate(p_list) if len(prog) < len_limit]
     if best_keep:
@@ -37,7 +52,7 @@ def tournament(p1, p2, f1, f2, tour_size=3, len_limit=100, best_keep=True):
     # print('------------', np.mean([len(ind) for ind in p_new]), np.mean([len(p_list[idx]) for idx in legal_list]))
     return [ind.copy() for ind in p_new], p_new, f_new, f_new.copy()
 
-
+# def tournament(p1, p2, f1, f2, tour_size=3, len_limit=100, best_keep=True):
 
 if __name__ == '__main__':
     fit1 = [1, 2, 3]

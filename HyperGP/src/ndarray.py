@@ -383,8 +383,8 @@ class NDArray:
             array = basic_ops_gpu().to_numpy(self._shape, self._stride, self._offset)
             return NDArray(array, None, device)
     
-    def numpy(self):
-        return basic_ops_gpu().to_numpy(self._handle, self._shape, self._stride, self._offset)
+    def numpy(self, asynchronize=False):
+        return basic_ops_gpu().to_numpy(self._handle, self._shape, self._stride, self._offset, asynchronize)
 
     def ptr(self):
         return self._handle.ptr()
@@ -783,7 +783,7 @@ class NDArray:
         if stop <= start:
             raise ValueError("Start must be less than stop")
         if step <= 0:
-            raise ValueError("No support for  negative increments")
+            raise ValueError("No support for negative increments")
         return slice(start, stop, step)
     
     """ Matrix operation"""

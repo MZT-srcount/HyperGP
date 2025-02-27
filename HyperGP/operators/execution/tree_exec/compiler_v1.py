@@ -24,6 +24,7 @@ class ExecutableExpr:
         outputs = NDArray.make(shape=(self.prog_size, input.shape[1]), dtype=input.dtype)#gpu().Array(len(progs) * input.shape[1])
         records = NDArray.make(shape=(len(self.records_posi), input.shape[1]) if len(self.records_posi) > 0 else (1,), dtype=input.dtype)#gpu().Array(len(records_posi) * input.shape[1] if len(records_posi) > 0 else 1)
         paras = (self.exec_unit_len, self.x_len, len(self.pset.arguments) + self.prog_size, self.prog_size, len(self.pset.arguments))
+        
         if isinstance(input, Tensor):
             new_input = input
         else:
@@ -44,6 +45,7 @@ class ExecutableExpr:
         
         outputs=Tensor(NDArray.make(handle=outputs._handle, shape=tuple([self.prog_size] + list(input.shape[1:])), dtype=outputs.dtype))
         records=Tensor(NDArray.make(handle=records._handle, shape=tuple([len(self.records_posi)] + list(input.shape[1:])), dtype=records.dtype))
+        
         # print('et: ', time.time() - st)
         return outputs, States(records_array=records, records_posi=self.records_posi, records_str=self.states['record_strs'])
     def __str__(self):

@@ -23,7 +23,11 @@ class Executor(ExecMethod):
     def __call__(self, progs, input:np.array, pset: PrimitiveSet, cashset:CashManager=None):
         # print("prog mean len: ", np.mean([len(prog.list()) for prog in progs]))
         '''pre-conversion'''
+        # import time
+        # st = time.time()
         exec_list, states = ExecutableGen()(progs, pset, cashset)
+        # print('t1 ', time.time() - st)
+        # st = time.time()
         f_avec = [pset.genFunc(f_str) for f_str in pset.primitiveSet]
         
         compile_1 = [True]
@@ -37,7 +41,7 @@ class Executor(ExecMethod):
             
             expr = compile_v1(exec_list, pset, states, func_list)
             output, records = expr(input)
-
+            # print('...compile_v1...')
             # expr2 = compile_v2(exec_list, pset, states)
             # output2, _ = expr2(input)
             
@@ -54,6 +58,8 @@ class Executor(ExecMethod):
         else:
             expr = compile_v2(exec_list, pset, states)
             output, records = expr(input)
+            # print('...compile_v2...')
+        # print('t2 ', time.time() - st)
         return output, records
 
 def executor(progs, input, pset: PrimitiveSet, cashset:CashManager=None):

@@ -80,7 +80,6 @@ namespace pygp_utils{
         int cur_posi = std::get<1>(basic_info);
         int compute_unit = std::get<2>(basic_info);
         int arguments_num = paras[0], exec_len_max = paras[2], pset_funcs_num = paras[3];
-        std::unordered_map<std::string, std::array<int, 2>> output;
         int node_size = 0;
         for(int i = cur_ind; i < compute_unit + cur_ind; ++i){
             node_size += (*idxs)[i * 2 + 1];
@@ -105,12 +104,20 @@ namespace pygp_utils{
         int cur_expset_size = 0;
         int init_origin_posi = cur_posi;
         register int max_layer, child_size, idx, layer;
-        std::string sym;
+        // std::string sym;
+        // sym.reserve(100);
+        std::unordered_map<std::string, std::array<int, 2>> output;
+        output.reserve(compute_unit * 100);
         std::vector<int> exps(exec_len_max);
         size_t ind_cashes_size;
         std::string sym_child;
+        register int id_cur;
+        register int constid_cur;
+        register int node_id = 0;
         for(int k = cur_ind; k < idxs_size; ++k){
-            float* idxs_ptr = (float*)((*idxs)[k * 2]);
+
+            float* idxs_ptr = reinterpret_cast<float*>((*idxs)[k * 2]);
+            
             int idxs_ksize = (*idxs)[k * 2 + 1];
             std::vector<std::vector<int>> node_childs(idxs_ksize);
             
@@ -119,66 +126,64 @@ namespace pygp_utils{
                 std::vector<int>& cash_list_k = (*cash_list)[k];
                 for(int i = 0; i < cash_list_ksize; ++i){
                     mtx.lock();
-                    output[sym_set[cash_list_k[i]]] = {(*id_allocator), 0};
-                    (*id_allocator) += 1;
+                    id_cur = (*id_allocator)++;
                     mtx.unlock();
+                    output[sym_set[cash_list_k[i]]] = {id_cur, 0};
                 }
             }
-            getChilds(idxs_ptr, f_arity, idxs_ksize, node_childs, func_len);
-            
             ind_cashes_size = (*ind_after_cashes)[k * 2 + 1];
             // if(ind_cashes_size == 1 && ind_after_cashes[k][0] != 0){
             //     ind_cashes_size = ind_after_cashes[k][0];
             // }
-            int* preorder_offset = (int*)((*ind_after_cashes)[k * 2]);
+            int* preorder_offset = reinterpret_cast<int*>((*ind_after_cashes)[k * 2]);
+
+            getChilds(idxs_ptr, f_arity, idxs_ksize, node_childs, func_len);
             for(int ii = ind_cashes_size - 1; ii>=0; --ii){
-                int i = preorder_offset[ii], iter_i = i + init_origin_posi;
+                register int i = preorder_offset[ii];
                 idx = int(idxs_ptr[i * 3]);
                 child_size = node_childs[i].size();
                 if(idxs_ptr[i * 3 + 2] == 0){
                     // assert (child_size == idxs_ptr[i * 3 + 1]);
                     // sym.reserve(100);
-                    if(pre_symset){
-                        sym = sym_set[i];
+                    // sym_set[i].reserve(100);
+                    if(!pre_symset){
+                        sym_set[i] = f_name[idx] + '(';
                     }
-                    else{
-                        sym = f_name[idx] + '(';
-                    }
-
-                    max_layer = 0;
-                    
-                    exps[0] = idx;
-                    exps[1] = child_size;
                     for (int j = 0; j < child_size; ++j){
-                        sym_child = sym_set[node_childs[i][j]];
-                        layer = output[sym_child][1];
-                        exps[j + 2] = output[sym_child][0];
-                        
                         if(!pre_symset){
-                            sym += sym_child + ", ";
-                        }
-                        if (layer > max_layer){
-                            max_layer = layer;
+                            sym_set[i] += sym_set[node_childs[i][j]] + ", ";
                         }
                     }
                     if (!pre_symset){
-                        sym = sym.erase(sym.size() - 2, 2) + ')';
-                        sym_set[i] = sym;
+                        sym_set[i][sym_set[i].size() - 2] = ')';
+                        sym_set[i].pop_back();
                     }
 
-                    if(output.count(sym) == 0 || i == 0){
+                    if(output.find(sym_set[i]) == output.end() || i == 0){
                         
+                        max_layer = 0;
+                        
+                        exps[0] = idx;
+                        exps[1] = child_size;
+                        for (int j = 0; j < child_size; ++j){
+                            node_id = node_childs[i][j];
+                            layer = output[sym_set[node_id]][1];
+                            exps[j + 2] = output[sym_set[node_id]][0];
+                            if (layer > max_layer){
+                                max_layer = layer;
+                            }
+                        }
                         if (i == 0){
                             exps[child_size + 2] = arguments_num + k;
-                            output[sym] = {arguments_num + k, max_layer + 1};
+                            output[sym_set[i]] = {arguments_num + k, max_layer + 1};
                         }
                         else{
                             /// [ ] TODO: record_dict should be replaced by list struct
                             mtx.lock();
-                            exps[child_size + 2] = (*id_allocator);
-                            output[sym] = {(*id_allocator), max_layer + 1};
-                            (*id_allocator) += 1;
+                            id_cur = (*id_allocator)++;
                             mtx.unlock();
+                            exps[child_size + 2] = id_cur;
+                            output[sym_set[i]] = {id_cur, max_layer + 1};
                         }
                         
                         if (max_layer >= cur_expset_size){
@@ -189,6 +194,9 @@ namespace pygp_utils{
                             (*exp_set)[max_layer].push_back(exps);
                         }
                     }
+                    // else{
+                    //     printf("here...%s, cur_ind:%d, k:%d, compute_unit:%d\n", sym_set[i].c_str(), cur_ind, k, compute_unit);
+                    // }
 
                 }
                 else{
@@ -208,9 +216,9 @@ namespace pygp_utils{
                         else{
                             (*constants).push_back(idxs_ptr[i * 3]);
                             mtx_constval.lock();
-                            output[node_str] = {-*const_idx - 1, 0};
-                            *const_idx += 1;
+                            constid_cur = (*const_idx)++;
                             mtx_constval.unlock();
+                            output[node_str] = {-constid_cur - 1, 0};
                         }
                     }
                     if(!pre_symset){
@@ -230,9 +238,10 @@ namespace pygp_utils{
                 else{
                     (*constants).push_back(idxs_ptr[0]);
                     mtx_constval.lock();
-                    exps[2] = -*const_idx - 1;
-                    *const_idx += 1;
+                    constid_cur = (*const_idx)++;
                     mtx_constval.unlock();
+                    
+                    exps[2] = -constid_cur - 1;
                 }
                 exps[3] = arguments_num + k;
                 
@@ -364,8 +373,8 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
         }
         printf("here,,,succeed!!!%d\n", res[0][0].attr("arity").cast<int>());
     });
-    m.def("tree2graph_v2", [](std::vector<py::array_t<float>> encode_arrays, std::vector<py::array_t<int>> preorder_idxs, std::vector<std::vector<int>> records, std::vector<std::vector<int>> cash_list, int init_id_allocator, int max_arity){
-        int* encode_sizes = new int[encode_arrays.size()];
+    m.def("tree2graph_v2", [](pybind11::list& encode_arrays, pybind11::list& preorder_idxs, std::vector<py::array_t<int>> records, std::vector<std::vector<int>> cash_list, int init_id_allocator, int max_arity){
+        int* encode_sizes = new int[py::len(encode_arrays)];
         float* encode_ptrs_gpu;
         int* preorder_ptrs_gpu;
         int* encode_sizes_gpu;
@@ -381,16 +390,17 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
         cudaStreamCreate(&stream_tmp);
 
         int total_len = 0;
-        for(int i = 0; i < encode_arrays.size(); ++i){
+        int encode_size = py::len(encode_arrays);
+        for(int i = 0; i < encode_size; ++i){
             encode_sizes[i] = total_len;
-            total_len += encode_arrays[i].request().shape[0] / 3;
+            total_len += py::reinterpret_borrow<py::array_t<float>>(encode_arrays[i]).request().shape[0] / 3;
         }
         
-        thrust::device_vector<int> func_flags(total_len, 0);
-        thrust::device_vector<int> prefix_sum_funcs(total_len);
+        // thrust::device_vector<int> func_flags(total_len, 0);
+        // thrust::device_vector<int> prefix_sum_funcs(total_len);
         
-        thrust::device_vector<int> const_flags(total_len, 0);
-        thrust::device_vector<int> prefix_sum_consts(total_len);
+        // thrust::device_vector<int> const_flags(total_len, 0);
+        // thrust::device_vector<int> prefix_sum_consts(total_len);
         // printf("000800\n");
         // cudaDeviceSynchronize();
         // err_l = cudaGetLastError();
@@ -407,75 +417,78 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
         // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
 
         cudaMallocAsync((void**)&encode_posis_gpu, total_len * sizeof(int), stream_tmp); 
-        for(int i = 0; i < encode_arrays.size(); ++i){
-            cudaMemcpyAsync((encode_ptrs_gpu + encode_sizes[i] * 3), encode_arrays[i].request().ptr, encode_arrays[i].request().shape[0] * sizeof(float), cudaMemcpyHostToDevice, stream_tmp);
-            cudaMemcpyAsync((preorder_ptrs_gpu + encode_sizes[i]), preorder_idxs[i].request().ptr, preorder_idxs[i].request().shape[0] * sizeof(int), cudaMemcpyHostToDevice, stream_tmp);
-            end_posi = (i < (encode_arrays.size() - 1)) ? encode_sizes[i + 1] : total_len;
+        py::buffer_info encodes_buffer, preorders_buffer;
+        for(int i = 0; i < encode_size; ++i){
+            encodes_buffer = py::reinterpret_borrow<py::array_t<float>>(encode_arrays[i]).request();
+            preorders_buffer = py::reinterpret_borrow<py::array_t<int>>(preorder_idxs[i]).request();
+            cudaMemcpyAsync((encode_ptrs_gpu + encode_sizes[i] * 3), encodes_buffer.ptr, encodes_buffer.shape[0] * sizeof(float), cudaMemcpyHostToDevice, stream_tmp);
+            cudaMemcpyAsync((preorder_ptrs_gpu + encode_sizes[i]), preorders_buffer.ptr, preorders_buffer.shape[0] * sizeof(int), cudaMemcpyHostToDevice, stream_tmp);
+            end_posi = (i < (encode_size - 1)) ? encode_sizes[i + 1] : total_len;
             for(int j = encode_sizes[i]; j < end_posi; ++j){
                 encode_posis[j] = encode_sizes[i];
             }
         }
         cudaMemcpyAsync(encode_posis_gpu, encode_posis, total_len * sizeof(int), cudaMemcpyHostToDevice, stream_tmp);
         // printf("000700\n");
-        // cudaDeviceSynchronize();
+        cudaDeviceSynchronize();
         // err_l = cudaGetLastError();
         // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
 
         int thread_num = total_len < 256 ? int(total_len / 32 + 1) * 32 : 256;
         int batch = ceil(total_len / (thread_num * 10));
 
-        get_slice_list<<<batch, thread_num>>>(encode_ptrs_gpu, preorder_ptrs_gpu, encode_posis_gpu, slice_gpu, total_len, thrust::raw_pointer_cast(func_flags.data()), thrust::raw_pointer_cast(const_flags.data()));
+        // get_slice_list<<<batch, thread_num>>>(encode_ptrs_gpu, preorder_ptrs_gpu, encode_posis_gpu, slice_gpu, total_len, thrust::raw_pointer_cast(func_flags.data()), thrust::raw_pointer_cast(const_flags.data()));
         // printf("00000\n");
         // cudaDeviceSynchronize();
         // err_l = cudaGetLastError();
         // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
 
         // printf("000100\n");
-        thrust::exclusive_scan(func_flags.begin(), func_flags.end(), prefix_sum_funcs.begin());
-        thrust::exclusive_scan(const_flags.begin(), const_flags.end(), prefix_sum_consts.begin());
+        // thrust::exclusive_scan(func_flags.begin(), func_flags.end(), prefix_sum_funcs.begin());
+        // thrust::exclusive_scan(const_flags.begin(), const_flags.end(), prefix_sum_consts.begin());
         
         
-        // printf("000200\n");
-        // cudaDeviceSynchronize();
-        // err_l = cudaGetLastError();
-        // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
+        // // printf("000200\n");
+        // // cudaDeviceSynchronize();
+        // // err_l = cudaGetLastError();
+        // // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
 
-        cudaMallocAsync((void**)&consts_gpu, (const_flags[const_flags.size() - 1] + 1) * sizeof(float), stream_tmp); 
-        cudaMallocAsync((void**)&exprs_gpu, (func_flags[func_flags.size() - 1] + 1) * sizeof(int) * (max_arity + 3), stream_tmp); 
-        // printf("000200\n");
-        // cudaDeviceSynchronize();
-        // err_l = cudaGetLastError();
-        // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
-        get_expr_list<<<batch, thread_num>>>(encode_ptrs_gpu, preorder_ptrs_gpu, encode_posis_gpu, slice_gpu, total_len, thrust::raw_pointer_cast(prefix_sum_funcs.data()), thrust::raw_pointer_cast(prefix_sum_consts.data()), max_arity, exprs_gpu, consts_gpu, init_id_allocator);
+        // cudaMallocAsync((void**)&consts_gpu, (const_flags[const_flags.size() - 1] + 1) * sizeof(float), stream_tmp); 
+        // cudaMallocAsync((void**)&exprs_gpu, (func_flags[func_flags.size() - 1] + 1) * sizeof(int) * (max_arity + 3), stream_tmp); 
+        // // printf("000200\n");
+        // // cudaDeviceSynchronize();
+        // // err_l = cudaGetLastError();
+        // // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
+        // get_expr_list<<<batch, thread_num>>>(encode_ptrs_gpu, preorder_ptrs_gpu, encode_posis_gpu, slice_gpu, total_len, thrust::raw_pointer_cast(prefix_sum_funcs.data()), thrust::raw_pointer_cast(prefix_sum_consts.data()), max_arity, exprs_gpu, consts_gpu, init_id_allocator);
         
-        // printf("000300\n");
-        // cudaDeviceSynchronize();
-        // err_l = cudaGetLastError();
-        // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
-        py::array_t<int> exprs(func_flags[func_flags.size() - 1] * (max_arity + 3));
-        cudaMemcpyAsync(exprs.request().ptr, exprs_gpu, func_flags[func_flags.size() - 1] * (max_arity + 3) * sizeof(int), cudaMemcpyDeviceToHost, stream_tmp);
-        py::array_t<float> consts(const_flags[const_flags.size() - 1]);
-        cudaMemcpyAsync(consts.request().ptr, consts_gpu, const_flags[const_flags.size() - 1] * sizeof(float), cudaMemcpyDeviceToHost, stream_tmp);
+        // // printf("000300\n");
+        // // cudaDeviceSynchronize();
+        // // err_l = cudaGetLastError();
+        // // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
+        // py::array_t<int> exprs(func_flags[func_flags.size() - 1] * (max_arity + 3));
+        // cudaMemcpyAsync(exprs.request().ptr, exprs_gpu, func_flags[func_flags.size() - 1] * (max_arity + 3) * sizeof(int), cudaMemcpyDeviceToHost, stream_tmp);
+        // py::array_t<float> consts(const_flags[const_flags.size() - 1]);
+        // cudaMemcpyAsync(consts.request().ptr, consts_gpu, const_flags[const_flags.size() - 1] * sizeof(float), cudaMemcpyDeviceToHost, stream_tmp);
         
-        delete[] encode_posis;
-        delete[] encode_sizes;
-        cudaStreamDestroy(stream_tmp);
+        // delete[] encode_posis;
+        // delete[] encode_sizes;
+        // cudaStreamDestroy(stream_tmp);
 
-        // printf("000400\n");
-        // cudaDeviceSynchronize();
-        // err_l = cudaGetLastError();
-        // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
-        cudaFree(slice_gpu);
-        cudaFree(encode_ptrs_gpu);
-        cudaFree(preorder_ptrs_gpu);
-        cudaFree(consts_gpu);
-        cudaFree(exprs_gpu);
+        // // printf("000400\n");
+        // // cudaDeviceSynchronize();
+        // // err_l = cudaGetLastError();
+        // // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
+        // cudaFree(slice_gpu);
+        // cudaFree(encode_ptrs_gpu);
+        // cudaFree(preorder_ptrs_gpu);
+        // cudaFree(consts_gpu);
+        // cudaFree(exprs_gpu);
         
-        // printf("000500\n");
-        // cudaDeviceSynchronize();
-        // err_l = cudaGetLastError();
-        // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
-        return std::tuple<py::array_t<int>, py::array_t<float>>(exprs, consts);
+        // // printf("000500\n");
+        // // cudaDeviceSynchronize();
+        // // err_l = cudaGetLastError();
+        // // if (err_l != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
+        // return std::tuple<py::array_t<int>, py::array_t<float>>(exprs, consts);
     });
     m.def("tree2graph", [](std::tuple<std::vector<std::string>, std::vector<int>, int> f_attrs, 
                      pybind11::list& ind_after_cashes, pybind11::list& idxs, size_t sym_set_ptr,

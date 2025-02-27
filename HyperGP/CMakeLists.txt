@@ -179,7 +179,7 @@ if(CUDAToolkit_FOUND)
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
-        LINK_FLAGS "-Wl,-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections,--as-needed"
+        LINK_FLAGS "-Wl,-exclude-libs=ALL,--gc-sections,-ffunction-sections,-fdata-sections,--as-needed,-O3"
         # SUFFIX ${CMAKE_SHARED_MODULE_SUFFIX}  # 跨平台支持
         LINKER_LANGUAGE CUDA
     )

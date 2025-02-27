@@ -1,7 +1,7 @@
 Mutation Operators
 ========================
 
-.. currentmodule:: HyperGP.libs
+.. currentmodule:: HyperGP.ops.mutation
 
 ..autosummary::
     ::repeat:

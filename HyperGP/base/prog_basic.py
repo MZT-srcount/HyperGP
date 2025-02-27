@@ -3,6 +3,7 @@ from .func_basic import Constant
 import copy, numpy as np
 from numba import njit, jit
 
+prog_basic_list = np.arange(10000, dtype=np.int32)
 
 class Program(BaseStruct):
     def __init__(self, state=None, module_states=None, encode=None, **kwargs):
@@ -32,12 +33,12 @@ class Program(BaseStruct):
             max_depth = max(max_depth, depth)
             stack.extend([depth + 1] * encode_list[index + 1])
         return max_depth
-    
+
     def depth(self):
         return self._depth(self._encode_array)
 
     def buildProgram(self, cond, method, node_states=None, **kwargs):
-        
+      
         encode = method(cond, node_states)
         replace_array = np.array([elem for node in encode for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)], dtype=np.float32)
 
@@ -81,6 +82,9 @@ class Program(BaseStruct):
 
         return begin, end
     
+    def list(self):
+        return prog_basic_list[:int(self._encode_array.shape[0] / 3)]
+
     def slice(self, begin=None, end=None):
         
         """
@@ -104,21 +108,45 @@ class Program(BaseStruct):
         slice_be = (self._slice(self._encode_array, begin, end))
         return slice(slice_be[0], slice_be[1], 1)
 
+    def __len__(self):
+        return int(self._encode_array.shape[0] / 3)
+
     def get_encode(self, item):
-        return (self._encode_array[item.start * 3:item.stop * 3], self._pset_map)
+        return (self._encode_array[item.start * 3:item.stop * 3], self._pset_map) if isinstance(item, slice) else (self._encode_array[item * 3:item * 3], self._pset_map)
+
+    # @staticmethod
+    # @njit
+    # def concatenate_arrays(arr1, arr2, arr3):
+    #     new_array = np.empty(len(arr1) + len(arr2) + len(arr3), dtype=arr1.dtype)
+    #     new_array[:len(arr1)] = arr1
+    #     new_array[len(arr1):len(arr1) + len(arr2)] = arr2
+    #     new_array[len(arr1) + len(arr2):] = arr3
+    #     return new_array
 
     def set_encode(self, key, value):
         if not (isinstance(key, slice) or isinstance(key, int)):
             raise ValueError("The key should be slice or int, but '{TYPE}' is given".format(TYPE=type(key)))
         
-        encode_array = self._encode_array
         self._encode = None
 
         if self._encode_array is not None:
             key_slice = key if isinstance(key, slice) else slice((key, key + 1))
-            elems = []
             replace_array = value[0]
-            self._encode_array = np.concatenate((self._encode_array[:key_slice.start * 3], replace_array, self._encode_array[key_slice.stop * 3:]), dtype=np.float32)
+            # print(key_slice.start * 3, key_slice.stop * 3, replace_array.shape, self._encode_array.shape)
+            # if((key_slice.stop - key_slice.start) * 3 <= replace_array.shape[0]):
+            # old_encode_array = self._encode_array
+            # self._encode_array = np.empty(shape=(replace_array.size + old_encode_array.size - (key_slice.stop - key_slice.start) * 3,), dtype=np.float32)
+            # np.concatenate((old_encode_array[:key_slice.start * 3], replace_array, old_encode_array[key_slice.stop * 3:]), out=self._encode_array)
+            # self._encode_array = self.concatenate_arrays(
+            #     self._encode_array[:key_slice.start * 3],
+            #     replace_array,
+            #     self._encode_array[key_slice.stop * 3:]
+            # )
+            self._encode_array = np.concatenate((self._encode_array[:key_slice.start * 3], replace_array, self._encode_array[key_slice.stop * 3:]))
+            # else:
+            #     self._encode_array[key_slice.start * 3 + replace_array.shape[0]:key_slice.start * 3 + replace_array.shape[0] + self._encode_array[key_slice.stop * 3:].shape[0]] = self._encode_array[key_slice.stop * 3:]
+            #     # print(key_slice.start * 3,key_slice.start * 3 + replace_array.shape[0], key_slice.stop * 3, replace_array.shape, self._encode_array.shape)
+            #     self._encode_array[key_slice.start * 3:key_slice.start * 3 + replace_array.shape[0]] = replace_array
             self._pset_map.update(value[1])
         else:
             replace_array = value[0]
@@ -146,9 +174,16 @@ class Program(BaseStruct):
 
         if self._encode_array is not None:
             key_slice = key if isinstance(key, slice) else slice((key, key + 1))
-            elems = []
             replace_array = np.array([elem for node in value for elem in self.gen_array(node)], dtype=np.float32)
-            self._encode_array = np.concatenate((self._encode_array[:key_slice.start * 3], replace_array, self._encode_array[key_slice.stop * 3:]), dtype=np.float32)
+            # old_encode_array = self._encode_array
+            # self._encode_array = np.empty(shape=(replace_array.size + old_encode_array.size - (key_slice.stop - key_slice.start) * 3), dtype=np.float32)
+            # np.concatenate((old_encode_array[:key_slice.start * 3], replace_array, old_encode_array[key_slice.stop * 3:]), out=self._encode_array)
+            # self._encode_array = self.concatenate_arrays(
+            #     self._encode_array[:key_slice.start * 3],
+            #     replace_array,
+            #     self._encode_array[key_slice.stop * 3:]
+            # )
+            self._encode_array = np.concatenate((self._encode_array[:key_slice.start * 3], replace_array, self._encode_array[key_slice.stop * 3:]))
             # self._pset_map.update({int((replace_array[index] if replace_array[index + 1] > 0 else -(replace_array[index] + 1))):value[int(index / 3)] for index in range(0, len(replace_array), 3) if replace_array[index + 2] != 2 and int(replace_array[index] if replace_array[index + 1] > 0 else -(replace_array[index] + 1)) not in self._pset_map})
         else:
             replace_array = np.array([elem for node in value for elem in (node.idx if node.idx != -1 else node.val, node.arity, (0 if node.arity > 0 else 1) if node.idx != -1 else 2)], dtype=np.float32)
@@ -159,7 +194,11 @@ class Program(BaseStruct):
         return copy.deepcopy(self)
 
     def update(self, target_ind):
+        
+        self.states = target_ind.states.copy()
+        self.module_states = target_ind.module_states.copy()
         self._encode_array, self._pset_map = target_ind._encode_array.copy(), target_ind._pset_map
+        self._encode = None
         return self
         # return {'_encode_array':self._encode_array.copy(), '_pset_map':self._pset_map}
         
@@ -169,9 +208,3 @@ class Program(BaseStruct):
         if idx != -1 and int(idx if arity > 0 else -(idx + 1)) not in self._pset_map:
             self._pset_map.update({int(idx if arity > 0 else -(idx + 1)):node})
         return (idx if idx != -1 else node.val, arity, (0 if arity > 0 else 1) if idx != -1 else 2)
-
-    
-    #
-    # def slice(self, begin=None, end=None):
-    #     return self.root.slice(begin, end)
-

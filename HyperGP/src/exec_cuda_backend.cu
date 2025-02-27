@@ -1115,9 +1115,9 @@ __global__ void constant_fill(scalar_t* arrays, scalar_t* constant, size_t size)
 // }
 
 template<typename scalar_t>
-void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const& execs_layer,
-        py::array_t<scalar_t> const& constants, InputCuda const& inputs, 
-        py::array_t<scalar_t> const& cashes_cpu, std::vector<int32_t> const& func_list,
+void exec_gpuinput(py::array_t<int>& execs_list, std::vector<size_t>& execs_layer,
+        py::array_t<scalar_t>& constants, InputCuda const& inputs, 
+        py::array_t<scalar_t>& cashes_cpu, std::vector<int32_t> const& func_list,
         std::vector<int> const& records_list, const Array<scalar_t>& outputs, const Array<scalar_t>& records,
         std::tuple<size_t, size_t, size_t, size_t, size_t> paras){
     
@@ -1138,7 +1138,48 @@ void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
     py::buffer_info buf_cashes = cashes_cpu.request(), buf_constants = constants.request(), buf_exec_list = execs_list.request();
     const size_t* buf_layers = execs_layer.data();
     size_t execs_len = buf_exec_list.shape[0] / execs_unit_len, cashes_len = buf_cashes.shape[0], constants_len = buf_constants.shape[0], 
-     record_num= records_list.size(), layer_num = execs_layer.size(); 
+     record_num= records_list.size(), layer_num = execs_layer.size();
+     
+    // printf("block_num: %d\n", block_num);
+    // cudaStream_t* streams_exec = new cudaStream_t[STREAM_NUM];
+    // for(int i = 0; i < STREAM_NUM; ++i){
+    //     cudaStreamCreate(&streams_exec[i]);
+    // }
+    // et = std::clock();
+    // printf("exec part1 time: %f\n", (double)(et - st) / CLOCKS_PER_SEC);
+    // st = std::clock();
+    // printf("malloc.....\n");
+    ///cuda memory alloc
+    int* execs_gpu, *func_list_gpu;
+    scalar_t *constants_gpu, *inputs_gpu;
+    size_t *execs_layer_gpu;
+    err = cudaMallocAsync((void**)&execs_gpu, execs_len * execs_unit_len * sizeof(int), streams[outputs.device_id][0]);
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    err = cudaMallocAsync((void**)&constants_gpu, constants_len * ELEM_SIZE, streams[outputs.device_id][0]);
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    err = cudaMallocAsync((void**)&execs_layer_gpu, layer_num * sizeof(size_t), streams[outputs.device_id][0]);
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    
+    err = cudaMallocAsync((void**)&func_list_gpu, func_list.size() * sizeof(int32_t), streams[outputs.device_id][0]);
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+
+    // err = cudaMalloc((void**)&inputs_gpu, d_batch * ELEM_SIZE * xlen * STREAM_NUM);
+    // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    
+    // printf("malloc finish.....\n");
+    ///cuda memcpy
+    err = cudaMemcpyAsync(execs_gpu, buf_exec_list.ptr, execs_len * execs_unit_len * sizeof(int), cudaMemcpyHostToDevice, streams[outputs.device_id][0]);
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    
+    err = cudaMemcpyAsync(constants_gpu, buf_constants.ptr, constants_len * ELEM_SIZE, cudaMemcpyHostToDevice, streams[outputs.device_id][0]);
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    
+    err = cudaMemcpyAsync(execs_layer_gpu, buf_layers, layer_num * sizeof(size_t), cudaMemcpyHostToDevice, streams[outputs.device_id][0]);
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    
+    err = cudaMemcpyAsync(func_list_gpu, func_list.data(), func_list.size() * sizeof(int32_t), cudaMemcpyHostToDevice, streams[outputs.device_id][0]);
+    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
+    
     // printf("execs_len: %d\n", execs_len);
     //variable declaration
     
@@ -1202,69 +1243,30 @@ void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
         }
     }
     
-    size_t thread_num = 512, block_num = 100, warp_num = thread_num / 32;
-    if(warp_num < min_num_layer){
-        if(min_num_layer * 32 >= 1024){
-            thread_num = 1024;
-        }
-        else{
-            thread_num = (min_num_layer * 32) & (1023);
-        }
-        warp_num = thread_num / 32;
-    }
+    size_t thread_num = 256, block_num = 100, warp_num = thread_num / 32;
+    // if(warp_num < min_num_layer){
+    //     if(min_num_layer * 32 >= 1024){
+    //         thread_num = 1024;
+    //     }
+    //     else{
+    //         thread_num = (min_num_layer * 32) & (1023);
+    //     }
+    //     warp_num = thread_num / 32;
+    // }
     if(block_num * 32 * ceil(float(warp_num) / min_num_layer) > d_batch){
         block_num = ceil(double(d_batch) / (32 * ceil(float(warp_num) / min_num_layer)));
     }
-    // printf("block_num: %d\n", block_num);
-    cudaStream_t* streams_exec = new cudaStream_t[STREAM_NUM];
-    for(int i = 0; i < STREAM_NUM; ++i){
-        cudaStreamCreate(&streams_exec[i]);
-    }
-    // et = std::clock();
-    // printf("exec part1 time: %f\n", (double)(et - st) / CLOCKS_PER_SEC);
-    // st = std::clock();
-    // printf("malloc.....\n");
-    ///cuda memory alloc
-    int* execs_gpu, *func_list_gpu;
-    scalar_t *constants_gpu, *inputs_gpu;
-    size_t *execs_layer_gpu;
-    err = cudaMalloc((void**)&execs_gpu, execs_len * execs_unit_len * sizeof(int));
-    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-    err = cudaMalloc((void**)&constants_gpu, constants_len * ELEM_SIZE);
-    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-    err = cudaMalloc((void**)&execs_layer_gpu, layer_num * sizeof(size_t));
-    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
     err = cudaMallocPitch((void**)&inputs_gpu, &input_pitch, d_batch * ELEM_SIZE, xlen * STREAM_NUM);
     if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
     
-    err = cudaMalloc((void**)&func_list_gpu, func_list.size() * sizeof(int32_t));
-    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-
-    // err = cudaMalloc((void**)&inputs_gpu, d_batch * ELEM_SIZE * xlen * STREAM_NUM);
-    // if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-    
-    // printf("malloc finish.....\n");
-    ///cuda memcpy
-    err = cudaMemcpy(execs_gpu, buf_exec_list.ptr, execs_len * execs_unit_len * sizeof(int), cudaMemcpyHostToDevice);
-    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-    
-    err = cudaMemcpy(constants_gpu, buf_constants.ptr, constants_len * ELEM_SIZE, cudaMemcpyHostToDevice);
-    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-    
-    err = cudaMemcpy(execs_layer_gpu, buf_layers, layer_num * sizeof(size_t), cudaMemcpyHostToDevice);
-    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-    
-    err = cudaMemcpy(func_list_gpu, func_list.data(), func_list.size() * sizeof(int32_t), cudaMemcpyHostToDevice);
-    if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err));
-    
-    cudaMemcpy2DAsync(inputs_gpu, input_pitch, buf_ptr, data_size * ELEM_SIZE, d_batch * ELEM_SIZE, inputs_len, cudaMemcpyDeviceToDevice, streams_exec[0]);
-    cudaMemcpy2DAsync(inputs_gpu + input_pitch * cashs_init_posi / sizeof(scalar_t), input_pitch, buf_cashes.ptr, data_size * ELEM_SIZE, d_batch * ELEM_SIZE, cashes_len, cudaMemcpyHostToDevice, streams_exec[0]);
+    cudaMemcpy2DAsync(inputs_gpu, input_pitch, buf_ptr, data_size * ELEM_SIZE, d_batch * ELEM_SIZE, inputs_len, cudaMemcpyDeviceToDevice, streams[outputs.device_id][0]);
+    cudaMemcpy2DAsync(inputs_gpu + input_pitch * cashs_init_posi / sizeof(scalar_t), input_pitch, buf_cashes.ptr, data_size * ELEM_SIZE, d_batch * ELEM_SIZE, cashes_len, cudaMemcpyHostToDevice, streams[outputs.device_id][0]);
     
     // cudaDeviceSynchronize();
     // et = std::clock();
     // printf("exec part2 time: %f\n", (double)(et - st) / CLOCKS_PER_SEC);
-    // cudaMemcpyAsync(inputs_gpu, buf_ptr, d_batch * ELEM_SIZE * inputs_len, cudaMemcpyHostToDevice, streams_exec[0]);
-    // cudaMemcpyAsync(inputs_gpu + d_batch * cashs_init_posi, buf_cashes.ptr, d_batch * ELEM_SIZE * cashes_len, cudaMemcpyHostToDevice, streams_exec[0]);
+    // cudaMemcpyAsync(inputs_gpu, buf_ptr, d_batch * ELEM_SIZE * inputs_len, cudaMemcpyHostToDevice, streams[outputs.device_id][0]);
+    // cudaMemcpyAsync(inputs_gpu + d_batch * cashs_init_posi, buf_cashes.ptr, d_batch * ELEM_SIZE * cashes_len, cudaMemcpyHostToDevice, streams[outputs.device_id][0]);
     // st = std::clock();
     // printf("1 iteration: %d\n", iteration);
     
@@ -1277,26 +1279,26 @@ void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
             size_t inputs_gpu_init = ((i + 1) % STREAM_NUM) * d_batch * xlen;
             ///memcpy next data in advance, to overlay the transfer and computation.
               
-            cudaMemcpy2DAsync(inputs_gpu + inputs_gpu_init, input_pitch, buf_ptr + d_batch * i, data_size * ELEM_SIZE, d_batch * ELEM_SIZE, inputs_len, cudaMemcpyDeviceToDevice, streams_exec[(i + 1) % STREAM_NUM]);
-            cudaMemcpy2DAsync(inputs_gpu + inputs_gpu_init + cashs_init_posi * (input_pitch / sizeof(scalar_t)), input_pitch, buf_cashes.ptr + d_batch * i, data_size * ELEM_SIZE, d_batch * ELEM_SIZE, cashes_len, cudaMemcpyHostToDevice, streams_exec[(i + 1) % STREAM_NUM]);
-            // cudaMemcpyAsync(inputs_gpu + inputs_gpu_init, buf_ptr + d_batch * inputs_len * i, d_batch * ELEM_SIZE * inputs_len, cudaMemcpyHostToDevice, streams_exec[(i + 1) % STREAM_NUM]);
-            // cudaMemcpyAsync(inputs_gpu + inputs_gpu_init + cashs_init_posi * d_batch, buf_cashes.ptr + d_batch * cashes_len * i, d_batch * ELEM_SIZE * cashes_len, cudaMemcpyHostToDevice, streams_exec[(i + 1) % STREAM_NUM]);
+            cudaMemcpy2DAsync(inputs_gpu + inputs_gpu_init, input_pitch, buf_ptr + d_batch * i, data_size * ELEM_SIZE, d_batch * ELEM_SIZE, inputs_len, cudaMemcpyDeviceToDevice, streams[outputs.device_id][(i + 1) % STREAM_NUM]);
+            cudaMemcpy2DAsync(inputs_gpu + inputs_gpu_init + cashs_init_posi * (input_pitch / sizeof(scalar_t)), input_pitch, buf_cashes.ptr + d_batch * i, data_size * ELEM_SIZE, d_batch * ELEM_SIZE, cashes_len, cudaMemcpyHostToDevice, streams[outputs.device_id][(i + 1) % STREAM_NUM]);
+            // cudaMemcpyAsync(inputs_gpu + inputs_gpu_init, buf_ptr + d_batch * inputs_len * i, d_batch * ELEM_SIZE * inputs_len, cudaMemcpyHostToDevice, streams[outputs.device_id][(i + 1) % STREAM_NUM]);
+            // cudaMemcpyAsync(inputs_gpu + inputs_gpu_init + cashs_init_posi * d_batch, buf_cashes.ptr + d_batch * cashes_len * i, d_batch * ELEM_SIZE * cashes_len, cudaMemcpyHostToDevice, streams[outputs.device_id][(i + 1) % STREAM_NUM]);
         }
         // size_t inputs_gpu_init = (i % STREAM_NUM) * input_pitch * xlen / sizeof(scalar_t);
         size_t inputs_gpu_init = (i % STREAM_NUM) * d_batch * xlen;
-        execution_GPU<scalar_t><<<block_num, thread_num, 0, streams_exec[i % STREAM_NUM]>>>(execs_gpu, execs_unit_len, execs_layer_gpu, layer_num, inputs_gpu, input_pitch, offset, d_batch, constants_gpu, func_list_gpu); 
-        // cudaMemcpyAsync(outputs + d_batch * outputs_size * i, inputs_gpu + inputs_gpu_init + outputs_init_posi * d_batch, d_batch * ELEM_SIZE * outputs_size, cudaMemcpyDeviceToHost, streams_exec[i % STREAM_NUM]);
+        execution_GPU<scalar_t><<<block_num, thread_num, 0, streams[outputs.device_id][i % STREAM_NUM]>>>(execs_gpu, execs_unit_len, execs_layer_gpu, layer_num, inputs_gpu, input_pitch, offset, d_batch, constants_gpu, func_list_gpu); 
+        // cudaMemcpyAsync(outputs + d_batch * outputs_size * i, inputs_gpu + inputs_gpu_init + outputs_init_posi * d_batch, d_batch * ELEM_SIZE * outputs_size, cudaMemcpyDeviceToHost, streams[outputs.device_id][i % STREAM_NUM]);
         // for(int j = 0; j < record_num; ++j){
-        //     cudaMemcpyAsync(records + d_batch * (record_num * i + j), inputs_gpu + inputs_gpu_init + records_list[j] * d_batch, d_batch * ELEM_SIZE, cudaMemcpyDeviceToHost, streams_exec[i % STREAM_NUM]);
+        //     cudaMemcpyAsync(records + d_batch * (record_num * i + j), inputs_gpu + inputs_gpu_init + records_list[j] * d_batch, d_batch * ELEM_SIZE, cudaMemcpyDeviceToHost, streams[outputs.device_id][i % STREAM_NUM]);
         // }
         
-        cudaMemcpy2DAsync(outputs.ptr + d_batch * i, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + outputs_init_posi * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, outputs_size, cudaMemcpyDeviceToDevice, streams_exec[i % STREAM_NUM]);
+        cudaMemcpy2DAsync(outputs.ptr + d_batch * i, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + outputs_init_posi * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, outputs_size, cudaMemcpyDeviceToDevice, streams[outputs.device_id][i % STREAM_NUM]);
         for(int j = 0; j < record_num; ++j){
             if (records_list[j] >= 0){
-                cudaMemcpy2DAsync(records.ptr + d_batch * i + data_size * j, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + records_list[j] * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, 1, cudaMemcpyDeviceToDevice, streams_exec[i % STREAM_NUM]);
+                cudaMemcpy2DAsync(records.ptr + d_batch * i + data_size * j, data_size * ELEM_SIZE, inputs_gpu + inputs_gpu_init + records_list[j] * (input_pitch / sizeof(scalar_t)), input_pitch, d_batch * ELEM_SIZE, 1, cudaMemcpyDeviceToDevice, streams[outputs.device_id][i % STREAM_NUM]);
             }
             else{
-                constant_fill<scalar_t><<<fill_block_num, 256, 0, streams_exec[i % STREAM_NUM]>>>(records.ptr + d_batch * i + data_size * j, constants_gpu + (-records_list[j] - 1), d_batch);
+                constant_fill<scalar_t><<<fill_block_num, 256, 0, streams[outputs.device_id][i % STREAM_NUM]>>>(records.ptr + d_batch * i + data_size * j, constants_gpu + (-records_list[j] - 1), d_batch);
             }
         }
     }
@@ -1317,9 +1319,9 @@ void exec_gpuinput(py::array_t<int> const& execs_list, std::vector<size_t> const
     cudaFree(func_list_gpu);
 
     // printf("4here..\n");
-    for (int i = 0; i < STREAM_NUM; ++i){
-        cudaStreamDestroy(streams_exec[i]);
-    }
+    // for (int i = 0; i < STREAM_NUM; ++i){
+    //     cudaStreamDestroy(streams_exec[i]);
+    // }
     cudaError_t err_l = cudaGetLastError();
     if (err != cudaSuccess) throw std::runtime_error(cudaGetErrorString(err_l));
 
@@ -2030,9 +2032,19 @@ void TEMPLATE_BIND_FUNCS(py::module& m){
     m.def("exec_partial", &exec_partial<scalar_t>);
 }
 
+GlobalStreams gstreams;
+
+void initialize_global_streams() {
+    // std::cout << "initialize_global_streams " << std::endl;
+    for(int k = 0; k < STREAM_NUM_EXEC; ++k){
+        cudaStreamCreate(&streams[0][k]);
+    }
+}
 
 PYBIND11_MODULE(executor, m){
     
+    initialize_global_streams();
+    gstreams.init(streams);
     m.def("set_gstreams", [](const GlobalStreams& gstreams){
         streams = gstreams.streams;
     });

@@ -18,7 +18,6 @@ class ExecutableGen:
         cash_arrays = []
         nodes_arity, nodes_str, ind_after_cashes, idxs = [], [], [], []
 
-
         # import time
         # st = time.time()
         p_len = pset.func_count + 1
@@ -32,29 +31,31 @@ class ExecutableGen:
             f_nvec = [None] * (pset.func_count - len(pset.primitiveSet)) + pset.primitiveSet + ['assign'] + [None] * (pset.terminal_count - len(pset.terminalSet)) + pset.terminalSet
             f_avec = [None] * (pset.func_count - len(pset.primitiveSet)) + [pset.genFunc(f_str).arity for f_str in pset.primitiveSet] + [1] + [None] * (pset.terminal_count - len(pset.terminalSet)) + [pset.genTerminal(t_str).arity for t_str in pset.terminalSet]
             f_attrs = (f_nvec, f_avec, p_len)
-            def const_set(node):
-                constant_set.append(node.val if isinstance(node, Constant) else node.func())
-                constant_strs_set.append(str(node.val if isinstance(node, Constant) else node.func()))
-                return -len(constant_set)
+            # def const_set(node):
+            #     constant_set.append(node.val if isinstance(node, Constant) else node.func())
+            #     constant_strs_set.append(str(node.val if isinstance(node, Constant) else node.func()))
+            #     return -len(constant_set)
             
             # st_1 = time.time()
             # post_list = [ind.list() for ind in progs]
             # idxs = [[((node.idx + p_len) if node.idx != -1 else const_set(node)) if node.arity == 0 else node.idx for node in prog] for prog in post_list]
             idxs = [prog._encode_array for prog in progs]
-            # print('preorder_time: ', time.time() - st_1)
-            ind_after_cashes = [np.arange(len(ind)) for ind in progs]
+            ind_after_cashes = [ind.list() for ind in progs]
             cash_records = [np.array(ind.states['cash_record'] + ind.states['record']) for ind in progs]
         if len(cash_arrays) > 0:
             cash_arrays = np.vstack(cash_arrays)
         else:
             cash_arrays = np.array(cash_arrays)
         # print('prepare: ', time.time() - st)
+        # print(ind_after_cashes)
         # st = time.time()
         exp_set, layer_info, records_posi, record_strs, constant_set, x_len = pygp_utils.tree2graph(f_attrs,
                                           ind_after_cashes, idxs, sym_set, cash_list, cash_records, [len(pset.arguments), id_init, exec_len_max, p_len])
-        # print('t2p: ', time.time() - st, len(exp_set) / 5, sum(len(ind) for ind in progs))#, len(list(itertools.chain.from_iterable(idxs))) * exec_len_max)
+        # print('t2p: ', time.time() - st)#, len(list(itertools.chain.from_iterable(idxs))) * exec_len_max)
+        # print("exp_len, prog_tsize", len(exp_set) / 5, sum(len([1 for node in ind if node.arity > 0]) for ind in progs), sum(len([1 for idx in np.arange(len(ind)) if ind._encode_array[idx * 3 + 2] == 0]) for ind in progs))
+        # assert 0==1
         # st = time.time()
-        # pygp_utils.tree2graph_v2([prog._encode_array for prog in progs], [list(range(len(prog))) for prog in progs], [ind.states['record'] for ind in progs], [], id_init, exec_len_max - 3)
+        # pygp_utils.tree2graph_v2(idxs, ind_after_cashes, cash_records, [], id_init, exec_len_max - 3)
         # print('t2p_v2: ', time.time() - st)#, len(list(itertools.chain.from_iterable(idxs))) * exec_len_max)
         # assert 0==1
         # print(sum([len(ind) for ind in ind_after_cashes]))

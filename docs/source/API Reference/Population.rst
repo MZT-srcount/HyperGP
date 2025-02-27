@@ -4,5 +4,17 @@
 .. currentmodule:: HyperGP.libs
 .. autoclass:: Population
     :members:
-    :undoc-members:
-    :inherited-members:
+    
+    .. rubric:: Methods
+
+    .. autosummary::
+    
+        __init__
+        initPop
+
+    .. rubric:: Attributes
+
+    .. autosummary::
+
+        states
+

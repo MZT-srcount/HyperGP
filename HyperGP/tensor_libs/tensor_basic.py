@@ -607,8 +607,8 @@ class Tensor(Value):
             res.realize_cached_data
         return res
 
-    def numpy(self):
-        return self.cached_data.numpy()
+    def numpy(self, asynchronize=False):
+        return self.cached_data.numpy(asynchronize)
     
     @staticmethod
     def make_from_op(op: Op, inputs: List["Tensor"]):

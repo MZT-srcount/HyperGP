@@ -1,7 +1,7 @@
 from ...src.ops_dim import substract as _sub, add as _add, multiply as _mul, divide as _div, pdivide as _pdiv, pows as _pow, concatenate as concat
 from ...src.ndarray import _where, _all, _any, _zeros, _ones, _full, _empty, _uniform
 from ...src.ndarray import *
-from ...src import float64
+from ...src import float64, float32, int8, int32, int64, uint8, uint16, uint32, uint64
 from .basic import TensorOp
 
 

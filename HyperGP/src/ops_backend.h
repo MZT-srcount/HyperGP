@@ -1081,7 +1081,6 @@ __global__ void scalar_compute_gpu(scalar_t* a_handle, sscalar_t b, tscalar_t* o
 ///////////////////////////////////////////////////////////////////////
 // ewise sum
 ///////////////////////////////////////////////////////////////////////
-template<typename scalar_t, typename sscalar_t>
 __global__ void ewise_sum(const scalar_t* a_handle, sscalar_t* o, size_t len, int offset){
     scalar_t* a = (scalar_t*)(a_handle + offset);
     int bid = blockIdx.x;

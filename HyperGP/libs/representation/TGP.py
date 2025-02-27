@@ -6,6 +6,8 @@ from HyperGP.base.prog_basic import Program
 from ..states import ProgBuildStates
 from ..utils import HalfAndHalf
 
+prog_basic_list = np.arange(10000, dtype=np.int32)
+
 class TGPIndv(Program):
     """
     We provide the ``TGPIndv`` class to build the tree structure program
@@ -82,12 +84,11 @@ class TGPIndv(Program):
         # self.stateRegister(encode=root)
         self._encode = encode
 
-    def __len__(self):
-        return int(self._encode_array.shape[0] / 3)
 
     # def list(self, parent=False, childs=False):
     #     if not parent and not childs:
     #         return list(range(len(self._encode)))
+
 
     def list(self, parent=False, childs=False):
          
@@ -113,7 +114,7 @@ class TGPIndv(Program):
         """
 
         if not parent and not childs:
-            return self[:]
+            return prog_basic_list[:int(self._encode_array.shape[0] / 3)]
         pc_list = []
         if parent:
             p_list = [[] for z in range(int(self._encode_array.shape[0] / 3))]
@@ -186,7 +187,8 @@ class TGPIndv(Program):
         """
         Returns a new ``TGPIndv`` with the same encode list and states.
         """
-        new_ind = TGPIndv(states=self.states.copy(), module_states=self.module_states.copy() if len(self.module_states) > 0 else None)
+        new_ind = TGPIndv.__new__(TGPIndv)
+        # new_ind = TGPIndv()
         new_ind.update(self)
         # new_ind._encode_array, new_ind._pset_map = self._encode_array.copy(), self._pset_map
         return new_ind
