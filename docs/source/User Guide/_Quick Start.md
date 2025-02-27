@@ -1,50 +1,48 @@
 # Quick Start
 
 ```python
-import random, HyperGP
-from HyperGP import Population, PrimitiveSet, ExecGPU, Tensor, GpOptimizer
-from HyperGP.library.operators import RandTrCrv, RandTrMut
+import time
+import random, HyperGP, numpy as np
 from HyperGP.states import ProgBuildStates, ParaStates
 
-# Set Mask
-def set_prmask(size):
-    cdd = random.sample(range(size), size)
-    return [[cdd[i] for i in range(0, size, 2)], [cdd[i] for i in range(1, size, 2)]]
-def evaluation(output, target):
-    r1 = HyperGP.sub(output, target, dim_0=0)
-    return (r1 * r1).sum(dim=0).sqrt()
+np.random.seed(0)
+random.seed(0)
 
-# Generate training set
-input_array = Tensor.uniform(0, 10, size=(2, 10000))
-target = HyperGP.exp((input_array[0] + 1) ** 2) / (input_array[1] + input_array[0])
+pop_size = 1000
+input_size = 10000
 
-# Generate primitive set
-pset = PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.add, 2),('sub', HyperGP.sub, 2),('mul', HyperGP.mul, 2),('div', HyperGP.div, 2)])
+input_array = HyperGP.tensor.uniform(0, 10, size=(2, input_size))
 
-# Init population
-pop = Population(pop_size=100, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), parallel=False)
+target = (input_array[0] * 3 + input_array[0] * input_array[1] * 2) * (input_array[0])
 
-# Init workflow
-optimizer = GpOptimizer()
+pset = HyperGP.PrimitiveSet(input_arity=2,  primitive_set=[('add', HyperGP.tensor.add, 2),('sub', HyperGP.tensor.sub, 2),('mul', HyperGP.tensor.mul, 2),('div', HyperGP.tensor.div, 2),('sin', HyperGP.tensor.sin, 1),('cos', HyperGP.tensor.cos, 1)])
 
-# Register states
+pop = HyperGP.Population()
+pop.initPop(pop_size=pop_size, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 6], len_limit=100000))
+output, _ = HyperGP.executor(pop.states['progs'].indivs, input=input_array, pset=pset)
+pop.states['progs'].fitness = HyperGP.ops.rmse(output, target)
+
+optimizer = HyperGP.GpOptimizer()
 optimizer.status_init(
-    p_list=pop.states['progs'].indivs,
+    childs_list=pop.states['progs'].indivs, target=target,
     input=input_array,pset=pset,output=None,
-    fit_list = pop.states['progs'].fitness)
+    cfit_list = pop.states['progs'].fitness,
+    parent_list=[ind.copy() for ind in pop.states['progs'].indivs],  pfit_list=pop.states['progs'].fitness.copy(),
+    )
 
-# Add components
 optimizer.iter_component(
-    ParaStates(func=RandTrCrv(), source=["p_list", "p_list"], to=["p_list", "p_list"],
-                mask=set_prmask(100)),
-    ParaStates(func=RandTrMut(), source=["p_list", ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000), True], to=["p_list"],
-                mask=[random.sample(range(100), 100), 1, 1]),
-    ParaStates(func=ExecGPU(), source=["p_list", "input", "pset"], to=["output", None],
-                mask=[1, 1, 1]),
-    ParaStates(func=evaluation, source=["output", "target"], to=["fit_list"],
-                mask=[1, 1]))
+        ParaStates(func=HyperGP.ops.RandTrCrv(), source=["parent_list", "parent_list", 0.8], to=["parent_list", "parent_list"],
+                    mask=[lambda x=int(pop_size / 2):random.sample(range(pop_size), x), lambda x=int(pop_size / 2):random.sample(range(pop_size), x), 1]),
+        ParaStates(func=HyperGP.ops.RandTrMut(), source=["parent_list", ProgBuildStates(pset=pset, depth_rg=[1, 3], len_limit=pop_size), 0.2, True], to=["parent_list"],
+                    mask=[lambda x=pop_size:random.sample(range(pop_size), x), 1, 1, 1]),
+        ParaStates(func=HyperGP.executor, source=["parent_list", "input", "pset"], to=["output", None],
+                    mask=[1, 1, 1]),
+        ParaStates(func=HyperGP.ops.rmse, source=["output", "target"], to=["cfit_list"]),
+        ParaStates(func=HyperGP.ops.tournament, source=["parent_list", "parent_list", "cfit_list", "pfit_list"], to=["parent_list", "parent_list", "cfit_list", "pfit_list"],
+                    mask=[1, 1, 1, 1]),
+    )
 
-# Iteratively run
-optimizer.run(10)
+optimizer.monitor(HyperGP.monitors.statistics_record, "cfit_list")
+optimizer.run(100, stop_criteria=lambda: HyperGP.tensor.min(optimizer.workflowstates.cfit_list) == 0.0, tqdm_diable=False)
 
 ```
