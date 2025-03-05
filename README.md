@@ -34,8 +34,8 @@ A rich acceleration mode are supported.
 | High code coverage          | :heavy_check_mark: |
 
 # Documentation
-Documentation is available online: https://hypergp.readthedocs.io/en/latest/Quick%20Start.html
-
+Documentation is available online: https://hypergp.readthedocs.io/en/latest/Quick%20Start.html  
+- Due to time constraints, the document has not yet been fully completed and is currently being updated continuously.  
 # Installation
 
 ## Prerequisites
