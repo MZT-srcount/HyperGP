@@ -1,0 +1,37 @@
+name: Auto Delete Spam Issues
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  check-and-delete:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write  # 授予删除 Issue 的权限
+    steps:
+      - name: Check for spam keywords
+        uses: actions/github-script@v5
+        env:
+          # 定义垃圾关键词（支持正则表达式，用 | 分隔）
+          SPAM_KEYWORDS: "赌博|广告|hack|free money|http://|star|星星"
+        with:
+          script: |
+            const issueBody = context.payload.issue.body.toLowerCase();
+            const issueTitle = context.payload.issue.title.toLowerCase();
+            const spamKeywords = process.env.SPAM_KEYWORDS.toLowerCase().split('|');
+
+            // 检查标题或内容是否包含关键词
+            const isSpam = spamKeywords.some(keyword => 
+              issueBody.includes(keyword) || issueTitle.includes(keyword)
+            );
+
+            if (isSpam) {
+              // 自动删除 Issue
+              await github.rest.issues.delete({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number
+              });
+              console.log(`已删除垃圾 Issue #${context.issue.number}`);
+            }
