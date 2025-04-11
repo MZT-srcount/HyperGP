@@ -4,7 +4,10 @@ from functools import reduce
 import operator, psutil
 import HyperGP, math, time, itertools
 from .... import Tensor
-from ....src import executor
+
+import os
+if os.environ.get('READTHEDOCS') != 'True':
+    from ....src import executor
 
 class ExecutableExpr:
     def __init__(self, exec_list, pset, states):
