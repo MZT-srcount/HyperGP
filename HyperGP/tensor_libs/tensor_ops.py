@@ -46,7 +46,7 @@ def add(x: Tensor, y: Tensor, dim_0: int=0, dim_1: int=0) -> Tensor:
 
 		>>> st = time.time()
 		>>> ar = [x1_t + x2_t for i in range(10)]
-		>>> print("numpy runtime: ", time.time() - st)
+		>>> print("HyperGP runtime: ", time.time() - st)
 		HyperGP runtime:  0.00162813663482666
 
 		broadcast operation
@@ -59,7 +59,6 @@ def add(x: Tensor, y: Tensor, dim_0: int=0, dim_1: int=0) -> Tensor:
 		HyperGP runtime:  0.001430368423461914
 
 	Note:
-		xxxxxxx
 
 	"""
 
@@ -100,13 +99,37 @@ def sub(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 		a new 'Tensor' is returned
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x2 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t, x2_t = Tensor(x1), Tensor(x2)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [x1 - x2 for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [x1_t - x2_t for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [x1 - x2 for i in range(10)]
+		>>> ar = [HyperGP.sub(x1_t, x2_t, dim_0=1, dim_1=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -146,13 +169,38 @@ def mul(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 		a new 'Tensor' is returned
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x2 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t, x2_t = Tensor(x1), Tensor(x2)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [x1 * x2 for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [x1_t * x2_t for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [x1 * x2 for i in range(10)]
+		>>> ar = [HyperGP.mul(x1_t, x2_t, dim_0=1, dim_1=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
+
 
 	"""
 	if not isinstance(x, Tensor):
@@ -191,13 +239,38 @@ def div(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 		a new 'Tensor' is returned
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x2 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t, x2_t = Tensor(x1), Tensor(x2)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [x1 / x2 for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [x1_t / x2_t for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [x1 / x2 for i in range(10)]
+		>>> ar = [HyperGP.div(x1_t, x2_t, dim_0=1, dim_1=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
+
 
 	"""
 	if not isinstance(x, Tensor):
@@ -248,13 +321,37 @@ def sum(x: Tensor, dim=0):
 		a new 'Tensor' is returned
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.sum(x) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.sum(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [np.sum(x, axis=1) for i in range(10)]
+		>>> ar = [HyperGP.sum(x1_t, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
+
 
 	"""
 	
@@ -287,13 +384,37 @@ def min(x: Tensor, dim=0):
 		a new 'Tensor' is returned
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.min(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.min(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [x1 + x2 for i in range(10)]
+		>>> ar = [HyperGP.min(x1_t, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
+
 
 	"""
 	if not isinstance(x, Tensor):
@@ -325,13 +446,37 @@ def max(x: Tensor, dim=0):
 		a new 'Tensor' is returned
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.max(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.max(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [np.max(x1, axis=1) for i in range(10)]
+		>>> ar = [HyperGP.max(x1_t, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
+
 
 	"""
 	if not isinstance(x, Tensor):
@@ -363,13 +508,36 @@ def argmin(x: Tensor, dim=0):
 		ret(Tensor): the indices of the minimum of an array along the dim.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.argmin(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.argmin(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [np.argmin(x, axis=1) for i in range(10)]
+		>>> ar = [HyperGP.argmin(x, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
 
 	"""
 		
@@ -403,13 +571,36 @@ def argmax(x: Tensor, dim=0):
 		ret(Tensor): the indices of the maximum of an array along the dim.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.argmax(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.argmax(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [np.argmax(x, axis=1) for i in range(10)]
+		>>> ar = [HyperGP.argmax(x, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -441,13 +632,36 @@ def mean(x: Tensor, dim=0):
 		ret(Tensor): the mean value of an array along the dim.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.argmax(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.argmax(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [np.argmax(x, axis=1) for i in range(10)]
+		>>> ar = [HyperGP.argmax(x, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -479,13 +693,36 @@ def std(x: Tensor, dim=0):
 		ret(Tensor): the standard deviation of an array along the dim.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.std(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.std(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [np.std(x, axis=1) for i in range(10)]
+		>>> ar = [HyperGP.std(x, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -517,13 +754,36 @@ def var(x: Tensor, dim=0):
 		ret(Tensor): the variance of an array along the dim.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.var(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.var(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [np.var(x, axis=1) for i in range(10)]
+		>>> ar = [HyperGP.var(x, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -555,13 +815,36 @@ def sqrt(x: Tensor):
 		ret(Tensor): the elementwise non-negative square-root of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.sqrt(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.sqrt(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
+		broadcast operation
+
+		>>> ar = [np.sqrt(x, axis=1) for i in range(10)]
+		>>> ar = [HyperGP.sqrt(x, dim=1) for i in range(10)]
+		>>> for x in ar: 
+		... 	x.wait()
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -592,13 +875,29 @@ def sqrtf(x: Tensor):
 		ret(Tensor): the elementwise non-negative square-root of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.sqrt(np.fabs(x1)) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.sqrtf(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -629,13 +928,29 @@ def abs(x: Tensor):
 		ret(Tensor): the elementwise absolute values of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.abs(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.abs(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -668,13 +983,29 @@ def loge(x: Tensor):
 		ret(Tensor): the natural logarithm of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.log(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.log(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -705,13 +1036,29 @@ def neg(x: Tensor):
 		ret(Tensor): A negative array of the input.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.negative(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.neg(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -742,15 +1089,32 @@ def log10(x: Tensor):
 		ret(Tensor): the base-10 logarithm of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.log10(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.log10(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
+
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
 	
@@ -779,13 +1143,29 @@ def log2(x: Tensor):
 		ret(Tensor): the base-2 logarithm of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.log2(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.log2(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -818,13 +1198,29 @@ def logfe(x: Tensor):
 		ret(Tensor): the natural logarithm of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.log(np.fabs(x1)) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.logfe(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -857,13 +1253,29 @@ def logf2(x: Tensor):
 		ret(Tensor): the natural logarithm of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.log2(np.fabs(x1)) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.logf2(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -896,13 +1308,29 @@ def logf10(x: Tensor):
 		ret(Tensor): the natural logarithm of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.log10(np.fabs(x1)) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.logf10(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -933,13 +1361,29 @@ def sin(x: Tensor):
 		ret(Tensor): the sin values of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.sin(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.sin(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 
@@ -971,13 +1415,29 @@ def cos(x: Tensor):
 		ret(Tensor): the cosine values of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.cos(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.cos(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1008,13 +1468,29 @@ def tan(x: Tensor):
 		ret(Tensor): the tangent values of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.tan(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.tan(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1047,11 +1523,28 @@ def arcsin(x: Tensor):
 		ret(Tensor): the inverse sine values of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.arcsin(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.arcsin(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
 		return nan if element not in [-1, 1]
 
@@ -1086,11 +1579,28 @@ def arccos(x: Tensor):
 		ret(Tensor): the inverse cosine values of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.arccos(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.arccos(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
 		return nan if element not in [-1, 1]
 
@@ -1125,13 +1635,29 @@ def arctan(x: Tensor):
 		ret(Tensor): the inverse tan values of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.arctan(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.arctan(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1160,13 +1686,28 @@ def exp(x: Tensor):
 		ret(Tensor): the exponent values of an array.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
-	Note:
-		xxxxx
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.exp(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.exp(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1195,13 +1736,28 @@ def ceil(x: Tensor):
 		ret(Tensor): the elements after ceiling.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
-	Note:
-		xxxxx
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.ceil(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.ceil(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+s
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1230,13 +1786,28 @@ def floor(x: Tensor):
 		ret(Tensor): the elements after flooring.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
-	Note:
-		xxxxx
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.floor(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.floor(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1265,13 +1836,28 @@ def sign(x: Tensor):
 		ret(Tensor): the sign of each element.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
-	Note:
-		xxxxx
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.sign(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.sign(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1301,13 +1887,30 @@ def reciprocal(x: Tensor):
 		ret(Tensor): the reciprocal of each element.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.reciprocal(x1) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.reciprocal(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxx
+
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1336,13 +1939,31 @@ def concatenate(arrays, dim=0, device=None):
 		ret(Tensor): A new array after concatenating.
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+		
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x2 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t, x2_t = Tensor(x1), Tensor(x2)
+
+		runtime test
+		
+		>>> st = time.time()
+		>>> ar = [np.concatenate((x1, x2)) for i in range(10)]
+		>>> print("numpy runtime: ", time.time() - st)
+
+		>>> st = time.time()
+		>>> ar = [HyperGP.concatenate((x1_t, x2_t)) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxx
+		
 
 	"""
 	assert isinstance(arrays, tuple), "The input arrays should be organized as tuple"
@@ -1361,14 +1982,6 @@ def where(condition, true_array, false_array):
 	Returns:
 		ret(Tensor): A new array in which elements from true_array(correponding index in condition is true) and false_array(correponding index in bool_array is false).
 	
-	Examples:
-		xxxxx
-
-		>>> xxxx
-		xxxx
-	
-	Note:
-		xxxxx
 
 	"""
 	
@@ -1402,14 +2015,6 @@ def all(x:Tensor):
 	Returns:
 		ret(boolean)
 	
-	Examples:
-		xxxxx
-
-		>>> xxxx
-		xxxx
-	
-	Note:
-		xxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1437,15 +2042,7 @@ def any(x:Tensor):
 	
 	Returns:
 		ret(boolean)
-	
-	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
-	Note:
-		xxxxx
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1477,13 +2074,20 @@ def zeros(shape: tuple, dtype=float64, device_id=query_device()):
 		ret(boolean)
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+		
+		>>> x1 = HyperGP.zeros((500, 100000))
+		>>> print("x1: ", x1)
+
 	Note:
-		xxxxx
+		
 
 	"""
 	tensor = Tensor(_zeros(shape, dtype=dtype, device_id=device_id))
@@ -1501,13 +2105,19 @@ def empty(shape: tuple, dtype=float64, device_id=query_device()):
 		ret(boolean)
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+		
+		>>> x1 = HyperGP.empty((500, 100000))
+
 	Note:
-		xxxxx
+		
 
 	"""
 	tensor = Tensor(_empty(shape, dtype=dtype, device_id=device_id))
@@ -1525,13 +2135,19 @@ def ones(shape: tuple, dtype=float64, device_id=query_device()):
 		ret(boolean)
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+		
+		>>> x1 = HyperGP.ones((500, 100000))
+		>>> print("x1: ", x1)
+
 	Note:
-		xxxxx
 
 	"""
 	tensor = Tensor(_ones(shape, dtype=dtype, device_id=device_id))
@@ -1548,15 +2164,20 @@ def full(shape: tuple, fill_value: float, dtype=None, device_id=query_device()):
 	
 	Returns:
 		ret(boolean)
-	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+		
+		>>> x1 = HyperGP.full((500, 100000), fill_value=0.24)
+		>>> print("x1: ", x1)
+
 	Note:
-		xxxxx
 
 	"""
 	if isinstance(fill_value, Tensor):
@@ -1715,13 +2336,23 @@ def pdiv(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 		a new 'Tensor' is returned
 	
 	Examples:
-		xxxxx
 
-		>>> xxxx
-		xxxx
-	
+		import modules
+
+		>>> import numpy as np
+		>>> from HyperGP import Tensor
+		>>> import time
+
+		array initialization
+		
+		>>> x1 = np.random.uniform(-1, 1, size=(500, 100000))
+		>>> x1_t = Tensor(x1)
+		
+		>>> st = time.time()
+		>>> ar = [HyperGP.pdiv(x1_t) for i in range(10)]
+		>>> print("HyperGP runtime: ", time.time() - st)
+
 	Note:
-		xxxxxxx
 
 	"""
 	if not isinstance(x, Tensor):
