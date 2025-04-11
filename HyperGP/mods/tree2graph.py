@@ -4,8 +4,10 @@ from HyperGP.base.func_basic import Constant
 from HyperGP.base.base_struct import States
 from .cash_manager import CashManager
 import numpy as np
-from ..src import pygp_utils
 import itertools
+
+if os.environ.get('READTHEDOCS') != 'True':
+    from ..src import pygp_utils
 
 """[ ] TODO: Execution respond to get the output data of expression, there should be the ability to return the data need to record"""
 class ExecutableGen:
