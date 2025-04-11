@@ -58,7 +58,6 @@ def add(x: Tensor, y: Tensor, dim_0: int=0, dim_1: int=0) -> Tensor:
 		numpy runtime:  0.17173876762390136
 		HyperGP runtime:  0.001430368423461914
 
-	Note:
 
 	"""
 
@@ -129,8 +128,7 @@ def sub(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -199,8 +197,7 @@ def mul(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 
 	"""
 	if not isinstance(x, Tensor):
@@ -269,8 +266,7 @@ def div(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 
 	"""
 	if not isinstance(x, Tensor):
@@ -350,8 +346,7 @@ def sum(x: Tensor, dim=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 
 	"""
 	
@@ -413,8 +408,7 @@ def min(x: Tensor, dim=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 
 	"""
 	if not isinstance(x, Tensor):
@@ -475,8 +469,7 @@ def max(x: Tensor, dim=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 
 	"""
 	if not isinstance(x, Tensor):
@@ -537,8 +530,7 @@ def argmin(x: Tensor, dim=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 	"""
 		
 	if not isinstance(x, Tensor):
@@ -600,8 +592,7 @@ def argmax(x: Tensor, dim=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -661,8 +652,7 @@ def mean(x: Tensor, dim=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -722,8 +712,7 @@ def std(x: Tensor, dim=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -783,8 +772,7 @@ def var(x: Tensor, dim=0):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -844,8 +832,7 @@ def sqrt(x: Tensor):
 		>>> for x in ar: 
 		... 	x.wait()
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -897,8 +884,7 @@ def sqrtf(x: Tensor):
 		>>> ar = [HyperGP.sqrtf(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -950,8 +936,7 @@ def abs(x: Tensor):
 		>>> ar = [HyperGP.abs(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1005,8 +990,7 @@ def loge(x: Tensor):
 		>>> ar = [HyperGP.log(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1058,8 +1042,7 @@ def neg(x: Tensor):
 		>>> ar = [HyperGP.neg(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1111,8 +1094,7 @@ def log10(x: Tensor):
 		>>> ar = [HyperGP.log10(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 
 	if not isinstance(x, Tensor):
@@ -1165,8 +1147,7 @@ def log2(x: Tensor):
 		>>> ar = [HyperGP.log2(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1220,8 +1201,7 @@ def logfe(x: Tensor):
 		>>> ar = [HyperGP.logfe(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1275,8 +1255,7 @@ def logf2(x: Tensor):
 		>>> ar = [HyperGP.logf2(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1330,8 +1309,7 @@ def logf10(x: Tensor):
 		>>> ar = [HyperGP.logf10(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1383,8 +1361,7 @@ def sin(x: Tensor):
 		>>> ar = [HyperGP.sin(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 
 	if not isinstance(x, Tensor):
@@ -1437,8 +1414,7 @@ def cos(x: Tensor):
 		>>> ar = [HyperGP.cos(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1490,8 +1466,7 @@ def tan(x: Tensor):
 		>>> ar = [HyperGP.tan(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1657,8 +1632,7 @@ def arctan(x: Tensor):
 		>>> ar = [HyperGP.arctan(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
@@ -1909,8 +1883,7 @@ def reciprocal(x: Tensor):
 		>>> ar = [HyperGP.reciprocal(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 
 	"""
 	if not isinstance(x, Tensor):
@@ -1962,8 +1935,7 @@ def concatenate(arrays, dim=0, device=None):
 		>>> ar = [HyperGP.concatenate((x1_t, x2_t)) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-		
+			
 
 	"""
 	assert isinstance(arrays, tuple), "The input arrays should be organized as tuple"
@@ -2086,8 +2058,7 @@ def zeros(shape: tuple, dtype=float64, device_id=query_device()):
 		>>> x1 = HyperGP.zeros((500, 100000))
 		>>> print("x1: ", x1)
 
-	Note:
-		
+			
 
 	"""
 	tensor = Tensor(_zeros(shape, dtype=dtype, device_id=device_id))
@@ -2116,8 +2087,7 @@ def empty(shape: tuple, dtype=float64, device_id=query_device()):
 		
 		>>> x1 = HyperGP.empty((500, 100000))
 
-	Note:
-		
+			
 
 	"""
 	tensor = Tensor(_empty(shape, dtype=dtype, device_id=device_id))
@@ -2147,8 +2117,7 @@ def ones(shape: tuple, dtype=float64, device_id=query_device()):
 		>>> x1 = HyperGP.ones((500, 100000))
 		>>> print("x1: ", x1)
 
-	Note:
-
+	
 	"""
 	tensor = Tensor(_ones(shape, dtype=dtype, device_id=device_id))
 	return tensor
@@ -2177,8 +2146,7 @@ def full(shape: tuple, fill_value: float, dtype=None, device_id=query_device()):
 		>>> x1 = HyperGP.full((500, 100000), fill_value=0.24)
 		>>> print("x1: ", x1)
 
-	Note:
-
+	
 	"""
 	if isinstance(fill_value, Tensor):
 		tensor = Tensor(_full(shape, fill_value.cached_data, dtype=dtype, device_id=device_id))
@@ -2352,8 +2320,7 @@ def pdiv(x: Tensor, y: Tensor, dim_0=0, dim_1=0):
 		>>> ar = [HyperGP.pdiv(x1_t) for i in range(10)]
 		>>> print("HyperGP runtime: ", time.time() - st)
 
-	Note:
-
+	
 	"""
 	if not isinstance(x, Tensor):
 		x = Tensor(x)
