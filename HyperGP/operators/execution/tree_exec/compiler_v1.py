@@ -2,8 +2,11 @@
 import operator
 import time
 from .... import Tensor, States
-from ....src import executor, NDArray
 import numpy as np
+
+import os
+if os.environ.get('READTHEDOCS') != 'True':
+    from ....src import executor, NDArray
 
 class ExecutableExpr:
     def __init__(self, exec_list, pset, states, func_list = None):
