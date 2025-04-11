@@ -6,6 +6,7 @@ from .cash_manager import CashManager
 import numpy as np
 import itertools
 
+import os
 if os.environ.get('READTHEDOCS') != 'True':
     from ..src import pygp_utils
 
