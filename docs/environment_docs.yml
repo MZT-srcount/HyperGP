@@ -103,4 +103,5 @@ dependencies:
       - uvicorn==0.34.0
       - watchfiles==1.0.3
       - websockets==14.1
+      - numba==0.61.0
 prefix: /home/mazt/Software/anaconda3/envs/HyperGP
