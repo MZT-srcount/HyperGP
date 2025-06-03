@@ -62,10 +62,24 @@ If you are installing from source, you will need:
 
 An example of environment setup in Linux is shown below:
 
+- create a conda environment and install the dependencies by running the following command:
 ```bash
 $ conda env create -n HyperGP -f environment.yml
 $ conda activate HyperGP
+```
+
+- Activate the c++ compiler:
+```bash
+$ conda env config vars set CC=x86_64-conda-linux-gnu-gcc
+$ conda env config vars set CXX=x86_64-conda-linux-gnu-g++
+$ conda deactivate
+```
+
+- Build HyperGP:
+```bash
+$ conda activate HyperGP
 $ cd HyperGP
+$ rm -rf ./build/*
 $ make compile
 $ cd ..
 ```

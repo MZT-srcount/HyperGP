@@ -84,12 +84,20 @@ set(CUDA_NVCC_FLAGS
 )
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -Wall -s")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wall -s")
-set(CUBLAS_STATIC_LIB /home/mazt/cuda-11.4.2/lib64/libcublas_static.a)
-set(CUBLAS_STATIC_PREFIX /home/mazt/cuda-11.4.2/lib64)
+# set(CUBLAS_STATIC_LIB /home/mazt/cuda-11.4.2/lib64/libcublas_static.a)
+# set(CUBLAS_STATIC_PREFIX /home/mazt/cuda-11.4.2/lib64)
 ### tensor backend
 find_package(CUDAToolkit REQUIRED)
 find_package(CUDA REQUIRED)
 if(CUDAToolkit_FOUND)
+
+    include(FindCUDA/select_compute_arch)
+    CUDA_DETECT_INSTALLED_GPUS(INSTALLED_GPU_CCS_1)
+    string(STRIP "${INSTALLED_GPU_CCS_1}" INSTALLED_GPU_CCS_2)
+    string(REPLACE " " ";" INSTALLED_GPU_CCS_3 "${INSTALLED_GPU_CCS_2}")
+    string(REPLACE "." "" CUDA_ARCH_LIST "${INSTALLED_GPU_CCS_3}")
+    # SET(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH_LIST})
+
     # 全局 CUDA 编译选项
     # include_directories(SYSTEM ${CUDA_INCLUDE_DIRS} ${CUDA_CUBLAS_DIRS} "src")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 --compiler-options -Wall")
@@ -145,13 +153,14 @@ if(CUDAToolkit_FOUND)
 
     
     add_library(ndarray_cuda_backend MODULE ${CMAKE_CURRENT_SOURCE_DIR}/src/ndarray_cuda_backend.cu)
-    target_link_libraries(ndarray_cuda_backend ${LINKER_LIBS} 
-        ${CUBLAS_STATIC_LIB}
-        ${CUBLAS_STATIC_PREFIX}/libculibos.a
-        ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
-        ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)#paras ${CUDA_cublas_LIBRARY}
+    target_link_libraries(ndarray_cuda_backend ${LINKER_LIBS} ${CUDA_cublas_LIBRARY})
+        # ${CUBLAS_STATIC_LIB}
+        # ${CUBLAS_STATIC_PREFIX}/libculibos.a
+        # ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
+        # ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)#paras ${CUDA_cublas_LIBRARY}
     set_target_properties(ndarray_cuda_backend
         PROPERTIES
+        CUDA_ARCHITECTURES "${CUDA_ARCH_LIST}"
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
@@ -161,6 +170,7 @@ if(CUDAToolkit_FOUND)
     )
     # target_link_options(ndarray_cuda_backend PRIVATE -gc-sections,-exclude-libs=ALL,-ffunction-sections,-fdata-sections)
     # 针对特定目标的编译选项
+    target_compile_options(ndarray_cuda_backend PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_75,code=sm_75>)
     # target_compile_options(ndarray_cuda_backend PRIVATE --compiler-options -Wextra)
     # target_link_options(ndarray_cuda_backend PRIVATE -Wl,--gc-sections,-exclude-libs=ALL)
     # pybind11_add_module(${MODULE_NAME} MODULE src/ndarray_cuda_backend.cu)
@@ -168,14 +178,15 @@ if(CUDAToolkit_FOUND)
     pybind11_strip(ndarray_cuda_backend)
     
     add_library(pygp_utils MODULE src/utils_backend.cu)
-    target_link_libraries(pygp_utils ${LINKER_LIBS} 
-        ${CUBLAS_STATIC_LIB}
-        ${CUBLAS_STATIC_PREFIX}/libculibos.a
-        ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
-        ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)#paras ${CUDA_cublas_LIBRARY}
+    target_link_libraries(pygp_utils ${LINKER_LIBS} ${CUDA_cublas_LIBRARY})
+        # ${CUBLAS_STATIC_LIB}
+        # ${CUBLAS_STATIC_PREFIX}/libculibos.a
+        # ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
+        # ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)#paras ${CUDA_cublas_LIBRARY}
         
     set_target_properties(pygp_utils
         PROPERTIES
+        CUDA_ARCHITECTURES "${CUDA_ARCH_LIST}"
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
@@ -203,16 +214,17 @@ if(CUDAToolkit_FOUND)
 
     add_library(executor MODULE ${CMAKE_CURRENT_SOURCE_DIR}/src/exec_cuda_backend.cu)
 
-    target_link_libraries(executor ${LINKER_LIBS} 
-        ${CUBLAS_STATIC_LIB}
-        ${CUBLAS_STATIC_PREFIX}/libculibos.a
-        ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
-        ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)# CUDA::cublas 
+    target_link_libraries(executor ${LINKER_LIBS} CUDA::cublas)
+        # ${CUBLAS_STATIC_LIB}
+        # ${CUBLAS_STATIC_PREFIX}/libculibos.a
+        # ${CUBLAS_STATIC_PREFIX}/libcublasLt_static.a
+        # ${CUBLAS_STATIC_PREFIX}/libcudart_static.a)# CUDA::cublas 
     pybind11_extension(executor)
     pybind11_strip(executor)
 
     set_target_properties(executor
         PROPERTIES
+        CUDA_ARCHITECTURES "${CUDA_ARCH_LIST}"
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
         CXX_VISIBILITY_PRESET "hidden"
         CUDA_VISIBILITY_PRESET "hidden"
@@ -221,6 +233,7 @@ if(CUDAToolkit_FOUND)
     )
     # target_link_options(executor PRIVATE -gc-sections,-exclude-libs=ALL,-ffunction-sections,-fdata-sections)
     # target_compile_options(executor PRIVATE --compiler-options -Wextra)
+    target_compile_options(executor PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-gencode arch=compute_75,code=sm_75>)
     # target_link_options(executor PRIVATE -Wl,--gc-sections,-exclude-libs=ALL)
 else()
     message(STATUS "Can not found CUDA")
