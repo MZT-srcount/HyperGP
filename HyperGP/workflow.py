@@ -67,19 +67,17 @@ class GpOptimizer(BaseStruct, __Mods):
             
             >>> pop_size = 1000
             >>> pset = HyperGP.PrimitiveSet(input_arity=1,  primitive_set=[('add', HyperGP.tensor.add, 2),('sub', HyperGP.tensor.sub, 2)])
-            >>> pop = HyperGP.Population(parallel=False)
+            >>> pop = HyperGP.Population()
             >>> pop.initPop(pop_size=pop_size, prog_paras=ProgBuildStates(pset=pset, depth_rg=[2, 3], len_limit=10000))
             >>> pop.stateRegister(cprogs = pop.states['progs'].copy)
-            >>> input = np.random.uniform(0, 10, size=(1, 10000))
+            >>> input_array = HyperGP.tensor.uniform(0, 10, size=(1, 10000))
+            >>> optimizer = HyperGP.GpOptimizer()
             >>> optimizer.status_init(
             ...     p_list=pop.states['cprogs'].indivs,
                     fit_list = pop.states['cprogs'].fitness,
-                    input=Tensor(input),
+                    input=input_array,
                     pset=pset,
-                    output=None
-            >>> )
-            >>> print(optimizer.input)
-            xxxxxxxxxxxxxxxx
+                    output=None)
 
         """
         for key, value in kwargs.items():
@@ -111,7 +109,14 @@ class GpOptimizer(BaseStruct, __Mods):
             save_path: File path to save the results
         
         Examples:
-            xxxxxxxxxxx
+            >>> optimizer.monitor(HyperGP.monitors.statistics_record, "fit_list", "./records/fitness.txt")
+            
+            ./records/fitness.txt:
+            min	max	mean	var	std
+            148792.54973409744	149393.69216920136	149353.97619133547	15368.910548484808	123.97141020608262
+            148730.17933285816	149387.63549782007	149297.24560745712	36924.96589522792	192.15869976461622
+            148758.9647289339	149387.54256014896	149171.7426450109	65744.58211613352	256.4070633117066
+            ...
             )
         """
         if getattr(tool, "init") and callable(tool.init):
